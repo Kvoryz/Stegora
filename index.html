@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=2.56" />
+    <link rel="stylesheet" href="assets/css/style.css?v=2.57" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
@@ -179,6 +179,10 @@
                 type="password"
                 id="encode-password"
                 placeholder="Encrypt with password..."
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
               />
               <button
                 type="button"
@@ -321,6 +325,10 @@
                 type="password"
                 id="decode-password"
                 placeholder="Enter password to decrypt..."
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
               />
               <button
                 type="button"
@@ -912,7 +920,7 @@
       </div>
     </div>
 
-    <script src="assets/js/app.js?v=2.56"></script>
+    <script src="assets/js/app.js?v=2.57"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
