@@ -753,6 +753,11 @@ class StegoraApp {
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
       input.value = "";
+
+      // Clear hash display
+      document.getElementById("encode-hash-display").hidden = true;
+      document.getElementById("encode-hash-value").textContent = "";
+
       this.updateEncodeButton(maxAllowedChars);
     });
 
@@ -850,8 +855,6 @@ class StegoraApp {
       throw new Error("Please select a valid image file");
     }
 
-    // Use createImageBitmap to disable color space conversion
-    // This is CRITICAL for steganography to preserve exact pixel values
     try {
       return await createImageBitmap(file, {
         colorSpaceConversion: "none",
@@ -860,7 +863,6 @@ class StegoraApp {
       });
     } catch (e) {
       console.error("createImageBitmap failed, falling back:", e);
-      // Fallback for older browsers (though less reliable for stego)
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
@@ -900,11 +902,8 @@ class StegoraApp {
     try {
       let finalMessage = message;
 
-      // If password, encrypt. Store both real and decoy.
       if (password) {
         this.showToast("Securing message...", "");
-
-        // Store encrypted real message + unencrypted decoy with marker
         const encryptedReal = await Crypto.encrypt(message, password);
         finalMessage =
           "<<DECOY>>" +
@@ -952,8 +951,8 @@ class StegoraApp {
         URL.revokeObjectURL(url);
 
         const successMsg = password
-          ? "Secured with decoy & encoded!"
-          : "Image encoded and downloaded!";
+          ? "Sanitized, Secured with decoy & Encoded!"
+          : "Sanitized & Encoded!";
         this.showToast(successMsg, "success");
       }, "image/png");
     } catch (error) {

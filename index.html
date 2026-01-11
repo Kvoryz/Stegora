@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css" />
+    <link rel="stylesheet" href="assets/css/style.css?v=2.0" />
   </head>
   <body>
     <div class="app-container">
@@ -103,7 +103,7 @@
               </svg>
               <div class="upload-info">
                 <p class="upload-text">Drop your image here</p>
-                <span class="upload-hint">PNG format only</span>
+                <span class="upload-hint">Any image format</span>
               </div>
             </div>
             <div class="preview-thumb" id="encode-preview" hidden>
@@ -254,7 +254,7 @@
             <input
               type="file"
               id="decode-image-input"
-              accept="image/png"
+              accept="image/*"
               hidden
             />
             <div class="upload-content">
@@ -271,7 +271,7 @@
               </svg>
               <div class="upload-info">
                 <p class="upload-text">Drop encoded image here</p>
-                <span class="upload-hint">PNG format only</span>
+                <span class="upload-hint">Any image format</span>
               </div>
             </div>
             <div class="preview-thumb" id="decode-preview" hidden>
@@ -812,6 +812,6 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-    <script src="assets/js/app.js?v=2.9"></script>
+    <script src="assets/js/app.js?v=2.14"></script>
   </body>
 </html>
