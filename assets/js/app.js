@@ -600,9 +600,10 @@ class Steganalysis {
     let verdict = "Clean";
     let suspicionLevel = 0;
 
-    if (lsbScore > 0.95) suspicionLevel++;
-    if (chiSquare < 100) suspicionLevel++; // Low chi-square for POV often means embedding or very random noise
-    if (bitPlaneRatio > 1.2) suspicionLevel++; // LSB significantly noisier than next bit
+    // Adjusted thresholds for balanced sensitivity
+    if (lsbScore > 0.88) suspicionLevel++; // Was > 0.85 (Too sensitive) vs 0.95 (Too loose)
+    if (chiSquare < 200) suspicionLevel++; // Was < 300 (Too sensitive) vs 100 (Too loose)
+    if (bitPlaneRatio > 1.15) suspicionLevel++; // Was > 1.05 (Too sensitive) vs 1.2 (Too loose)
 
     if (suspicionLevel >= 2) verdict = "Detected";
     else if (suspicionLevel === 1) verdict = "Suspicious";
@@ -891,7 +892,7 @@ class StegoraApp {
 
   async encode() {
     const message = document.getElementById("secret-message").value.trim();
-    const password = document.getElementById("encode-password").value;
+    const password = document.getElementById("encode-password").value.trim();
     const decoyMessage = "Who are you?";
 
     if (!this.encodeImage || !message) {
@@ -966,7 +967,7 @@ class StegoraApp {
       return;
     }
 
-    const password = document.getElementById("decode-password").value;
+    const password = document.getElementById("decode-password").value.trim();
 
     try {
       this.canvas.width =
@@ -1233,7 +1234,9 @@ class StegoraApp {
     const message = document
       .getElementById("audio-secret-message")
       .value.trim();
-    const password = document.getElementById("audio-encode-password").value;
+    const password = document
+      .getElementById("audio-encode-password")
+      .value.trim();
 
     if (!this.audioEncodeBuffer || !message) {
       this.showToast("Please provide an audio file and message", "error");
@@ -1275,7 +1278,9 @@ class StegoraApp {
       return;
     }
 
-    const password = document.getElementById("audio-decode-password").value;
+    const password = document
+      .getElementById("audio-decode-password")
+      .value.trim();
 
     try {
       let message = await AudioSteganography.decode(this.audioDecodeBuffer);

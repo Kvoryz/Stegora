@@ -1,0 +1,22 @@
+{
+  "name": "Stegora - Secure Steganography",
+  "short_name": "Stegora",
+  "description": "Hide secrets in images securely with AES-256 and LSB steganography.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0b",
+  "theme_color": "#18181b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/iconste.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/iconste.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
