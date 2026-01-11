@@ -678,12 +678,42 @@ class MetadataScanner {
         tags.copyright = this.readString(view, dataOffset, count);
       if (tag === 0x010e) tags.desc = this.readString(view, dataOffset, count);
 
-      if (tag === 0x8825) {
-        const gpsOffset = tiffStart + valueOffset;
-        Object.assign(
-          tags,
-          this.parseGPS(view, gpsOffset, littleEndian, tiffStart)
-        );
+      if (tag === 0x8825 && type === 4) {
+        const gpsIfdOffset = tiffStart + valueOffset;
+        try {
+          Object.assign(
+            tags,
+            this.parseGPS(view, gpsIfdOffset, littleEndian, tiffStart)
+          );
+        } catch (e) {
+          console.warn("GPS parsing failed:", e);
+        }
+      }
+
+      // Check EXIF sub-IFD for GPS pointer
+      if (tag === 0x8769 && type === 4) {
+        const exifIfdOffset = tiffStart + valueOffset;
+        try {
+          const exifEntries = view.getUint16(exifIfdOffset, littleEndian);
+          for (let j = 0; j < exifEntries; j++) {
+            const exifEntryOffset = exifIfdOffset + 2 + j * 12;
+            const exifTag = view.getUint16(exifEntryOffset, littleEndian);
+            const exifType = view.getUint16(exifEntryOffset + 2, littleEndian);
+            const exifValOffset = view.getUint32(
+              exifEntryOffset + 8,
+              littleEndian
+            );
+            if (exifTag === 0x8825 && exifType === 4) {
+              const gpsIfdOffset = tiffStart + exifValOffset;
+              Object.assign(
+                tags,
+                this.parseGPS(view, gpsIfdOffset, littleEndian, tiffStart)
+              );
+            }
+          }
+        } catch (e) {
+          console.warn("EXIF sub-IFD parsing failed:", e);
+        }
       }
     }
     return tags;
@@ -851,11 +881,16 @@ class StegoraApp {
     const messageInput = document.getElementById("secret-message");
     const charCount = document.getElementById("char-count");
     const maxCharsDisplay = document.getElementById("max-chars");
-    const encodeBtn = document.getElementById("encode-btn");
+    const submitBtn = document.getElementById("submit-btn");
+    const modal = document.getElementById("submit-modal");
+    const modalClose = document.getElementById("submit-modal-close");
+    const sanitizeBtn = document.getElementById("sanitize-btn");
+    const confirmEncodeBtn = document.getElementById("confirm-encode-btn");
 
     let maxAllowedChars = 0;
 
     this.setupDropzone(dropzone, input, (file) => {
+      this.encodeFile = file;
       this.loadImage(file)
         .then((img) => {
           this.encodeImage = img;
@@ -880,6 +915,7 @@ class StegoraApp {
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.encodeImage = null;
+      this.encodeFile = null;
       maxAllowedChars = 0;
       maxCharsDisplay.textContent = "0";
       charCount.textContent = "0";
@@ -908,7 +944,23 @@ class StegoraApp {
       this.updateEncodeButton(maxAllowedChars);
     });
 
-    encodeBtn.addEventListener("click", () => this.encode());
+    submitBtn.addEventListener("click", () => {
+      modal.hidden = false;
+    });
+
+    modalClose.addEventListener("click", () => {
+      modal.hidden = true;
+    });
+
+    sanitizeBtn.addEventListener("click", () => {
+      modal.hidden = true;
+      this.sanitize();
+    });
+
+    confirmEncodeBtn.addEventListener("click", () => {
+      modal.hidden = true;
+      this.encode();
+    });
   }
 
   initDecode() {
@@ -1013,14 +1065,53 @@ class StegoraApp {
     const hasMessage = !!message.trim();
     const isWithinLimit = maxChars > 0 ? message.length <= maxChars : true;
 
-    const btn = document.getElementById("encode-btn");
-    btn.disabled = !hasImage || !hasMessage || !isWithinLimit;
+    const submitBtn = document.getElementById("submit-btn");
+    const confirmEncodeBtn = document.getElementById("confirm-encode-btn");
 
-    if (!isWithinLimit && hasImage && hasMessage) {
-      btn.title = "Message too long for this image";
-    } else {
-      btn.title = "";
+    if (submitBtn) {
+      submitBtn.disabled = !hasImage;
     }
+
+    if (confirmEncodeBtn) {
+      confirmEncodeBtn.disabled = !hasMessage || !isWithinLimit;
+      if (!isWithinLimit && hasMessage) {
+        confirmEncodeBtn.title = "Message too long for this image";
+      } else if (!hasMessage) {
+        confirmEncodeBtn.title = "Enter a secret message first";
+      } else {
+        confirmEncodeBtn.title = "";
+      }
+    }
+  }
+
+  async sanitize() {
+    if (!this.encodeImage) {
+      this.showToast("Please provide an image first", "error");
+      return;
+    }
+
+    this.showToast("Sanitizing image...", "");
+
+    this.canvas.width = this.encodeImage.width || this.encodeImage.naturalWidth;
+    this.canvas.height =
+      this.encodeImage.height || this.encodeImage.naturalHeight;
+    this.ctx.drawImage(this.encodeImage, 0, 0);
+
+    this.canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = this.encodeFile
+        ? this.encodeFile.name.replace(/\.[^/.]+$/, "")
+        : "image";
+      a.download = `sanitize_${baseName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.showToast("Metadata removed & saved!", "success");
+    }, "image/png");
   }
 
   async encode() {
@@ -1075,7 +1166,10 @@ class StegoraApp {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "stegora_encoded.png";
+        const baseName = this.encodeFile
+          ? this.encodeFile.name.replace(/\.[^/.]+$/, "")
+          : "image";
+        a.download = `stegora_${baseName}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
