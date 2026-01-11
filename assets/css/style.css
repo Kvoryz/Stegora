@@ -365,9 +365,14 @@ body {
   color: var(--text-primary);
 }
 
-.btn.secondary:hover {
+.btn.secondary:hover:not(:disabled) {
   background: var(--bg-tertiary);
   border-color: var(--border-hover);
+}
+
+.btn.secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 #submit-modal .modal-close {

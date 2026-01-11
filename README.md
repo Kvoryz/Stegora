@@ -24,6 +24,7 @@ When you click **Submit**, you get two options:
 
 1. **Sanitize Only**: Removes all metadata and saves as `sanitize_filename.png` — no message hidden.
 2. **Encode Message**: Hides your secret message AND strips metadata, saving as `stegora_filename.png`.
+3. **Scramble Image**: Visually encrypts the image using XOR with your password. The image becomes unrecognizable noise. To restore, scramble again with the same password. Output: `scramble_filename.png`.
 
 ### 🕵️‍♂️ Hybrid Analysis (Forensics)
 
@@ -65,6 +66,14 @@ Protect yourself from coercion:
 1. Upload an image.
 2. Click **Submit** → Choose **Sanitize Only**.
 3. Download the clean file (prefixed with `sanitize_`).
+
+### 3. Scramble (Visual Encryption)
+
+1. Upload an image.
+2. Enter a password (required).
+3. Click **Submit** → Choose **Scramble Image**.
+4. Download the scrambled file (prefixed with `scramble_`).
+5. To **restore**: Upload the scrambled image, enter the same password, and Scramble again.
 
 ### 3. Decode (Reveal)
 

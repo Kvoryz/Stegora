@@ -945,6 +945,12 @@ class StegoraApp {
     });
 
     submitBtn.addEventListener("click", () => {
+      const password = document.getElementById("encode-password").value.trim();
+      const scrambleBtn = document.getElementById("scramble-btn");
+      if (scrambleBtn) {
+        scrambleBtn.disabled = !password;
+      }
+      this.updateEncodeButton(maxAllowedChars);
       modal.hidden = false;
     });
 
@@ -961,6 +967,17 @@ class StegoraApp {
       modal.hidden = true;
       this.encode();
     });
+
+    const scrambleBtn = document.getElementById("scramble-btn");
+    scrambleBtn.addEventListener("click", () => {
+      modal.hidden = true;
+      this.scramble();
+    });
+
+    const passwordInput = document.getElementById("encode-password");
+    passwordInput.addEventListener("input", () => {
+      this.updateEncodeButton(maxAllowedChars);
+    });
   }
 
   initDecode() {
@@ -970,16 +987,44 @@ class StegoraApp {
     const previewImg = document.getElementById("decode-preview-img");
     const removeBtn = document.getElementById("decode-remove");
     const decodeBtn = document.getElementById("decode-btn");
+    const unscrambleBtn = document.getElementById("unscramble-btn");
     const copyBtn = document.getElementById("copy-btn");
+    const passwordInput = document.getElementById("decode-password");
+
+    const updateUnscrambleBtn = () => {
+      const hasImage = !!this.decodeImage;
+      const hasPassword = !!passwordInput.value.trim();
+      const isScrambledFile =
+        this.decodeFile && this.decodeFile.name.startsWith("scramble_");
+      unscrambleBtn.disabled = !hasImage || !hasPassword || !isScrambledFile;
+      if (hasImage && !isScrambledFile) {
+        unscrambleBtn.title = "Only scrambled images can be unscrambled";
+      } else if (!hasPassword) {
+        unscrambleBtn.title = "Password required";
+      } else {
+        unscrambleBtn.title = "";
+      }
+    };
 
     this.setupDropzone(dropzone, input, (file) => {
       this.loadImage(file)
         .then((img) => {
           this.decodeImage = img;
+          this.decodeFile = file;
           previewImg.src = URL.createObjectURL(file);
           preview.hidden = false;
           dropzone.querySelector(".upload-content").hidden = true;
-          decodeBtn.disabled = false;
+
+          const isScrambledFile = file.name.startsWith("scramble_");
+          decodeBtn.disabled = isScrambledFile;
+          if (isScrambledFile) {
+            decodeBtn.title =
+              "Scrambled images cannot be decoded. Use Unscramble instead.";
+          } else {
+            decodeBtn.title = "";
+          }
+
+          updateUnscrambleBtn();
           document.getElementById("result-box").hidden = true;
         })
         .catch((err) => {
@@ -990,15 +1035,20 @@ class StegoraApp {
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.decodeImage = null;
+      this.decodeFile = null;
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
       input.value = "";
-      document.getElementById("decode-password").value = "";
+      passwordInput.value = "";
       decodeBtn.disabled = true;
+      unscrambleBtn.disabled = true;
       document.getElementById("result-box").hidden = true;
     });
 
+    passwordInput.addEventListener("input", updateUnscrambleBtn);
+
     decodeBtn.addEventListener("click", () => this.decode());
+    unscrambleBtn.addEventListener("click", () => this.unscramble());
 
     copyBtn.addEventListener("click", () => {
       const message = document.getElementById("result-message").textContent;
@@ -1067,6 +1117,9 @@ class StegoraApp {
 
     const submitBtn = document.getElementById("submit-btn");
     const confirmEncodeBtn = document.getElementById("confirm-encode-btn");
+    const scrambleBtn = document.getElementById("scramble-btn");
+    const password = document.getElementById("encode-password").value.trim();
+    const hasPassword = !!password;
 
     if (submitBtn) {
       submitBtn.disabled = !hasImage;
@@ -1081,6 +1134,11 @@ class StegoraApp {
       } else {
         confirmEncodeBtn.title = "";
       }
+    }
+
+    if (scrambleBtn) {
+      scrambleBtn.disabled = !hasPassword;
+      scrambleBtn.title = hasPassword ? "" : "Password required for scramble";
     }
   }
 
@@ -1111,6 +1169,175 @@ class StegoraApp {
       URL.revokeObjectURL(url);
 
       this.showToast("Metadata removed & saved!", "success");
+    }, "image/png");
+  }
+
+  mulberry32(a) {
+    return function () {
+      let t = (a += 0x6d2b79f5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  async hashToSeed(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = new Uint8Array(hashBuffer);
+    return (
+      (hashArray[0] << 24) |
+      (hashArray[1] << 16) |
+      (hashArray[2] << 8) |
+      hashArray[3]
+    );
+  }
+
+  async scramble() {
+    const password = document.getElementById("encode-password").value.trim();
+
+    if (!this.encodeImage) {
+      this.showToast("Please provide an image first", "error");
+      return;
+    }
+
+    if (!password) {
+      this.showToast("Password required for scramble", "error");
+      return;
+    }
+
+    this.showToast("Scrambling image...", "");
+
+    await new Promise((r) => setTimeout(r, 50));
+
+    this.canvas.width = this.encodeImage.width || this.encodeImage.naturalWidth;
+    this.canvas.height =
+      this.encodeImage.height || this.encodeImage.naturalHeight;
+    this.ctx.drawImage(this.encodeImage, 0, 0);
+
+    const imageData = this.ctx.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    );
+    const data = imageData.data;
+
+    const seed = await this.hashToSeed(password);
+    const prng = this.mulberry32(seed);
+
+    const chunkSize = 500000;
+    const totalPixels = data.length;
+
+    const processChunk = (start) => {
+      return new Promise((resolve) => {
+        const end = Math.min(start + chunkSize, totalPixels);
+        for (let i = start; i < end; i += 4) {
+          data[i] ^= (prng() * 256) | 0;
+          data[i + 1] ^= (prng() * 256) | 0;
+          data[i + 2] ^= (prng() * 256) | 0;
+        }
+        requestAnimationFrame(resolve);
+      });
+    };
+
+    for (let i = 0; i < totalPixels; i += chunkSize) {
+      await processChunk(i);
+    }
+
+    this.ctx.putImageData(imageData, 0, 0);
+
+    this.canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = this.encodeFile
+        ? this.encodeFile.name.replace(/\.[^/.]+$/, "")
+        : "image";
+      a.download = `scramble_${baseName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.showToast(
+        "Image scrambled! Use same password to restore.",
+        "success"
+      );
+    }, "image/png");
+  }
+
+  async unscramble() {
+    const password = document.getElementById("decode-password").value.trim();
+
+    if (!this.decodeImage) {
+      this.showToast("Please provide an image first", "error");
+      return;
+    }
+
+    if (!password) {
+      this.showToast("Password required for unscramble", "error");
+      return;
+    }
+
+    this.showToast("Unscrambling image...", "");
+
+    await new Promise((r) => setTimeout(r, 50));
+
+    this.canvas.width = this.decodeImage.width || this.decodeImage.naturalWidth;
+    this.canvas.height =
+      this.decodeImage.height || this.decodeImage.naturalHeight;
+    this.ctx.drawImage(this.decodeImage, 0, 0);
+
+    const imageData = this.ctx.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    );
+    const data = imageData.data;
+
+    const seed = await this.hashToSeed(password);
+    const prng = this.mulberry32(seed);
+
+    const chunkSize = 500000;
+    const totalPixels = data.length;
+
+    const processChunk = (start) => {
+      return new Promise((resolve) => {
+        const end = Math.min(start + chunkSize, totalPixels);
+        for (let i = start; i < end; i += 4) {
+          data[i] ^= (prng() * 256) | 0;
+          data[i + 1] ^= (prng() * 256) | 0;
+          data[i + 2] ^= (prng() * 256) | 0;
+        }
+        requestAnimationFrame(resolve);
+      });
+    };
+
+    for (let i = 0; i < totalPixels; i += chunkSize) {
+      await processChunk(i);
+    }
+
+    this.ctx.putImageData(imageData, 0, 0);
+
+    this.canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = this.decodeFile
+        ? this.decodeFile.name
+            .replace(/\.[^/.]+$/, "")
+            .replace(/^scramble_/, "")
+        : "image";
+      a.download = `unscramble_${baseName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.showToast("Image restored!", "success");
     }, "image/png");
   }
 
@@ -1641,6 +1868,7 @@ class StegoraApp {
             }
           }
           if (details.gps && rowGPS) {
+            const metaGPS = document.getElementById("meta-gps");
             if (metaGPS) {
               metaGPS.textContent = details.gps;
               rowGPS.hidden = false;
