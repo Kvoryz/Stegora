@@ -1476,32 +1476,38 @@ class StegoraApp {
           analysis.bitPlaneNoise;
 
         if (this.analyzeFile) {
-          document.getElementById("meta-type").textContent =
-            this.analyzeFile.type || "Unknown";
-          document.getElementById("meta-size").textContent =
-            (this.analyzeFile.size / 1024).toFixed(2) + " KB";
-          document.getElementById(
-            "meta-dims"
-          ).textContent = `${this.canvas.width} x ${this.canvas.height}`;
+          const elType = document.getElementById("meta-type");
+          if (elType) elType.textContent = this.analyzeFile.type || "Unknown";
+
+          const elSize = document.getElementById("meta-size");
+          if (elSize)
+            elSize.textContent =
+              (this.analyzeFile.size / 1024).toFixed(2) + " KB";
+
+          const elDims = document.getElementById("meta-dims");
+          if (elDims)
+            elDims.textContent = `${this.canvas.width} x ${this.canvas.height}`;
 
           const { findings, details } = await MetadataScanner.scan(
             this.analyzeFile
           );
           const metaHidden = document.getElementById("meta-hidden");
 
-          const hasPrivacyRisk = findings.some(
-            (f) =>
-              !f.includes("JFIF Header") &&
-              !f.includes("Physical Dimensions") &&
-              !f.includes("No hidden metadata")
-          );
+          if (metaHidden) {
+            const hasPrivacyRisk = findings.some(
+              (f) =>
+                !f.includes("JFIF Header") &&
+                !f.includes("Physical Dimensions") &&
+                !f.includes("No hidden metadata")
+            );
 
-          if (!hasPrivacyRisk) {
-            metaHidden.style.color = "#4ade80";
-            metaHidden.textContent = "Safe (No Exif/GPS detected)";
-          } else {
-            metaHidden.style.color = "#ef4444";
-            metaHidden.textContent = findings.join(", ");
+            if (!hasPrivacyRisk) {
+              metaHidden.style.color = "#4ade80";
+              metaHidden.textContent = "Safe (No Exif/GPS detected)";
+            } else {
+              metaHidden.style.color = "#ef4444";
+              metaHidden.textContent = findings.join(", ");
+            }
           }
 
           const rowCamera = document.getElementById("row-camera");

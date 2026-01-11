@@ -1,26 +1,47 @@
-# Stegora - Secure Steganography App
+# Stegora - Secure Steganography & Forensics
 
 Stegora is a modern, privacy-focused web application that allows you to hide secret messages inside images and audio files using advanced steganography techniques. It combines LSB (Least Significant Bit) manipulation with AES-256 encryption to ensure your data remains hidden and secure.
 
-![Stegora Icon](assets/iconste.png)
+Beyond hiding secrets, Stegora is also a powerful **Forensics Tool**, capable of analyzing images for hidden data and privacy leaks (Metadata/GPS).
+
+<p align="center">
+  <img src="assets/iconste.png" alt="Stegora Icon" width="200">
+</p>
 
 ## ✨ Features
 
+### 🛡️ Secure Encoding
+
 - **Image Steganography**: Hide text messages inside PNG, JPG, and WEBP images.
 - **Audio Steganography**: Hide messages inside WAV audio files.
-- **AES-256 Encryption**: All messages are encrypted with a user-provided password before hiding.
-- **Decoy Mode**: Protect yourself from coercion. If a wrong password is entered (or no password), a fake "decoy" message ("Who are you?") is revealed instead of an error.
-- **Steganalysis Tool**: Analyze images to detect if they contain hidden steganographic data.
-- **Secure Sanitization**: Automatically strips EXIF metadata from images during encoding to protect privacy.
-- **PWA Support**: Installable as a native-like app on Mobile (Android/iOS) and Desktop. Works offline!
-- **Mobile Optimized**: Responsive design that works perfectly on smartphones and tablets.
+- **AES-256 Encryption**: All messages are encrypted not just with LSB, but with Military-grade AES encryption.
+- **Smart Capacity**: Automatically calculates exactly how many characters you can hide based on the file size.
+- **Privacy Sanitization**: Automatically strips all metadata (Exif, GPS, Camera info) during the encoding process to protect your anonymity.
+
+### 🕵️‍♂️ Hybrid Analysis (Forensics)
+
+Stegora includes a dual-engine analysis tool to check files for potential security risks:
+
+1.  **Steganalysis**: Detects hidden messages by analyzing pixel statistics (LSB noise patterns, Chi-Square analysis).
+2.  **Metadata Scan**: Parses raw file data to extract hidden tags.
+    - **GPS Location**: Extracts Latitude & Longitude if present.
+    - **device Info**: Identifies Camera Make & Model.
+    - **Ratings**: Classifies images as **"Safe"** (Green) if they are anonymized, or warns you if privacy-leaking tags are found.
+
+### 🎭 Decoy Mode
+
+Protect yourself from coercion. If someone forces you to give up your password:
+
+- **Real Password**: Decrypts the actual secret message.
+- **Wrong/No Password**: Decrypts a **Decoy Message** ("Who are you?") instead of showing an error. To the attacker, it looks like that was the only hidden message.
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: HTML5, CSS3 (Plus Jakarta Sans), JavaScript (ES6+).
+- **Frontend**: HTML5, Vanilla CSS3 (Plus Jakarta Sans), JavaScript (ES6+).
 - **Encryption**: CryptoJS (AES-256).
-- **Analysis**: Custom LSB & Chi-Square analysis algorithms.
+- **Core Logic**: Custom Bit-Plane Slicing & TIFF/Exif Parsing.
 - **Deployment**: Vercel ready (Clean URLs, Secure Headers).
+- **PWA**: Fully offline-capable Progressive Web App.
 
 ## 🚀 How to Use
 
@@ -30,33 +51,33 @@ Stegora is a modern, privacy-focused web application that allows you to hide sec
 2.  Enter your secret message.
 3.  (Optional) Set a password for encryption.
 4.  Click **Encode** and download the secured file.
+    - _The output file is automatically sanitized of all original metadata._
 
 ### 2. Decode (Reveal)
 
 1.  Upload the encoded file.
-2.  Enter the password (if one was used).
+2.  Enter the password.
 3.  Click **Decode** to reveal the secret.
     - _Note: Entering the wrong password will trigger Decoy Mode._
 
-### 3. Analyze (Detect)
+### 3. Analyze (Forensics)
 
 1.  Upload any image to the **Analyze** tab.
-2.  The tool will scan for statistical anomalies (LSB noise, bit-plane complexity).
-3.  It will give a verdict: **Clean**, **Suspicious**, or **Detected**.
+2.  View the **Verdict** (Clean/Suspicious/Detected).
+3.  Check the **Metadata Report**:
+    - **Green**: Safe! (No tracking data found).
+    - **Red**: Warning! (Contains Exif or GPS data).
 
 ## 📱 Installation (PWA)
 
-**On Android/Chrome Desktop**:
+Stegora works offline! You can install it on your device:
 
-- Click the **"Install App"** button at the top of the screen (Mobile only) or use the browser menu -> "Install App".
-
-**On iOS**:
-
-- Tap the **Share** button -> **Add to Home Screen**.
+- **Mobile (iOS/Android)**: Tap "Share" -> "Add to Home Screen" (or use browser menu -> "Install App").
+- **Desktop**: Click the install icon in the URL bar.
 
 ## 🔒 Privacy
 
-Stegora runs entirely in your browser. No images, audio files, or passwords are ever sent to a server. Your secrets stay on your device.
+Stegora runs **entirely in your browser**. No images, audio files, or passwords are ever uploaded to a server. Your secrets stay on your device.
 
 ---
 
