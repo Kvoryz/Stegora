@@ -289,6 +289,10 @@ class Steganography {
       let bitIndex = 0;
       for (const pixelIdx of pixelIndices) {
         const dataOffset = pixelIdx * 4;
+
+        // Force alpha to 255 (opaque) to ensure data persistence
+        data[dataOffset + 3] = 255;
+
         for (
           let channel = 0;
           channel < 3 && bitIndex < fullBinary.length;
@@ -306,6 +310,10 @@ class Steganography {
         const pixelIndex = Math.floor(bitIndex / 3) * 4;
         const channelOffset = bitIndex % 3;
         const bit = parseInt(fullBinary[bitIndex], 10);
+
+        // Force alpha to 255 (opaque) to ensure data persistence
+        data[pixelIndex + 3] = 255;
+
         data[pixelIndex + channelOffset] =
           (data[pixelIndex + channelOffset] & 0xfe) | bit;
       }
@@ -524,6 +532,90 @@ class AudioSteganography {
   }
 }
 
+class Steganalysis {
+  static analyze(imageData) {
+    const data = imageData.data;
+    const totalPixels = data.length / 4;
+
+    // 1. LSB Randomness Analysis
+    let transitions = 0;
+    let ones = 0;
+
+    for (let i = 0; i < totalPixels * 3; i++) {
+      // Check R, G, B channels
+      const bit = data[i] & 1;
+      if (bit === 1) ones++;
+      if (i > 0) {
+        const prevBit = data[i - 1] & 1;
+        if (bit !== prevBit) transitions++;
+      }
+    }
+
+    const totalBits = totalPixels * 3;
+    const onesRatio = ones / totalBits;
+    const transitionsRatio = transitions / totalBits;
+
+    // Ideal random data has ~0.5 ones ratio and ~0.5 transitions ratio
+    // Encrypted/Compressed data looks random
+    const lsbScore =
+      1 - (Math.abs(0.5 - onesRatio) + Math.abs(0.5 - transitionsRatio));
+
+    // 2. Chi-Square Attack (Simplified)
+    // Checks if frequency of PoVs (Pairs of Values) suggests embedding
+    let chiSquare = 0;
+    const bins = new Array(256).fill(0);
+
+    for (let i = 0; i < totalPixels * 3; i += 3) {
+      // Sample mostly Red channel for speed
+      bins[data[i]]++;
+    }
+
+    for (let i = 0; i < 254; i += 2) {
+      const avg = (bins[i] + bins[i + 1]) / 2;
+      if (avg > 0) {
+        chiSquare += Math.pow(bins[i] - avg, 2) / avg;
+        chiSquare += Math.pow(bins[i + 1] - avg, 2) / avg;
+      }
+    }
+
+    // 3. Bit Plane Noise Level
+    // Compare LSB plane complexity vs 2nd LSB plane
+    // If LSB is much more complex than 2nd bit plane, it's suspicious
+    let lsbComplexity = 0;
+    let secondBitComplexity = 0;
+
+    for (let i = 1; i < totalPixels * 3; i++) {
+      const lsb1 = data[i] & 1;
+      const lsbPrev = data[i - 1] & 1;
+      if (lsb1 !== lsbPrev) lsbComplexity++;
+
+      const second1 = (data[i] >> 1) & 1;
+      const secondPrev = (data[i - 1] >> 1) & 1;
+      if (second1 !== secondPrev) secondBitComplexity++;
+    }
+
+    const bitPlaneRatio = lsbComplexity / (secondBitComplexity || 1);
+
+    // Verdict Logic
+    let verdict = "Clean";
+    let suspicionLevel = 0;
+
+    if (lsbScore > 0.95) suspicionLevel++;
+    if (chiSquare < 100) suspicionLevel++; // Low chi-square for POV often means embedding or very random noise
+    if (bitPlaneRatio > 1.2) suspicionLevel++; // LSB significantly noisier than next bit
+
+    if (suspicionLevel >= 2) verdict = "Detected";
+    else if (suspicionLevel === 1) verdict = "Suspicious";
+
+    return {
+      verdict,
+      lsbScore: (lsbScore * 100).toFixed(1) + "%",
+      chiSquare: chiSquare.toFixed(2),
+      bitPlaneNoise: bitPlaneRatio.toFixed(2),
+    };
+  }
+}
+
 class StegoraApp {
   constructor() {
     this.canvas = document.getElementById("canvas");
@@ -540,6 +632,7 @@ class StegoraApp {
     this.initModal();
     this.initHashCopy();
     this.initAudio();
+    this.initAnalyze();
   }
 
   initTabs() {
@@ -621,16 +714,30 @@ class StegoraApp {
     const removeBtn = document.getElementById("encode-remove");
     const messageInput = document.getElementById("secret-message");
     const charCount = document.getElementById("char-count");
+    const maxCharsDisplay = document.getElementById("max-chars");
     const encodeBtn = document.getElementById("encode-btn");
+
+    let maxAllowedChars = 0;
 
     this.setupDropzone(dropzone, input, (file) => {
       this.loadImage(file)
         .then((img) => {
           this.encodeImage = img;
-          previewImg.src = img.src;
+
+          // Calculate max capacity
+          // 3 bits per pixel (RGB), minus 32 bits header and 56 bits delimiter (7 chars * 8)
+          // Formula: (TotalPixels * 3 - 88) / 8
+          const totalPixels =
+            (img.width || img.naturalWidth) * (img.height || img.naturalHeight);
+          maxAllowedChars = Math.floor((totalPixels * 3 - 88) / 8);
+
+          if (maxAllowedChars < 0) maxAllowedChars = 0;
+          maxCharsDisplay.textContent = maxAllowedChars.toLocaleString();
+
+          previewImg.src = URL.createObjectURL(file);
           preview.hidden = false;
           dropzone.querySelector(".upload-content").hidden = true;
-          this.updateEncodeButton();
+          this.updateEncodeButton(maxAllowedChars);
         })
         .catch((err) => {
           this.showToast(err.message, "error");
@@ -640,15 +747,26 @@ class StegoraApp {
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.encodeImage = null;
+      maxAllowedChars = 0;
+      maxCharsDisplay.textContent = "0";
+      charCount.textContent = "0";
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
       input.value = "";
-      this.updateEncodeButton();
+      this.updateEncodeButton(maxAllowedChars);
     });
 
     messageInput.addEventListener("input", () => {
-      charCount.textContent = messageInput.value.length;
-      this.updateEncodeButton();
+      const len = messageInput.value.length;
+      charCount.textContent = len.toLocaleString();
+
+      if (len > maxAllowedChars && maxAllowedChars > 0) {
+        charCount.style.color = "red";
+      } else {
+        charCount.style.color = "inherit";
+      }
+
+      this.updateEncodeButton(maxAllowedChars);
     });
 
     encodeBtn.addEventListener("click", () => this.encode());
@@ -667,7 +785,7 @@ class StegoraApp {
       this.loadImage(file)
         .then((img) => {
           this.decodeImage = img;
-          previewImg.src = img.src;
+          previewImg.src = URL.createObjectURL(file);
           preview.hidden = false;
           dropzone.querySelector(".upload-content").hidden = true;
           decodeBtn.disabled = false;
@@ -727,29 +845,52 @@ class StegoraApp {
     });
   }
 
-  loadImage(file) {
-    return new Promise((resolve, reject) => {
-      if (!file.type.startsWith("image/")) {
-        reject(new Error("Please select a valid image file"));
-        return;
-      }
+  async loadImage(file) {
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Please select a valid image file");
+    }
 
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = URL.createObjectURL(file);
-    });
+    // Use createImageBitmap to disable color space conversion
+    // This is CRITICAL for steganography to preserve exact pixel values
+    try {
+      return await createImageBitmap(file, {
+        colorSpaceConversion: "none",
+        imageOrientation: "none",
+        premultiplyAlpha: "none",
+      });
+    } catch (e) {
+      console.error("createImageBitmap failed, falling back:", e);
+      // Fallback for older browsers (though less reliable for stego)
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = URL.createObjectURL(file);
+      });
+    }
   }
 
-  updateEncodeButton() {
+  updateEncodeButton(maxChars = 0) {
     const message = document.getElementById("secret-message").value;
-    document.getElementById("encode-btn").disabled =
-      !this.encodeImage || !message.trim();
+    const hasImage = !!this.encodeImage;
+    const hasMessage = !!message.trim();
+    const isWithinLimit = maxChars > 0 ? message.length <= maxChars : true;
+
+    const btn = document.getElementById("encode-btn");
+    btn.disabled = !hasImage || !hasMessage || !isWithinLimit;
+
+    // Optional: Visual feedback on button
+    if (!isWithinLimit && hasImage && hasMessage) {
+      btn.title = "Message too long for this image";
+    } else {
+      btn.title = "";
+    }
   }
 
   async encode() {
     const message = document.getElementById("secret-message").value.trim();
     const password = document.getElementById("encode-password").value;
+    const decoyMessage = "Who are you?";
 
     if (!this.encodeImage || !message) {
       this.showToast("Please provide an image and message", "error");
@@ -759,14 +900,24 @@ class StegoraApp {
     try {
       let finalMessage = message;
 
-      // If password, encrypt first
+      // If password, encrypt. Store both real and decoy.
       if (password) {
         this.showToast("Securing message...", "");
-        finalMessage = await Crypto.encrypt(message, password);
+
+        // Store encrypted real message + unencrypted decoy with marker
+        const encryptedReal = await Crypto.encrypt(message, password);
+        finalMessage =
+          "<<DECOY>>" +
+          JSON.stringify({
+            real: encryptedReal,
+            decoy: decoyMessage,
+          });
       }
 
-      this.canvas.width = this.encodeImage.naturalWidth;
-      this.canvas.height = this.encodeImage.naturalHeight;
+      this.canvas.width =
+        this.encodeImage.width || this.encodeImage.naturalWidth;
+      this.canvas.height =
+        this.encodeImage.height || this.encodeImage.naturalHeight;
       this.ctx.drawImage(this.encodeImage, 0, 0);
 
       const imageData = this.ctx.getImageData(
@@ -776,11 +927,12 @@ class StegoraApp {
         this.canvas.height
       );
 
-      // Pass password for pixel scrambling (null if no password)
+      // Pass null for password to force sequential encoding (no scrambling)
+      // This is crucial so that the decoy text is retrievable without the correct password.
       const encodedData = await Steganography.encode(
         imageData,
         finalMessage,
-        password || null
+        null
       );
       this.ctx.putImageData(encodedData, 0, 0);
 
@@ -800,7 +952,7 @@ class StegoraApp {
         URL.revokeObjectURL(url);
 
         const successMsg = password
-          ? "Secured & encoded successfully!"
+          ? "Secured with decoy & encoded!"
           : "Image encoded and downloaded!";
         this.showToast(successMsg, "success");
       }, "image/png");
@@ -818,8 +970,10 @@ class StegoraApp {
     const password = document.getElementById("decode-password").value;
 
     try {
-      this.canvas.width = this.decodeImage.naturalWidth;
-      this.canvas.height = this.decodeImage.naturalHeight;
+      this.canvas.width =
+        this.decodeImage.width || this.decodeImage.naturalWidth;
+      this.canvas.height =
+        this.decodeImage.height || this.decodeImage.naturalHeight;
       this.ctx.drawImage(this.decodeImage, 0, 0);
 
       const imageData = this.ctx.getImageData(
@@ -829,11 +983,53 @@ class StegoraApp {
         this.canvas.height
       );
 
-      // Pass password for pixel descrambling
-      let message = await Steganography.decode(imageData, password || null);
+      let message;
+      let usedScrambling = false;
 
-      // Check if still encrypted and decrypt
-      if (Crypto.isEncrypted(message)) {
+      // TOP PRIORITY: Try sequential read first (how new decoy messages are stored)
+      try {
+        message = await Steganography.decode(imageData, null);
+      } catch (sequentialError) {
+        // If sequential read fails (e.g. legacy scrambled image), try with password if provided
+        if (password) {
+          try {
+            message = await Steganography.decode(imageData, password);
+            usedScrambling = true;
+          } catch (scrambledError) {
+            throw new Error("No hidden message found or wrong password.");
+          }
+        } else {
+          throw new Error("No hidden message found.");
+        }
+      }
+
+      // Check for decoy message format
+      if (message.startsWith("<<DECOY>>")) {
+        const jsonPart = message.slice(9);
+        try {
+          const data = JSON.parse(jsonPart);
+
+          // Always show something. If password works, show real. If not, show decoy.
+          if (!password) {
+            message = data.decoy;
+            this.showToast("Message decoded (Decoy Mode)", "success");
+          } else {
+            try {
+              // Try to decrypt real message
+              message = await Crypto.decrypt(data.real, password);
+              this.showToast("Message decoded!", "success");
+            } catch {
+              // Wrong password - show decoy
+              message = data.decoy;
+              this.showToast("Message decoded (Decoy Mode)", "success");
+            }
+          }
+        } catch {
+          this.showToast("Failed to parse message structure", "error");
+          return;
+        }
+      } else if (Crypto.isEncrypted(message)) {
+        // Standard encrypted message (legacy or direct encrypt)
         if (!password) {
           this.showToast(
             "This message is encrypted. Please enter the password.",
@@ -841,14 +1037,25 @@ class StegoraApp {
           );
           return;
         }
-        message = await Crypto.decrypt(message, password);
+        try {
+          message = await Crypto.decrypt(message, password);
+        } catch (e) {
+          throw new Error("Wrong password.");
+        }
       }
 
       // Calculate and display hash
       const messageHash = await Crypto.hash(message);
       document.getElementById("decode-hash-value").textContent = messageHash;
 
-      this.showToast("Message decoded!", "success");
+      if (
+        !message.startsWith("<<DECOY>>") &&
+        !usedScrambling &&
+        !Crypto.isEncrypted(message)
+      ) {
+        this.showToast("Message decoded!", "success");
+      }
+
       document.getElementById("result-message").textContent = message;
       document.getElementById("result-box").hidden = false;
     } catch (error) {
@@ -1086,11 +1293,80 @@ class StegoraApp {
       }
 
       this.showToast("Message decoded!", "success");
-      document.getElementById("audio-result-message").textContent = message;
-      document.getElementById("audio-result-box").hidden = false;
+      const resultBox = document.getElementById("audio-result-box");
+      const resultMsg = document.getElementById("audio-result-message");
+
+      resultMsg.textContent = message;
+      resultBox.hidden = false;
     } catch (error) {
       this.showToast(error.message, "error");
     }
+  }
+
+  initAnalyze() {
+    const dropzone = document.getElementById("analyze-dropzone");
+    const input = document.getElementById("analyze-input");
+    const preview = document.getElementById("analyze-preview");
+    const previewImg = document.getElementById("analyze-preview-img");
+    const removeBtn = document.getElementById("analyze-remove");
+    const analyzeBtn = document.getElementById("analyze-btn");
+    const results = document.getElementById("analysis-results");
+
+    this.setupDropzone(dropzone, input, (file) => {
+      this.loadImage(file).then((img) => {
+        this.analyzeImage = img;
+        previewImg.src = URL.createObjectURL(file);
+        preview.hidden = false;
+        dropzone.querySelector(".upload-content").hidden = true;
+        analyzeBtn.disabled = false;
+        results.hidden = true;
+      });
+    });
+
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      previewImg.src = "";
+      preview.hidden = true;
+      dropzone.querySelector(".upload-content").hidden = false;
+      input.value = "";
+      analyzeBtn.disabled = true;
+      results.hidden = true;
+    });
+
+    analyzeBtn.addEventListener("click", () => {
+      if (!this.analyzeImage) return;
+
+      const img = this.analyzeImage;
+      this.canvas.width = img.width || img.naturalWidth;
+      this.canvas.height = img.height || img.naturalHeight;
+      this.ctx.drawImage(img, 0, 0);
+
+      const imageData = this.ctx.getImageData(
+        0,
+        0,
+        this.canvas.width,
+        this.canvas.height
+      );
+      const analysis = Steganalysis.analyze(imageData);
+
+      document.getElementById("verdict-value").textContent = analysis.verdict;
+      document.getElementById("lsb-score").textContent = analysis.lsbScore;
+      document.getElementById("chi-value").textContent = analysis.chiSquare;
+      document.getElementById("noise-value").textContent =
+        analysis.bitPlaneNoise;
+
+      // Update styling based on verdict
+      const verdictItem = document.getElementById("analysis-verdict");
+      verdictItem.className = "analysis-item"; // reset
+      if (analysis.verdict === "Clean")
+        verdictItem.classList.add("verdict-clean");
+      else if (analysis.verdict === "Suspicious")
+        verdictItem.classList.add("verdict-suspicious");
+      else verdictItem.classList.add("verdict-detected");
+
+      results.hidden = false;
+      this.showToast("Analysis complete!", "success");
+    });
   }
 
   showToast(message, type = "") {

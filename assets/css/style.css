@@ -494,28 +494,6 @@ body {
   cursor: not-allowed;
 }
 
-.info-card {
-  display: flex;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-}
-
-.info-card svg {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  color: var(--text-muted);
-}
-
-.info-card p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
 .result-box {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -761,4 +739,65 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: 10px;
+}
+
+.analysis-results {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.analysis-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.analysis-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.analysis-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.verdict-clean {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.verdict-clean .analysis-value {
+  color: var(--success);
+}
+
+.verdict-suspicious {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.verdict-suspicious .analysis-value {
+  color: #f59e0b;
+}
+
+.verdict-detected {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.verdict-detected .analysis-value {
+  color: var(--error);
 }

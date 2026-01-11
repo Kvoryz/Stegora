@@ -65,6 +65,18 @@
           </svg>
           Audio
         </button>
+        <button class="tab" data-tab="analyze">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          Analyze
+        </button>
       </nav>
 
       <main class="main-content">
@@ -140,6 +152,10 @@
               placeholder="Enter your secret message here..."
               rows="4"
             ></textarea>
+            <div class="input-help">
+              <span id="char-count">0</span> /
+              <span id="max-chars">0</span> characters
+            </div>
           </div>
 
           <div class="input-group">
@@ -402,22 +418,6 @@
                 </button>
               </div>
             </div>
-          </div>
-
-          <div class="info-card">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
-            <p>
-              Upload a PNG image that was encoded with Stegora to reveal the
-              hidden message.
-            </p>
           </div>
         </section>
 
@@ -692,6 +692,103 @@
             </div>
           </div>
         </section>
+
+        <!-- Analyze Section -->
+        <section class="panel" id="analyze-panel">
+          <div class="upload-zone" id="analyze-dropzone">
+            <input type="file" id="analyze-input" accept="image/*" hidden />
+            <div class="upload-content">
+              <svg
+                class="upload-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <div class="upload-info">
+                <p class="upload-text">Drop image to analyze</p>
+                <span class="upload-hint">Detect hidden data</span>
+              </div>
+            </div>
+            <div class="preview-thumb" id="analyze-preview" hidden>
+              <img id="analyze-preview-img" alt="Preview" />
+              <div class="preview-actions">
+                <button
+                  type="button"
+                  class="preview-view"
+                  data-target="analyze-preview-img"
+                  title="View"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="analyze-remove"
+                  title="Remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <span class="preview-label">Image loaded</span>
+            </div>
+          </div>
+
+          <button class="btn primary" id="analyze-btn" disabled>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            Analyze Image
+          </button>
+
+          <div class="analysis-results" id="analysis-results" hidden>
+            <div class="result-header">
+              <h3>Analysis Results</h3>
+            </div>
+            <div class="analysis-content">
+              <div class="analysis-item" id="analysis-verdict">
+                <span class="analysis-label">Verdict</span>
+                <span class="analysis-value" id="verdict-value">-</span>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">LSB Pattern Score</span>
+                <span class="analysis-value" id="lsb-score">-</span>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">Chi-Square Value</span>
+                <span class="analysis-value" id="chi-value">-</span>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">Bit Plane Noise</span>
+                <span class="analysis-value" id="noise-value">-</span>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -715,6 +812,6 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/app.js?v=2.9"></script>
   </body>
 </html>
