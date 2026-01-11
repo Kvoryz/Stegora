@@ -580,6 +580,166 @@ class Steganalysis {
   }
 }
 
+class MetadataScanner {
+  static async scan(file) {
+    const buffer = await file.arrayBuffer();
+    const view = new DataView(buffer);
+    const findings = [];
+    const details = {};
+
+    if (view.getUint16(0) === 0xffd8) {
+      let offset = 2;
+      while (offset < view.byteLength) {
+        if (view.getUint8(offset) !== 0xff) break;
+        const marker = view.getUint8(offset + 1);
+        const length = view.getUint16(offset + 2);
+
+        if (marker === 0xe1) {
+          findings.push("Exif Metadata (APP1)");
+          const exifData = this.parseExif(view, offset + 4);
+          if (exifData) Object.assign(details, exifData);
+        }
+        if (marker === 0xe0) findings.push("JFIF Header (APP0)");
+        if (marker === 0xfe) findings.push("JPEG Comment");
+        if (marker === 0xed) findings.push("Photoshop Metadata");
+
+        offset += 2 + length;
+      }
+    }
+
+    if (view.getUint32(0) === 0x89504e47) {
+      let offset = 8;
+      while (offset < view.byteLength) {
+        const length = view.getUint32(offset);
+        const type = String.fromCharCode(
+          view.getUint8(offset + 4),
+          view.getUint8(offset + 5),
+          view.getUint8(offset + 6),
+          view.getUint8(offset + 7)
+        );
+
+        if (["tEXt", "zTXt", "iTXt"].includes(type))
+          findings.push(`Text Data (${type})`);
+        if (type === "pHYs") findings.push("Physical Dimensions (pHYs)");
+        if (type === "tIME") findings.push("Modification Time (tIME)");
+        if (type === "eXIf") findings.push("Raw Exif (eXIf)");
+
+        offset += 12 + length;
+      }
+    }
+
+    return {
+      findings: findings.length > 0 ? findings : ["No hidden metadata found"],
+      details,
+    };
+  }
+
+  static parseExif(view, start) {
+    const tiffStart = start + 6;
+    if (
+      String.fromCharCode(
+        view.getUint8(start),
+        view.getUint8(start + 1),
+        view.getUint8(start + 2),
+        view.getUint8(start + 3)
+      ) !== "Exif"
+    )
+      return null;
+
+    const littleEndian = view.getUint16(tiffStart) === 0x4949;
+    const firstIFDOffset = view.getUint32(tiffStart + 4, littleEndian);
+    if (firstIFDOffset < 8) return null;
+
+    const tags = {};
+    const ifdOffset = tiffStart + firstIFDOffset;
+    const entries = view.getUint16(ifdOffset, littleEndian);
+
+    for (let i = 0; i < entries; i++) {
+      const entryOffset = ifdOffset + 2 + i * 12;
+      const tag = view.getUint16(entryOffset, littleEndian);
+      const type = view.getUint16(entryOffset + 2, littleEndian);
+      const count = view.getUint32(entryOffset + 4, littleEndian);
+      const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
+
+      const dataOffset =
+        count * (type === 3 ? 2 : type === 5 || type === 10 ? 8 : 1) > 4
+          ? tiffStart + valueOffset
+          : entryOffset + 8;
+
+      if (tag === 0x0110) tags.model = this.readString(view, dataOffset, count);
+      if (tag === 0x010f) tags.make = this.readString(view, dataOffset, count);
+      if (tag === 0x0132 || tag === 0x9003)
+        tags.date = this.readString(view, dataOffset, count);
+
+      if (tag === 0x8825) {
+        const gpsOffset = tiffStart + valueOffset;
+        Object.assign(
+          tags,
+          this.parseGPS(view, gpsOffset, littleEndian, tiffStart)
+        );
+      }
+    }
+    return tags;
+  }
+
+  static parseGPS(view, offset, littleEndian, tiffStart) {
+    const entries = view.getUint16(offset, littleEndian);
+    let lat = [],
+      lon = [],
+      latRef = "",
+      lonRef = "";
+
+    for (let i = 0; i < entries; i++) {
+      const entryOffset = offset + 2 + i * 12;
+      const tag = view.getUint16(entryOffset, littleEndian);
+      const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
+      const dataOffset = tiffStart + valueOffset;
+
+      if (tag === 1)
+        latRef = String.fromCharCode(view.getUint8(entryOffset + 8));
+      if (tag === 2)
+        lat = [
+          this.readRational(view, dataOffset, littleEndian),
+          this.readRational(view, dataOffset + 8, littleEndian),
+          this.readRational(view, dataOffset + 16, littleEndian),
+        ];
+      if (tag === 3)
+        lonRef = String.fromCharCode(view.getUint8(entryOffset + 8));
+      if (tag === 4)
+        lon = [
+          this.readRational(view, dataOffset, littleEndian),
+          this.readRational(view, dataOffset + 8, littleEndian),
+          this.readRational(view, dataOffset + 16, littleEndian),
+        ];
+    }
+
+    if (lat.length && lon.length && latRef && lonRef) {
+      const latDec =
+        (lat[0] + lat[1] / 60 + lat[2] / 3600) * (latRef === "N" ? 1 : -1);
+      const lonDec =
+        (lon[0] + lon[1] / 60 + lon[2] / 3600) * (lonRef === "E" ? 1 : -1);
+      return { gps: `${latDec.toFixed(6)}, ${lonDec.toFixed(6)}` };
+    }
+    return {};
+  }
+
+  static readRational(view, offset, littleEndian) {
+    const num = view.getUint32(offset, littleEndian);
+    const den = view.getUint32(offset + 4, littleEndian);
+    return den === 0 ? 0 : num / den;
+  }
+
+  static readString(view, offset, length) {
+    let str = "";
+    for (let i = 0; i < length; i++) {
+      const char = view.getUint8(offset + i);
+      if (char === 0) break;
+      str += String.fromCharCode(char);
+    }
+    return str.trim();
+  }
+}
+
 class StegoraApp {
   constructor() {
     this.canvas = document.getElementById("canvas");
@@ -597,7 +757,6 @@ class StegoraApp {
     this.initHashCopy();
     this.initAudio();
     this.initAnalyze();
-    this.initPWA();
   }
 
   initTabs() {
@@ -668,47 +827,6 @@ class StegoraApp {
       if (e.key === "Escape" && !modal.hidden) {
         closeModal();
       }
-    });
-  }
-
-  initPWA() {
-    let deferredPrompt;
-    const installBtn = document.getElementById("install-btn");
-
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-      if (isMobile) {
-        installBtn.hidden = false;
-      }
-    });
-
-    installBtn.addEventListener("click", () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === "accepted") {
-            installBtn.hidden = true;
-          }
-          deferredPrompt = null;
-        });
-      } else {
-        const isIOS =
-          /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIOS) {
-          this.showToast("Tap 'Share' -> 'Add to Home Screen'", "");
-        }
-      }
-    });
-
-    window.addEventListener("appinstalled", () => {
-      installBtn.hidden = true;
-      deferredPrompt = null;
-      this.showToast("App installed!", "success");
     });
   }
 
@@ -1308,14 +1426,19 @@ class StegoraApp {
     const results = document.getElementById("analysis-results");
 
     this.setupDropzone(dropzone, input, (file) => {
-      this.loadImage(file).then((img) => {
-        this.analyzeImage = img;
-        previewImg.src = URL.createObjectURL(file);
-        preview.hidden = false;
-        dropzone.querySelector(".upload-content").hidden = true;
-        analyzeBtn.disabled = false;
-        results.hidden = true;
-      });
+      this.loadImage(file)
+        .then((img) => {
+          this.analyzeImage = img;
+          this.analyzeFile = file;
+          previewImg.src = URL.createObjectURL(file);
+          preview.hidden = false;
+          dropzone.querySelector(".upload-content").hidden = true;
+          analyzeBtn.disabled = false;
+          results.hidden = true;
+        })
+        .catch((err) => {
+          this.showToast(err.message, "error");
+        });
     });
 
     removeBtn.addEventListener("click", (e) => {
@@ -1326,40 +1449,107 @@ class StegoraApp {
       input.value = "";
       analyzeBtn.disabled = true;
       results.hidden = true;
+      this.analyzeFile = null;
     });
 
-    analyzeBtn.addEventListener("click", () => {
+    analyzeBtn.addEventListener("click", async () => {
       if (!this.analyzeImage) return;
 
-      const img = this.analyzeImage;
-      this.canvas.width = img.width || img.naturalWidth;
-      this.canvas.height = img.height || img.naturalHeight;
-      this.ctx.drawImage(img, 0, 0);
+      try {
+        const img = this.analyzeImage;
+        this.canvas.width = img.width || img.naturalWidth;
+        this.canvas.height = img.height || img.naturalHeight;
+        this.ctx.drawImage(img, 0, 0);
 
-      const imageData = this.ctx.getImageData(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height
-      );
-      const analysis = Steganalysis.analyze(imageData);
+        const imageData = this.ctx.getImageData(
+          0,
+          0,
+          this.canvas.width,
+          this.canvas.height
+        );
+        const analysis = Steganalysis.analyze(imageData);
 
-      document.getElementById("verdict-value").textContent = analysis.verdict;
-      document.getElementById("lsb-score").textContent = analysis.lsbScore;
-      document.getElementById("chi-value").textContent = analysis.chiSquare;
-      document.getElementById("noise-value").textContent =
-        analysis.bitPlaneNoise;
+        document.getElementById("verdict-value").textContent = analysis.verdict;
+        document.getElementById("lsb-score").textContent = analysis.lsbScore;
+        document.getElementById("chi-value").textContent = analysis.chiSquare;
+        document.getElementById("noise-value").textContent =
+          analysis.bitPlaneNoise;
 
-      const verdictItem = document.getElementById("analysis-verdict");
-      verdictItem.className = "analysis-item";
-      if (analysis.verdict === "Clean")
-        verdictItem.classList.add("verdict-clean");
-      else if (analysis.verdict === "Suspicious")
-        verdictItem.classList.add("verdict-suspicious");
-      else verdictItem.classList.add("verdict-detected");
+        if (this.analyzeFile) {
+          document.getElementById("meta-type").textContent =
+            this.analyzeFile.type || "Unknown";
+          document.getElementById("meta-size").textContent =
+            (this.analyzeFile.size / 1024).toFixed(2) + " KB";
+          document.getElementById(
+            "meta-dims"
+          ).textContent = `${this.canvas.width} x ${this.canvas.height}`;
 
-      results.hidden = false;
-      this.showToast("Analysis complete!", "success");
+          const { findings, details } = await MetadataScanner.scan(
+            this.analyzeFile
+          );
+          const metaHidden = document.getElementById("meta-hidden");
+
+          const hasPrivacyRisk = findings.some(
+            (f) =>
+              !f.includes("JFIF Header") &&
+              !f.includes("Physical Dimensions") &&
+              !f.includes("No hidden metadata")
+          );
+
+          if (!hasPrivacyRisk) {
+            metaHidden.style.color = "#4ade80";
+            metaHidden.textContent = "Safe (No Exif/GPS detected)";
+          } else {
+            metaHidden.style.color = "#ef4444";
+            metaHidden.textContent = findings.join(", ");
+          }
+
+          const rowCamera = document.getElementById("row-camera");
+          const rowDate = document.getElementById("row-date");
+          const rowGPS = document.getElementById("row-gps");
+
+          if (rowCamera) rowCamera.hidden = true;
+          if (rowDate) rowDate.hidden = true;
+          if (rowGPS) rowGPS.hidden = true;
+
+          if ((details.make || details.model) && rowCamera) {
+            const metaCamera = document.getElementById("meta-camera");
+            if (metaCamera) {
+              metaCamera.textContent = [details.make, details.model]
+                .filter(Boolean)
+                .join(" ");
+              rowCamera.hidden = false;
+            }
+          }
+          if (details.date && rowDate) {
+            const metaDate = document.getElementById("meta-date");
+            if (metaDate) {
+              metaDate.textContent = details.date;
+              rowDate.hidden = false;
+            }
+          }
+          if (details.gps && rowGPS) {
+            const metaGPS = document.getElementById("meta-gps");
+            if (metaGPS) {
+              metaGPS.textContent = details.gps;
+              rowGPS.hidden = false;
+            }
+          }
+        }
+
+        const verdictItem = document.getElementById("analysis-verdict");
+        verdictItem.className = "analysis-item";
+        if (analysis.verdict === "Clean")
+          verdictItem.classList.add("verdict-clean");
+        else if (analysis.verdict === "Suspicious")
+          verdictItem.classList.add("verdict-suspicious");
+        else verdictItem.classList.add("verdict-detected");
+
+        results.hidden = false;
+        this.showToast("Analysis complete!", "success");
+      } catch (error) {
+        this.showToast(error.message, "error");
+      }
     });
   }
 

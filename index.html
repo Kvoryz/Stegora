@@ -17,7 +17,7 @@
     />
     <link rel="stylesheet" href="assets/css/style.css?v=2.0" />
     <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#18181b" />
+    <meta name="theme-color" content="#000000" />
   </head>
   <body>
     <div class="app-container">
@@ -27,24 +27,6 @@
           <span class="logo-text">Stegora</span>
         </div>
         <p class="tagline">Hide secrets in plain sight</p>
-        <button
-          id="install-btn"
-          class="btn primary"
-          hidden
-          style="margin: 16px auto 0; max-width: 200px"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Install App
-        </button>
       </header>
 
       <nav class="tabs">
@@ -806,6 +788,45 @@
                 <span class="analysis-label">Bit Plane Noise</span>
                 <span class="analysis-value" id="noise-value">-</span>
               </div>
+
+              <div
+                class="result-header"
+                style="
+                  margin-top: 24px;
+                  border-top: 1px solid rgba(255, 255, 255, 0.1);
+                  padding-top: 16px;
+                "
+              >
+                <h3>Metadata Scan</h3>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">File Type</span>
+                <span class="analysis-value" id="meta-type">-</span>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">File Size</span>
+                <span class="analysis-value" id="meta-size">-</span>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">Dimensions</span>
+                <span class="analysis-value" id="meta-dims">-</span>
+              </div>
+              <div class="analysis-item">
+                <span class="analysis-label">Hidden Metadata</span>
+                <span class="analysis-value" id="meta-hidden">-</span>
+              </div>
+              <div class="analysis-item" id="row-camera" hidden>
+                <span class="analysis-label">Camera Model</span>
+                <span class="analysis-value" id="meta-camera">-</span>
+              </div>
+              <div class="analysis-item" id="row-date" hidden>
+                <span class="analysis-label">Date Taken</span>
+                <span class="analysis-value" id="meta-date">-</span>
+              </div>
+              <div class="analysis-item" id="row-gps" hidden>
+                <span class="analysis-label">GPS Location</span>
+                <span class="analysis-value" id="meta-gps">-</span>
+              </div>
             </div>
           </div>
         </section>
@@ -832,7 +853,7 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-    <script src="assets/js/app.js?v=2.21"></script>
+    <script src="assets/js/app.js?v=2.28"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
