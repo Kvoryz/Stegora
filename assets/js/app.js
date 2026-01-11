@@ -727,30 +727,38 @@ class MetadataScanner {
       lonRef = "";
 
     for (let i = 0; i < entries; i++) {
-      const entryOffset = offset + 2 + i * 12;
-      const tag = view.getUint16(entryOffset, littleEndian);
-      const type = view.getUint16(entryOffset + 2, littleEndian);
-      const count = view.getUint32(entryOffset + 4, littleEndian);
-      const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
+      try {
+        const entryOffset = offset + 2 + i * 12;
+        if (entryOffset + 12 > view.byteLength) break;
 
-      const typeSize = type === 5 || type === 10 ? 8 : 1;
-      const dataOffset =
-        count * typeSize > 4 ? tiffStart + valueOffset : entryOffset + 8;
+        const tag = view.getUint16(entryOffset, littleEndian);
+        const type = view.getUint16(entryOffset + 2, littleEndian);
+        const count = view.getUint32(entryOffset + 4, littleEndian);
+        const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
 
-      if (tag === 1) latRef = this.readString(view, dataOffset, count);
-      if (tag === 2)
-        lat = [
-          this.readRational(view, dataOffset, littleEndian),
-          this.readRational(view, dataOffset + 8, littleEndian),
-          this.readRational(view, dataOffset + 16, littleEndian),
-        ];
-      if (tag === 3) lonRef = this.readString(view, dataOffset, count);
-      if (tag === 4)
-        lon = [
-          this.readRational(view, dataOffset, littleEndian),
-          this.readRational(view, dataOffset + 8, littleEndian),
-          this.readRational(view, dataOffset + 16, littleEndian),
-        ];
+        const typeSize = type === 5 || type === 10 ? 8 : 1;
+        const dataOffset =
+          count * typeSize > 4 ? tiffStart + valueOffset : entryOffset + 8;
+
+        if (dataOffset + count * typeSize > view.byteLength) continue;
+
+        if (tag === 1) latRef = this.readString(view, dataOffset, count);
+        if (tag === 2)
+          lat = [
+            this.readRational(view, dataOffset, littleEndian),
+            this.readRational(view, dataOffset + 8, littleEndian),
+            this.readRational(view, dataOffset + 16, littleEndian),
+          ];
+        if (tag === 3) lonRef = this.readString(view, dataOffset, count);
+        if (tag === 4)
+          lon = [
+            this.readRational(view, dataOffset, littleEndian),
+            this.readRational(view, dataOffset + 8, littleEndian),
+            this.readRational(view, dataOffset + 16, littleEndian),
+          ];
+      } catch (e) {
+        continue;
+      }
     }
 
     if (lat.length && lon.length) {
@@ -760,15 +768,23 @@ class MetadataScanner {
       const latDec = (lat[0] + lat[1] / 60 + lat[2] / 3600) * latMult;
       const lonDec = (lon[0] + lon[1] / 60 + lon[2] / 3600) * lonMult;
 
-      return { gps: `${latDec.toFixed(6)}, ${lonDec.toFixed(6)}` };
+      if (latDec !== 0 || lonDec !== 0) {
+        return { gps: `${latDec.toFixed(6)}, ${lonDec.toFixed(6)}` };
+      }
     }
     return {};
   }
 
   static readRational(view, offset, littleEndian) {
-    const num = view.getUint32(offset, littleEndian);
-    const den = view.getUint32(offset + 4, littleEndian);
-    return den === 0 ? 0 : num / den;
+    try {
+      if (offset + 8 > view.byteLength) return 0;
+      const num = view.getUint32(offset, littleEndian);
+      const den = view.getUint32(offset + 4, littleEndian);
+      if (den === 0) return 0;
+      return num / den;
+    } catch (e) {
+      return 0;
+    }
   }
 
   static readString(view, offset, length) {
