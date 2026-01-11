@@ -1,3 +1,83 @@
+class Crypto {
+  static ENCRYPTED_PREFIX = "<<ENC>>";
+
+  static async deriveKey(password, salt) {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+
+    return crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  static async encrypt(message, password) {
+    const encoder = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await this.deriveKey(password, salt);
+
+    const encrypted = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      encoder.encode(message)
+    );
+
+    const combined = new Uint8Array(
+      salt.length + iv.length + encrypted.byteLength
+    );
+    combined.set(salt, 0);
+    combined.set(iv, salt.length);
+    combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+    return this.ENCRYPTED_PREFIX + btoa(String.fromCharCode(...combined));
+  }
+
+  static async decrypt(encryptedData, password) {
+    if (!encryptedData.startsWith(this.ENCRYPTED_PREFIX)) {
+      return encryptedData;
+    }
+
+    const data = encryptedData.slice(this.ENCRYPTED_PREFIX.length);
+    const combined = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+
+    const salt = combined.slice(0, 16);
+    const iv = combined.slice(16, 28);
+    const encrypted = combined.slice(28);
+
+    const key = await this.deriveKey(password, salt);
+
+    try {
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encrypted
+      );
+      return new TextDecoder().decode(decrypted);
+    } catch {
+      throw new Error("Incorrect password or corrupted data");
+    }
+  }
+
+  static isEncrypted(message) {
+    return message.startsWith(this.ENCRYPTED_PREFIX);
+  }
+}
+
 class Steganography {
   static HEADER_BITS = 32;
   static DELIMITER = "<<END>>";
@@ -98,6 +178,8 @@ class StegoraApp {
     this.initTabs();
     this.initEncode();
     this.initDecode();
+    this.initPasswordToggles();
+    this.initModal();
   }
 
   initTabs() {
@@ -114,6 +196,60 @@ class StegoraApp {
           .getElementById(`${tab.dataset.tab}-panel`)
           .classList.add("active");
       });
+    });
+  }
+
+  initPasswordToggles() {
+    const toggles = [
+      { btn: "toggle-encode-password", input: "encode-password" },
+      { btn: "toggle-decode-password", input: "decode-password" },
+    ];
+
+    toggles.forEach(({ btn, input }) => {
+      const button = document.getElementById(btn);
+      const passwordInput = document.getElementById(input);
+
+      if (button && passwordInput) {
+        button.addEventListener("click", () => {
+          const isPassword = passwordInput.type === "password";
+          passwordInput.type = isPassword ? "text" : "password";
+          button.classList.toggle("active", isPassword);
+        });
+      }
+    });
+  }
+
+  initModal() {
+    const modal = document.getElementById("image-modal");
+    const modalImage = document.getElementById("modal-image");
+    const modalClose = document.getElementById("modal-close");
+    const backdrop = modal.querySelector(".modal-backdrop");
+
+    document.querySelectorAll(".preview-view").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const targetId = btn.dataset.target;
+        const img = document.getElementById(targetId);
+        if (img && img.src) {
+          modalImage.src = img.src;
+          modal.hidden = false;
+          document.body.style.overflow = "hidden";
+        }
+      });
+    });
+
+    const closeModal = () => {
+      modal.hidden = true;
+      document.body.style.overflow = "";
+    };
+
+    modalClose.addEventListener("click", closeModal);
+    backdrop.addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !modal.hidden) {
+        closeModal();
+      }
     });
   }
 
@@ -251,8 +387,9 @@ class StegoraApp {
       !this.encodeImage || !message.trim();
   }
 
-  encode() {
+  async encode() {
     const message = document.getElementById("secret-message").value.trim();
+    const password = document.getElementById("encode-password").value;
 
     if (!this.encodeImage || !message) {
       this.showToast("Please provide an image and message", "error");
@@ -260,6 +397,13 @@ class StegoraApp {
     }
 
     try {
+      let finalMessage = message;
+
+      if (password) {
+        this.showToast("Encrypting message...", "");
+        finalMessage = await Crypto.encrypt(message, password);
+      }
+
       this.canvas.width = this.encodeImage.naturalWidth;
       this.canvas.height = this.encodeImage.naturalHeight;
       this.ctx.drawImage(this.encodeImage, 0, 0);
@@ -270,7 +414,7 @@ class StegoraApp {
         this.canvas.width,
         this.canvas.height
       );
-      const encodedData = Steganography.encode(imageData, message);
+      const encodedData = Steganography.encode(imageData, finalMessage);
       this.ctx.putImageData(encodedData, 0, 0);
 
       this.canvas.toBlob((blob) => {
@@ -283,14 +427,17 @@ class StegoraApp {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        this.showToast("Image encoded and downloaded!", "success");
+        const successMsg = password
+          ? "Encrypted & encoded successfully!"
+          : "Image encoded and downloaded!";
+        this.showToast(successMsg, "success");
       }, "image/png");
     } catch (error) {
       this.showToast(error.message, "error");
     }
   }
 
-  decode() {
+  async decode() {
     if (!this.decodeImage) {
       this.showToast("Please provide an image", "error");
       return;
@@ -307,12 +454,25 @@ class StegoraApp {
         this.canvas.width,
         this.canvas.height
       );
-      const message = Steganography.decode(imageData);
+      let message = Steganography.decode(imageData);
+
+      if (Crypto.isEncrypted(message)) {
+        const password = document.getElementById("decode-password").value;
+        if (!password) {
+          this.showToast(
+            "This message is encrypted. Please enter the password.",
+            "error"
+          );
+          return;
+        }
+        message = await Crypto.decrypt(message, password);
+        this.showToast("Decrypted successfully!", "success");
+      } else {
+        this.showToast("Message decoded!", "success");
+      }
 
       document.getElementById("result-message").textContent = message;
       document.getElementById("result-box").hidden = false;
-
-      this.showToast("Message decoded!", "success");
     } catch (error) {
       this.showToast(error.message, "error");
     }
