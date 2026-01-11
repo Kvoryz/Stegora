@@ -91,7 +91,6 @@ class Steganography {
   static DELIMITER = "<<END>>";
   static SCRAMBLE_MARKER = "<<SCR>>";
 
-  // Seeded PRNG (Mulberry32)
   static createPRNG(seed) {
     let state = seed;
     return function () {
@@ -103,7 +102,6 @@ class Steganography {
     };
   }
 
-  // Generate seed from password
   static async passwordToSeed(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -117,7 +115,6 @@ class Steganography {
     );
   }
 
-  // Generate scrambled pixel indices
   static generateScrambledIndices(totalPixels, count, prng) {
     const indices = [];
     const used = new Set();
@@ -133,7 +130,6 @@ class Steganography {
     return indices;
   }
 
-  // Compress string using LZW-like compression
   static compress(str) {
     const dict = {};
     let dictSize = 256;
@@ -159,7 +155,6 @@ class Steganography {
       result.push(dict[w]);
     }
 
-    // Convert to base64
     const bytes = [];
     for (const code of result) {
       bytes.push((code >> 8) & 0xff);
@@ -169,7 +164,6 @@ class Steganography {
     return btoa(String.fromCharCode(...bytes));
   }
 
-  // Decompress LZW
   static decompress(compressed) {
     try {
       const bytes = atob(compressed)
@@ -214,7 +208,6 @@ class Steganography {
     }
   }
 
-  // Add random padding
   static addPadding(str, minPadding = 16, maxPadding = 64) {
     const paddingLength =
       minPadding + Math.floor(Math.random() * (maxPadding - minPadding));
@@ -225,7 +218,6 @@ class Steganography {
     return str + "<<PAD>>" + padding;
   }
 
-  // Remove padding
   static removePadding(str) {
     const padIndex = str.indexOf("<<PAD>>");
     return padIndex !== -1 ? str.substring(0, padIndex) : str;
@@ -243,13 +235,10 @@ class Steganography {
     return bytes.map((byte) => String.fromCharCode(parseInt(byte, 2))).join("");
   }
 
-  // Secure encode with scrambling
   static async encode(imageData, message, password = null) {
     let processedMessage = message;
 
-    // If password provided, use scrambling
     if (password) {
-      // Compress and add padding
       const compressed = this.compress(message);
       const padded = this.addPadding(compressed);
       processedMessage = this.SCRAMBLE_MARKER + padded;
@@ -277,7 +266,6 @@ class Steganography {
     const data = imageData.data;
 
     if (password) {
-      // Scrambled mode: use PRNG to get random pixel positions
       const seed = await this.passwordToSeed(password);
       const prng = this.createPRNG(seed);
       const pixelIndices = this.generateScrambledIndices(
@@ -290,7 +278,6 @@ class Steganography {
       for (const pixelIdx of pixelIndices) {
         const dataOffset = pixelIdx * 4;
 
-        // Force alpha to 255 (opaque) to ensure data persistence
         data[dataOffset + 3] = 255;
 
         for (
@@ -305,13 +292,11 @@ class Steganography {
         }
       }
     } else {
-      // Sequential mode (no password)
       for (let bitIndex = 0; bitIndex < fullBinary.length; bitIndex++) {
         const pixelIndex = Math.floor(bitIndex / 3) * 4;
         const channelOffset = bitIndex % 3;
         const bit = parseInt(fullBinary[bitIndex], 10);
 
-        // Force alpha to 255 (opaque) to ensure data persistence
         data[pixelIndex + 3] = 255;
 
         data[pixelIndex + channelOffset] =
@@ -322,7 +307,6 @@ class Steganography {
     return imageData;
   }
 
-  // Secure decode with descrambling
   static async decode(imageData, password = null) {
     const data = imageData.data;
     const totalPixels = imageData.width * imageData.height;
@@ -330,13 +314,10 @@ class Steganography {
     let binaryLength = "";
     let bitIndex = 0;
 
-    // First, try to read header
     if (password) {
-      // Scrambled mode
       const seed = await this.passwordToSeed(password);
       const prng = this.createPRNG(seed);
 
-      // We need at least enough pixels for header
       const headerPixels = Math.ceil(this.HEADER_BITS / 3);
       const pixelIndices = this.generateScrambledIndices(
         totalPixels,
@@ -344,7 +325,6 @@ class Steganography {
         prng
       );
 
-      // Read header
       for (const pixelIdx of pixelIndices.slice(0, headerPixels)) {
         const dataOffset = pixelIdx * 4;
         for (
@@ -363,7 +343,6 @@ class Steganography {
         throw new Error("No hidden message found or wrong password.");
       }
 
-      // Read message
       let binaryMessage = "";
       const totalBitsNeeded = this.HEADER_BITS + messageLength;
       const requiredPixels = Math.ceil(totalBitsNeeded / 3);
@@ -392,7 +371,6 @@ class Steganography {
 
       let message = rawMessage.substring(0, delimiterIndex);
 
-      // Check if scrambled and decompress
       if (message.startsWith(this.SCRAMBLE_MARKER)) {
         message = message.slice(this.SCRAMBLE_MARKER.length);
         message = this.removePadding(message);
@@ -401,7 +379,6 @@ class Steganography {
 
       return message;
     } else {
-      // Sequential mode (no password)
       while (bitIndex < this.HEADER_BITS) {
         const pixelIndex = Math.floor(bitIndex / 3) * 4;
         const channelOffset = bitIndex % 3;
@@ -466,9 +443,8 @@ class AudioSteganography {
       .padStart(this.HEADER_BITS, "0");
     const fullBinary = binaryLength + binaryMessage;
 
-    // Parse WAV header
     const view = new DataView(audioBuffer);
-    const dataStart = 44; // Standard WAV header size
+    const dataStart = 44;
     const bytesPerSample = view.getUint16(34, true) / 8;
     const numSamples = (audioBuffer.byteLength - dataStart) / bytesPerSample;
 
@@ -498,7 +474,6 @@ class AudioSteganography {
     let binaryLength = "";
     let bitIndex = 0;
 
-    // Read header
     while (bitIndex < this.HEADER_BITS) {
       const sampleIndex = dataStart + bitIndex * bytesPerSample;
       binaryLength += (data[sampleIndex] & 1).toString();
@@ -537,12 +512,10 @@ class Steganalysis {
     const data = imageData.data;
     const totalPixels = data.length / 4;
 
-    // 1. LSB Randomness Analysis
     let transitions = 0;
     let ones = 0;
 
     for (let i = 0; i < totalPixels * 3; i++) {
-      // Check R, G, B channels
       const bit = data[i] & 1;
       if (bit === 1) ones++;
       if (i > 0) {
@@ -555,18 +528,13 @@ class Steganalysis {
     const onesRatio = ones / totalBits;
     const transitionsRatio = transitions / totalBits;
 
-    // Ideal random data has ~0.5 ones ratio and ~0.5 transitions ratio
-    // Encrypted/Compressed data looks random
     const lsbScore =
       1 - (Math.abs(0.5 - onesRatio) + Math.abs(0.5 - transitionsRatio));
 
-    // 2. Chi-Square Attack (Simplified)
-    // Checks if frequency of PoVs (Pairs of Values) suggests embedding
     let chiSquare = 0;
     const bins = new Array(256).fill(0);
 
     for (let i = 0; i < totalPixels * 3; i += 3) {
-      // Sample mostly Red channel for speed
       bins[data[i]]++;
     }
 
@@ -578,9 +546,6 @@ class Steganalysis {
       }
     }
 
-    // 3. Bit Plane Noise Level
-    // Compare LSB plane complexity vs 2nd LSB plane
-    // If LSB is much more complex than 2nd bit plane, it's suspicious
     let lsbComplexity = 0;
     let secondBitComplexity = 0;
 
@@ -596,14 +561,12 @@ class Steganalysis {
 
     const bitPlaneRatio = lsbComplexity / (secondBitComplexity || 1);
 
-    // Verdict Logic
     let verdict = "Clean";
     let suspicionLevel = 0;
 
-    // Adjusted thresholds for balanced sensitivity
-    if (lsbScore > 0.88) suspicionLevel++; // Was > 0.85 (Too sensitive) vs 0.95 (Too loose)
-    if (chiSquare < 200) suspicionLevel++; // Was < 300 (Too sensitive) vs 100 (Too loose)
-    if (bitPlaneRatio > 1.15) suspicionLevel++; // Was > 1.05 (Too sensitive) vs 1.2 (Too loose)
+    if (lsbScore > 0.88) suspicionLevel++;
+    if (chiSquare < 200) suspicionLevel++;
+    if (bitPlaneRatio > 1.15) suspicionLevel++;
 
     if (suspicionLevel >= 2) verdict = "Detected";
     else if (suspicionLevel === 1) verdict = "Suspicious";
@@ -634,6 +597,7 @@ class StegoraApp {
     this.initHashCopy();
     this.initAudio();
     this.initAnalyze();
+    this.initPWA();
   }
 
   initTabs() {
@@ -707,6 +671,47 @@ class StegoraApp {
     });
   }
 
+  initPWA() {
+    let deferredPrompt;
+    const installBtn = document.getElementById("install-btn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+      if (isMobile) {
+        installBtn.hidden = false;
+      }
+    });
+
+    installBtn.addEventListener("click", () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === "accepted") {
+            installBtn.hidden = true;
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        const isIOS =
+          /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          this.showToast("Tap 'Share' -> 'Add to Home Screen'", "");
+        }
+      }
+    });
+
+    window.addEventListener("appinstalled", () => {
+      installBtn.hidden = true;
+      deferredPrompt = null;
+      this.showToast("App installed!", "success");
+    });
+  }
+
   initEncode() {
     const dropzone = document.getElementById("encode-dropzone");
     const input = document.getElementById("encode-image-input");
@@ -725,9 +730,6 @@ class StegoraApp {
         .then((img) => {
           this.encodeImage = img;
 
-          // Calculate max capacity
-          // 3 bits per pixel (RGB), minus 32 bits header and 56 bits delimiter (7 chars * 8)
-          // Formula: (TotalPixels * 3 - 88) / 8
           const totalPixels =
             (img.width || img.naturalWidth) * (img.height || img.naturalHeight);
           maxAllowedChars = Math.floor((totalPixels * 3 - 88) / 8);
@@ -755,7 +757,8 @@ class StegoraApp {
       dropzone.querySelector(".upload-content").hidden = false;
       input.value = "";
 
-      // Clear hash display
+      document.getElementById("secret-message").value = "";
+      document.getElementById("encode-password").value = "";
       document.getElementById("encode-hash-display").hidden = true;
       document.getElementById("encode-hash-value").textContent = "";
 
@@ -808,6 +811,7 @@ class StegoraApp {
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
       input.value = "";
+      document.getElementById("decode-password").value = "";
       decodeBtn.disabled = true;
       document.getElementById("result-box").hidden = true;
     });
@@ -882,7 +886,6 @@ class StegoraApp {
     const btn = document.getElementById("encode-btn");
     btn.disabled = !hasImage || !hasMessage || !isWithinLimit;
 
-    // Optional: Visual feedback on button
     if (!isWithinLimit && hasImage && hasMessage) {
       btn.title = "Message too long for this image";
     } else {
@@ -927,8 +930,6 @@ class StegoraApp {
         this.canvas.height
       );
 
-      // Pass null for password to force sequential encoding (no scrambling)
-      // This is crucial so that the decoy text is retrievable without the correct password.
       const encodedData = await Steganography.encode(
         imageData,
         finalMessage,
@@ -936,7 +937,6 @@ class StegoraApp {
       );
       this.ctx.putImageData(encodedData, 0, 0);
 
-      // Calculate and display hash
       const messageHash = await Crypto.hash(message);
       document.getElementById("encode-hash-value").textContent = messageHash;
       document.getElementById("encode-hash-display").hidden = false;
@@ -986,11 +986,9 @@ class StegoraApp {
       let message;
       let usedScrambling = false;
 
-      // TOP PRIORITY: Try sequential read first (how new decoy messages are stored)
       try {
         message = await Steganography.decode(imageData, null);
       } catch (sequentialError) {
-        // If sequential read fails (e.g. legacy scrambled image), try with password if provided
         if (password) {
           try {
             message = await Steganography.decode(imageData, password);
@@ -1003,23 +1001,19 @@ class StegoraApp {
         }
       }
 
-      // Check for decoy message format
       if (message.startsWith("<<DECOY>>")) {
         const jsonPart = message.slice(9);
         try {
           const data = JSON.parse(jsonPart);
 
-          // Always show something. If password works, show real. If not, show decoy.
           if (!password) {
             message = data.decoy;
             this.showToast("Message decoded (Decoy Mode)", "success");
           } else {
             try {
-              // Try to decrypt real message
               message = await Crypto.decrypt(data.real, password);
               this.showToast("Message decoded!", "success");
             } catch {
-              // Wrong password - show decoy
               message = data.decoy;
               this.showToast("Message decoded (Decoy Mode)", "success");
             }
@@ -1029,7 +1023,6 @@ class StegoraApp {
           return;
         }
       } else if (Crypto.isEncrypted(message)) {
-        // Standard encrypted message (legacy or direct encrypt)
         if (!password) {
           this.showToast(
             "This message is encrypted. Please enter the password.",
@@ -1044,7 +1037,6 @@ class StegoraApp {
         }
       }
 
-      // Calculate and display hash
       const messageHash = await Crypto.hash(message);
       document.getElementById("decode-hash-value").textContent = messageHash;
 
@@ -1087,7 +1079,6 @@ class StegoraApp {
   }
 
   initAudio() {
-    // Mode toggle
     const modeButtons = document.querySelectorAll(".audio-mode");
     modeButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1102,7 +1093,6 @@ class StegoraApp {
       });
     });
 
-    // Audio encode
     const encodeDropzone = document.getElementById("audio-encode-dropzone");
     const encodeInput = document.getElementById("audio-encode-input");
     const encodePreview = document.getElementById("audio-encode-preview");
@@ -1127,6 +1117,8 @@ class StegoraApp {
       encodePreview.hidden = true;
       encodeDropzone.querySelector(".upload-content").hidden = false;
       encodeInput.value = "";
+      audioMessage.value = "";
+      document.getElementById("audio-encode-password").value = "";
       this.updateAudioEncodeButton();
     });
 
@@ -1136,7 +1128,6 @@ class StegoraApp {
 
     audioEncodeBtn.addEventListener("click", () => this.encodeAudio());
 
-    // Audio decode
     const decodeDropzone = document.getElementById("audio-decode-dropzone");
     const decodeInput = document.getElementById("audio-decode-input");
     const decodePreview = document.getElementById("audio-decode-preview");
@@ -1162,6 +1153,7 @@ class StegoraApp {
       decodePreview.hidden = true;
       decodeDropzone.querySelector(".upload-content").hidden = false;
       decodeInput.value = "";
+      document.getElementById("audio-decode-password").value = "";
       audioDecodeBtn.disabled = true;
       document.getElementById("audio-result-box").hidden = true;
     });
@@ -1177,7 +1169,6 @@ class StegoraApp {
       });
     });
 
-    // Password toggles for audio
     const audioPasswordToggles = [
       { btn: "toggle-audio-encode-password", input: "audio-encode-password" },
       { btn: "toggle-audio-decode-password", input: "audio-decode-password" },
@@ -1359,9 +1350,8 @@ class StegoraApp {
       document.getElementById("noise-value").textContent =
         analysis.bitPlaneNoise;
 
-      // Update styling based on verdict
       const verdictItem = document.getElementById("analysis-verdict");
-      verdictItem.className = "analysis-item"; // reset
+      verdictItem.className = "analysis-item";
       if (analysis.verdict === "Clean")
         verdictItem.classList.add("verdict-clean");
       else if (analysis.verdict === "Suspicious")
