@@ -670,6 +670,13 @@ class MetadataScanner {
       if (tag === 0x010f) tags.make = this.readString(view, dataOffset, count);
       if (tag === 0x0132 || tag === 0x9003)
         tags.date = this.readString(view, dataOffset, count);
+      if (tag === 0x0131)
+        tags.software = this.readString(view, dataOffset, count);
+      if (tag === 0x013b)
+        tags.artist = this.readString(view, dataOffset, count);
+      if (tag === 0x8298)
+        tags.copyright = this.readString(view, dataOffset, count);
+      if (tag === 0x010e) tags.desc = this.readString(view, dataOffset, count);
 
       if (tag === 0x8825) {
         const gpsOffset = tiffStart + valueOffset;
@@ -692,19 +699,22 @@ class MetadataScanner {
     for (let i = 0; i < entries; i++) {
       const entryOffset = offset + 2 + i * 12;
       const tag = view.getUint16(entryOffset, littleEndian);
+      const type = view.getUint16(entryOffset + 2, littleEndian);
+      const count = view.getUint32(entryOffset + 4, littleEndian);
       const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
-      const dataOffset = tiffStart + valueOffset;
 
-      if (tag === 1)
-        latRef = String.fromCharCode(view.getUint8(entryOffset + 8));
+      const typeSize = type === 5 || type === 10 ? 8 : 1;
+      const dataOffset =
+        count * typeSize > 4 ? tiffStart + valueOffset : entryOffset + 8;
+
+      if (tag === 1) latRef = this.readString(view, dataOffset, count);
       if (tag === 2)
         lat = [
           this.readRational(view, dataOffset, littleEndian),
           this.readRational(view, dataOffset + 8, littleEndian),
           this.readRational(view, dataOffset + 16, littleEndian),
         ];
-      if (tag === 3)
-        lonRef = String.fromCharCode(view.getUint8(entryOffset + 8));
+      if (tag === 3) lonRef = this.readString(view, dataOffset, count);
       if (tag === 4)
         lon = [
           this.readRational(view, dataOffset, littleEndian),
@@ -713,11 +723,13 @@ class MetadataScanner {
         ];
     }
 
-    if (lat.length && lon.length && latRef && lonRef) {
-      const latDec =
-        (lat[0] + lat[1] / 60 + lat[2] / 3600) * (latRef === "N" ? 1 : -1);
-      const lonDec =
-        (lon[0] + lon[1] / 60 + lon[2] / 3600) * (lonRef === "E" ? 1 : -1);
+    if (lat.length && lon.length) {
+      const latMult = latRef && latRef.toUpperCase().startsWith("S") ? -1 : 1;
+      const lonMult = lonRef && lonRef.toUpperCase().startsWith("W") ? -1 : 1;
+
+      const latDec = (lat[0] + lat[1] / 60 + lat[2] / 3600) * latMult;
+      const lonDec = (lon[0] + lon[1] / 60 + lon[2] / 3600) * lonMult;
+
       return { gps: `${latDec.toFixed(6)}, ${lonDec.toFixed(6)}` };
     }
     return {};
@@ -1503,7 +1515,7 @@ class StegoraApp {
 
             if (!hasPrivacyRisk) {
               metaHidden.style.color = "#4ade80";
-              metaHidden.textContent = "Safe (No Exif/GPS detected)";
+              metaHidden.textContent = findings.join(", ") + " (Safe)";
             } else {
               metaHidden.style.color = "#ef4444";
               metaHidden.textContent = findings.join(", ");
@@ -1535,10 +1547,33 @@ class StegoraApp {
             }
           }
           if (details.gps && rowGPS) {
-            const metaGPS = document.getElementById("meta-gps");
             if (metaGPS) {
               metaGPS.textContent = details.gps;
               rowGPS.hidden = false;
+            }
+          }
+
+          const rowSoftware = document.getElementById("row-software");
+          const rowOther = document.getElementById("row-other");
+          if (rowSoftware) rowSoftware.hidden = true;
+          if (rowOther) rowOther.hidden = true;
+
+          if (details.software && rowSoftware) {
+            const metaSoftware = document.getElementById("meta-software");
+            if (metaSoftware) {
+              metaSoftware.textContent = details.software;
+              rowSoftware.hidden = false;
+            }
+          }
+
+          const otherInfo = [details.artist, details.copyright, details.desc]
+            .filter(Boolean)
+            .join("; ");
+          if (otherInfo && rowOther) {
+            const metaOther = document.getElementById("meta-other");
+            if (metaOther) {
+              metaOther.textContent = otherInfo;
+              rowOther.hidden = false;
             }
           }
         }
