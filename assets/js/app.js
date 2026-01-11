@@ -680,13 +680,31 @@ class MetadataScanner {
 
       if (tag === 0x8825 && type === 4) {
         const gpsIfdOffset = tiffStart + valueOffset;
-        try {
-          Object.assign(
-            tags,
-            this.parseGPS(view, gpsIfdOffset, littleEndian, tiffStart)
-          );
-        } catch (e) {
-          console.warn("GPS parsing failed:", e);
+        console.log(
+          "GPS IFD found at:",
+          gpsIfdOffset,
+          "tiffStart:",
+          tiffStart,
+          "valueOffset:",
+          valueOffset,
+          "byteLength:",
+          view.byteLength
+        );
+        if (gpsIfdOffset < view.byteLength) {
+          try {
+            const gpsData = this.parseGPS(
+              view,
+              gpsIfdOffset,
+              littleEndian,
+              tiffStart
+            );
+            console.log("GPS data parsed:", gpsData);
+            Object.assign(tags, gpsData);
+          } catch (e) {
+            console.warn("GPS parsing failed:", e);
+          }
+        } else {
+          console.warn("GPS IFD offset out of bounds:", gpsIfdOffset);
         }
       }
 

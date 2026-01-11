@@ -1,9 +1,9 @@
-const CACHE_NAME = "stegora-v2.59";
+const CACHE_NAME = "stegora-v2.60";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
-  "/assets/css/style.css?v=2.59",
-  "/assets/js/app.js?v=2.59",
+  "/assets/css/style.css?v=2.60",
+  "/assets/js/app.js?v=2.60",
   "/assets/iconste.png",
   "/manifest.json",
   "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap",
