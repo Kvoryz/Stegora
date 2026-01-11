@@ -52,6 +52,19 @@
           </svg>
           Decode
         </button>
+        <button class="tab" data-tab="audio">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          Audio
+        </button>
       </nav>
 
       <main class="main-content">
@@ -78,7 +91,7 @@
               </svg>
               <div class="upload-info">
                 <p class="upload-text">Drop your image here</p>
-                <span class="upload-hint">or click to browse</span>
+                <span class="upload-hint">PNG format only</span>
               </div>
             </div>
             <div class="preview-thumb" id="encode-preview" hidden>
@@ -127,9 +140,6 @@
               placeholder="Enter your secret message here..."
               rows="4"
             ></textarea>
-            <span class="char-count"
-              ><span id="char-count">0</span> characters</span
-            >
           </div>
 
           <div class="input-group">
@@ -169,9 +179,6 @@
                 </svg>
               </button>
             </div>
-            <span class="input-hint"
-              >AES-256 encryption for extra security</span
-            >
           </div>
 
           <button class="btn primary" id="encode-btn" disabled>
@@ -188,6 +195,41 @@
             </svg>
             Encode & Download
           </button>
+
+          <div class="hash-display" id="encode-hash-display" hidden>
+            <div class="hash-header">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>Message Hash (SHA-256)</span>
+            </div>
+            <div class="hash-value">
+              <code id="encode-hash-value"></code>
+              <button
+                type="button"
+                class="copy-hash"
+                id="copy-encode-hash"
+                title="Copy"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path
+                    d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
         </section>
 
         <!-- Decode Section -->
@@ -326,6 +368,40 @@
               </button>
             </div>
             <p class="result-message" id="result-message"></p>
+            <div class="hash-display decode-hash">
+              <div class="hash-header">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Hash (SHA-256)</span>
+              </div>
+              <div class="hash-value">
+                <code id="decode-hash-value"></code>
+                <button
+                  type="button"
+                  class="copy-hash"
+                  id="copy-decode-hash"
+                  title="Copy"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="info-card">
@@ -342,6 +418,278 @@
               Upload a PNG image that was encoded with Stegora to reveal the
               hidden message.
             </p>
+          </div>
+        </section>
+
+        <!-- Audio Section -->
+        <section class="panel" id="audio-panel">
+          <div class="audio-mode-toggle">
+            <button class="audio-mode active" data-mode="encode">
+              Hide in Audio
+            </button>
+            <button class="audio-mode" data-mode="decode">
+              Extract from Audio
+            </button>
+          </div>
+
+          <!-- Audio Encode -->
+          <div class="audio-section" id="audio-encode-section">
+            <div class="upload-zone" id="audio-encode-dropzone">
+              <input
+                type="file"
+                id="audio-encode-input"
+                accept="audio/wav"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop your WAV file here</p>
+                  <span class="upload-hint">WAV format only</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="audio-encode-preview" hidden>
+                <svg
+                  class="audio-thumb-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+                <span class="preview-label" id="audio-encode-filename"
+                  >audio.wav</span
+                >
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="audio-encode-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="audio-secret-message">Secret Message</label>
+              <textarea
+                id="audio-secret-message"
+                placeholder="Enter your secret message here..."
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="input-group">
+              <label for="audio-encode-password">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                Password <span class="optional">(optional)</span>
+              </label>
+              <div class="password-input">
+                <input
+                  type="password"
+                  id="audio-encode-password"
+                  placeholder="Encrypt with password..."
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  id="toggle-audio-encode-password"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="eye-icon"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn primary" id="audio-encode-btn" disabled>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 15V3M12 3L7 8M12 3l5 5" />
+                <path
+                  d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"
+                />
+              </svg>
+              Encode & Download
+            </button>
+          </div>
+
+          <!-- Audio Decode -->
+          <div class="audio-section" id="audio-decode-section" hidden>
+            <div class="upload-zone" id="audio-decode-dropzone">
+              <input
+                type="file"
+                id="audio-decode-input"
+                accept="audio/wav"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop encoded WAV here</p>
+                  <span class="upload-hint">WAV format only</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="audio-decode-preview" hidden>
+                <svg
+                  class="audio-thumb-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+                <span class="preview-label" id="audio-decode-filename"
+                  >audio.wav</span
+                >
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="audio-decode-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="audio-decode-password">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                Password <span class="optional">(if encrypted)</span>
+              </label>
+              <div class="password-input">
+                <input
+                  type="password"
+                  id="audio-decode-password"
+                  placeholder="Enter password to decrypt..."
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  id="toggle-audio-decode-password"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="eye-icon"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn primary" id="audio-decode-btn" disabled>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 21l-6-6M10 4v6M7 7h6" />
+                <circle cx="10" cy="10" r="7" />
+              </svg>
+              Decode Message
+            </button>
+
+            <div class="result-box" id="audio-result-box" hidden>
+              <div class="result-header">
+                <h3>Hidden Message</h3>
+                <button class="copy-btn" id="audio-copy-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <p class="result-message" id="audio-result-message"></p>
+            </div>
           </div>
         </section>
       </main>
