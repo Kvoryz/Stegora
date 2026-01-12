@@ -708,7 +708,6 @@ class MetadataScanner {
         }
       }
 
-      // Check EXIF sub-IFD for GPS pointer
       if (tag === 0x8769 && type === 4) {
         const exifIfdOffset = tiffStart + valueOffset;
         try {
@@ -740,7 +739,6 @@ class MetadataScanner {
   static parseGPS(view, offset, littleEndian, tiffStart) {
     let entries = view.getUint16(offset, littleEndian);
 
-    // Fix for mobile: if entries looks invalid, try opposite endianness
     if (entries === 0 || entries > 50) {
       const altEntries = view.getUint16(offset, !littleEndian);
       if (altEntries > 0 && altEntries < 50) {
@@ -863,26 +861,23 @@ class StegoraApp {
     this.initScramblePanel();
     this.initSanitizePanel();
     this.initSteganalysis();
+    this.initLSBAnalysis();
     this.initRedact();
   }
 
   initTabs() {
-    // Category tabs
     const categoryTabs = document.querySelectorAll(".category-tab");
     const subTabGroups = document.querySelectorAll(".sub-tabs");
 
     categoryTabs.forEach((catTab) => {
       catTab.addEventListener("click", () => {
-        // Update category tab active state
         categoryTabs.forEach((t) => t.classList.remove("active"));
         catTab.classList.add("active");
 
-        // Show corresponding sub-tabs, hide others
         const category = catTab.dataset.category;
         subTabGroups.forEach((group) => {
           if (group.id === `sub-tabs-${category}`) {
             group.hidden = false;
-            // Activate first enabled sub-tab in this category
             const firstSubTab = group.querySelector(".sub-tab:not(:disabled)");
             if (firstSubTab) {
               firstSubTab.click();
@@ -894,20 +889,17 @@ class StegoraApp {
       });
     });
 
-    // Sub-tabs
     const allSubTabs = document.querySelectorAll(".sub-tab");
     allSubTabs.forEach((subTab) => {
       subTab.addEventListener("click", () => {
         if (subTab.disabled) return;
 
-        // Find parent sub-tabs group and update active state within it
         const parentGroup = subTab.closest(".sub-tabs");
         parentGroup
           .querySelectorAll(".sub-tab")
           .forEach((t) => t.classList.remove("active"));
         subTab.classList.add("active");
 
-        // Show corresponding panel
         document
           .querySelectorAll(".panel")
           .forEach((p) => p.classList.remove("active"));
@@ -918,18 +910,15 @@ class StegoraApp {
       });
     });
 
-    // Inner tabs (3rd level - e.g., Encode/Decode within Steganography)
     const innerTabs = document.querySelectorAll(".inner-tab");
     innerTabs.forEach((innerTab) => {
       innerTab.addEventListener("click", () => {
-        // Find parent inner-tabs group
         const parentGroup = innerTab.closest(".inner-tabs");
         parentGroup
           .querySelectorAll(".inner-tab")
           .forEach((t) => t.classList.remove("active"));
         innerTab.classList.add("active");
 
-        // Find parent panel and show corresponding inner-panel
         const parentPanel = innerTab.closest(".panel");
         parentPanel
           .querySelectorAll(".inner-panel")
@@ -1902,13 +1891,7 @@ class StegoraApp {
           this.canvas.width,
           this.canvas.height
         );
-        // const analysis = Steganalysis.analyze(imageData); // Legacy analysis removed
 
-        // document.getElementById("verdict-value").textContent = analysis.verdict; // Legacy
-        // document.getElementById("lsb-score").textContent = analysis.lsbScore; // Legacy
-        // document.getElementById("chi-value").textContent = analysis.chiSquare; // Legacy
-        // document.getElementById("noise-value").textContent =
-        //   analysis.bitPlaneNoise; // Legacy
 
         if (this.analyzeFile) {
           const elType = document.getElementById("meta-type");
@@ -2002,16 +1985,6 @@ class StegoraApp {
           }
         }
 
-        // Legacy verdict logic removed
-        // const verdictItem = document.getElementById("analysis-verdict");
-        // if (verdictItem) {
-        //   verdictItem.className = "analysis-item";
-        //   if (analysis.verdict === "Clean")
-        //     verdictItem.classList.add("verdict-clean");
-        //   else if (analysis.verdict === "Suspicious")
-        //     verdictItem.classList.add("verdict-suspicious");
-        //   else verdictItem.classList.add("verdict-detected");
-        // }
 
         results.hidden = false;
         this.showToast("Analysis complete!", "success");
@@ -2033,7 +2006,6 @@ class StegoraApp {
   }
 
   initScramblePanel() {
-    // Scramble dropzone
     const scrambleDropzone = document.getElementById("scramble-dropzone");
     const scrambleInput = document.getElementById("scramble-input");
     if (scrambleDropzone && scrambleInput) {
@@ -2072,7 +2044,6 @@ class StegoraApp {
       .getElementById("scramble-action-btn")
       ?.addEventListener("click", () => this.doScramble());
 
-    // Unscramble dropzone
     const unscrambleDropzone = document.getElementById("unscramble-dropzone");
     const unscrambleInput = document.getElementById("unscramble-input");
     if (unscrambleDropzone && unscrambleInput) {
@@ -2133,26 +2104,21 @@ class StegoraApp {
     this.showToast("Scrambling image...", "");
     await new Promise((r) => setTimeout(r, 50));
 
-    // Disable smoothing
     this.ctx.imageSmoothingEnabled = false;
 
-    // Use natural dimensions + 1px height for header
     const width = this.scrambleImage.naturalWidth;
     const height = this.scrambleImage.naturalHeight;
     this.canvas.width = width;
     this.canvas.height = height + 1; // Add 1px for header
 
-    // Draw image at (0,1) leaving row 0 for header
     this.ctx.drawImage(this.scrambleImage, 0, 1);
 
     const imageData = this.ctx.getImageData(0, 0, width, height + 1);
     const data = imageData.data;
 
-    // Generate Salt (16 bytes) and Hash
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
     const passHash = await this.generatePasswordHash(password, salt);
 
-    // Derive Seed from Password+Salt for scrambling
     const seedInput =
       password +
       Array.from(salt)
@@ -2161,36 +2127,25 @@ class StegoraApp {
     const seed = await this.hashToSeed(seedInput);
     const prng = this.mulberry32(seed);
 
-    // --- Write Header (Row 0) ---
-    // Format: MAGIC (4) + SALT (16) + HASH (32) = 52 bytes
-    // Encoded in first N pixels (RGB channels)
-    // 52 bytes needs ceil(52/3) = 18 pixels.
 
-    // 1. Magic "STEG" (0x53, 0x54, 0x45, 0x47)
-    // 2. Salt (16 bytes)
-    // 3. Hash (32 bytes)
 
     const headerBytes = new Uint8Array(4 + 16 + 32);
     headerBytes.set([0x53, 0x54, 0x45, 0x47], 0); // STEG
     headerBytes.set(salt, 4);
     headerBytes.set(passHash, 20);
 
-    // Write header bytes to pixels
     let pixelIdx = 0;
     for (let i = 0; i < headerBytes.length; i++) {
-      // data is RGBA, so 4 bytes per pixel. We use R, G, B channels.
       const offset = pixelIdx * 4 + (i % 3);
       data[offset] = headerBytes[i];
 
       if (i % 3 === 2) pixelIdx++; // Move to next pixel after filling RGB
     }
 
-    // Set Alpha=255 for header pixels
     for (let i = 0; i <= pixelIdx; i++) {
       data[i * 4 + 3] = 255;
     }
 
-    // Fill the rest of Row 0 with random noise to mask the header pattern
     const row0Bytes = width * 4;
     const headerEndIndex = (pixelIdx + 1) * 4;
     for (let i = headerEndIndex; i < row0Bytes; i += 4) {
@@ -2200,7 +2155,6 @@ class StegoraApp {
       data[i + 3] = 255;
     }
 
-    // --- Scramble Content (Rows 1..End) ---
     const startOffset = width * 4; // Start at Row 1
     for (let i = startOffset; i < data.length; i += 4) {
       data[i] ^= (prng() * 256) | 0;
@@ -2239,7 +2193,6 @@ class StegoraApp {
       false,
       ["deriveBits"]
     );
-    // Use PBKDF2 for better security than simple SHA256 of concat
     const derivedBits = await window.crypto.subtle.deriveBits(
       {
         name: "PBKDF2",
@@ -2270,7 +2223,6 @@ class StegoraApp {
     this.showToast("Unscrambling image...", "");
     await new Promise((r) => setTimeout(r, 50));
 
-    // Disable smoothing and use natural dimensions
     this.ctx.imageSmoothingEnabled = false;
     const width = this.unscrambleImage.naturalWidth;
     const height = this.unscrambleImage.naturalHeight;
@@ -2281,15 +2233,10 @@ class StegoraApp {
     const imageData = this.ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
 
-    // --- Header Check (Row 0) ---
-    // Read first 52 bytes from Row 0 pixels (R,G,B channels)
     const headerBytes = new Uint8Array(52);
     let pixelIdx = 0;
     let byteIdx = 0;
 
-    // We only need to check enough pixels to get 52 bytes.
-    // 52 bytes / 3 bytes/pixel = 17.33 -> 18 pixels.
-    // Ensure we don't go out of bounds if width is super small (unlikely for images, but safe to check)
     const maxHeaderPixels = Math.ceil(52 / 3);
 
     if (width >= maxHeaderPixels) {
@@ -2300,7 +2247,6 @@ class StegoraApp {
       }
     }
 
-    // Check Magic "STEG" (0x53, 0x54, 0x45, 0x47)
     const isNewFormat =
       headerBytes[0] === 0x53 &&
       headerBytes[1] === 0x54 &&
@@ -2312,18 +2258,15 @@ class StegoraApp {
     let outputHeight = height;
 
     if (isNewFormat) {
-      // --- New Format: Validation ---
       const salt = headerBytes.slice(4, 20); // 16 bytes
       const storedHash = headerBytes.slice(20, 52); // 32 bytes
 
-      // Check Password
       const checkHash = await this.generatePasswordHash(password, salt);
       if (!this.buffersEqual(storedHash, checkHash)) {
         this.showToast("Incorrect Password! Access Denied.", "error");
         return;
       }
 
-      // Match! Derive Seed
       const seedInput =
         password +
         Array.from(salt)
@@ -2331,16 +2274,9 @@ class StegoraApp {
           .join("");
       seed = await this.hashToSeed(seedInput);
 
-      // Content starts at Row 1
       contentStartOffset = width * 4;
       outputHeight = height - 1;
     } else {
-      // --- Legacy Format (No Header) ---
-      // Treat checking as success, just use simple password seed
-      // Warn user? Or just proceed silently as requested "biar salah passnya tetap bisa jalan" (only for legacy)
-      // User said "biar salah passnya tetap bisa jalan" referring to the old behavior.
-      // But for NEW format user said "harus match password".
-      // So Legacy we keep old behavior (garbage out if wrong pass).
 
       seed = await this.hashToSeed(password);
       contentStartOffset = 0;
@@ -2351,36 +2287,24 @@ class StegoraApp {
       );
     }
 
-    // --- Unscramble Content ---
     const prng = this.mulberry32(seed);
 
     for (let i = contentStartOffset; i < data.length; i += 4) {
       data[i] ^= (prng() * 256) | 0;
       data[i + 1] ^= (prng() * 256) | 0;
       data[i + 2] ^= (prng() * 256) | 0;
-      // No need to force alpha here, we keep what's there (should be 255 from scramble)
     }
 
-    // --- Output Result ---
     if (isNewFormat) {
-      // Crop the header (Row 0)
-      // Put the unscrambled content (from Row 1) into a new ImageData (or just draw to canvas offset)
 
-      // Easiest is to put the whole data back, then extract the part we want, or draw negative offset
-      // But we modified `data` in place. `data` contains Row 0 (header) + Unscrambled Content.
-      // We want to save ONLY Unscrambled Content.
 
-      // Create a new canvas for the output size
       const outputCanvas = document.createElement("canvas");
       outputCanvas.width = width;
       outputCanvas.height = outputHeight;
       const outputCtx = outputCanvas.getContext("2d");
 
-      // Put the Modified Data back to the main canvas first
       this.ctx.putImageData(imageData, 0, 0);
 
-      // Draw Main Canvas to Output Canvas, shifting up by 1 pixel (skipping header)
-      // Source (0, 1, w, h-1) -> Dest (0, 0, w, h-1)
       outputCtx.drawImage(
         this.canvas,
         0,
@@ -2395,7 +2319,6 @@ class StegoraApp {
 
       outputCanvas.toBlob(saveBlob, "image/png");
     } else {
-      // Legacy: Just save the whole thing
       this.ctx.putImageData(imageData, 0, 0);
       this.canvas.toBlob(saveBlob, "image/png");
     }
@@ -2457,7 +2380,6 @@ class StegoraApp {
   }
 
   initSteganalysis() {
-    // Original Image Dropzone
     this.setupDropzone(
       document.getElementById("steg-orig-dropzone"),
       document.getElementById("steg-orig-input"),
@@ -2489,7 +2411,6 @@ class StegoraApp {
         this.updateStegCompareBtn();
       });
 
-    // Suspect Image Dropzone
     this.setupDropzone(
       document.getElementById("steg-susp-dropzone"),
       document.getElementById("steg-susp-input"),
@@ -2521,18 +2442,15 @@ class StegoraApp {
         this.updateStegCompareBtn();
       });
 
-    // Amplification Slider
     const slider = document.getElementById("diff-amp");
     const ampValue = document.getElementById("amp-value");
     slider?.addEventListener("input", (e) => {
       ampValue.textContent = `${e.target.value}x`;
-      // If results are already shown, re-run comparison live
       if (!document.getElementById("steg-results").hidden) {
         this.doSteganalysis();
       }
     });
 
-    // Compare Button
     document
       .getElementById("steg-compare-btn")
       ?.addEventListener("click", () => this.doSteganalysis());
@@ -2564,15 +2482,12 @@ class StegoraApp {
     canvas.height = h1;
     const ctx = canvas.getContext("2d");
 
-    // Draw Original to get data
     ctx.drawImage(this.stegOrigImage, 0, 0);
     const img1Data = ctx.getImageData(0, 0, w1, h1).data;
 
-    // Draw Suspect to get data
     ctx.drawImage(this.stegSuspImage, 0, 0);
     const img2Data = ctx.getImageData(0, 0, w1, h1).data;
 
-    // Output Data
     const output = ctx.createImageData(w1, h1);
     const outData = output.data;
 
@@ -2587,13 +2502,11 @@ class StegoraApp {
 
       if (rDiff > 0 || gDiff > 0 || bDiff > 0 || aDiff > 0) {
         diffCount++;
-        // amplify difference
         outData[i] = Math.min(255, rDiff * amp);
         outData[i + 1] = Math.min(255, gDiff * amp);
         outData[i + 2] = Math.min(255, bDiff * amp);
         outData[i + 3] = 255; // Opaque
       } else {
-        // Match = Black
         outData[i] = 0;
         outData[i + 1] = 0;
         outData[i + 2] = 0;
@@ -2610,6 +2523,116 @@ class StegoraApp {
     ).textContent = `${diffCount.toLocaleString()} pixels differ (${diffPercent}%)`;
 
     this.showToast("Comparison complete.", "success");
+  }
+
+  initLSBAnalysis() {
+    this.setupDropzone(
+      document.getElementById("lsb-dropzone"),
+      document.getElementById("lsb-input"),
+      (file) => {
+        this.lsbFile = file;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.lsbImage = img;
+          document.getElementById("lsb-img").src = img.src;
+          document.getElementById("lsb-filename").textContent = file.name;
+          document.getElementById("lsb-preview").hidden = false;
+          document.querySelector("#lsb-dropzone .upload-content").hidden = true;
+          document.getElementById("lsb-analyze-btn").disabled = false;
+          document.getElementById("lsb-results").hidden = true;
+        };
+      }
+    );
+
+    document.getElementById("lsb-remove")?.addEventListener("click", () => {
+      this.lsbImage = null;
+      this.lsbFile = null;
+      document.getElementById("lsb-preview").hidden = true;
+      document.querySelector("#lsb-dropzone .upload-content").hidden = false;
+      document.getElementById("lsb-analyze-btn").disabled = true;
+      document.getElementById("lsb-results").hidden = true;
+    });
+
+    document
+      .getElementById("lsb-analyze-btn")
+      ?.addEventListener("click", () => {
+        this.doLSBAnalysis();
+      });
+  }
+
+  doLSBAnalysis() {
+    if (!this.lsbImage) return;
+
+    const w = this.lsbImage.naturalWidth;
+    const h = this.lsbImage.naturalHeight;
+
+    this.canvas.width = w;
+    this.canvas.height = h;
+    this.ctx.drawImage(this.lsbImage, 0, 0);
+    const imageData = this.ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+
+    const result = Steganalysis.analyze(imageData);
+
+    let lsbBits = [];
+    for (let i = 0; i < data.length; i += 4) {
+      lsbBits.push(data[i + 2] & 1); // Blue channel LSB
+    }
+    const ones = lsbBits.filter((b) => b === 1).length;
+    const zeros = lsbBits.length - ones;
+    const p1 = ones / lsbBits.length;
+    const p0 = zeros / lsbBits.length;
+    const entropy =
+      p1 > 0 && p0 > 0 ? -(p1 * Math.log2(p1) + p0 * Math.log2(p0)) : 0;
+
+    document.getElementById("lsb-chi").textContent = result.chiSquare;
+    document.getElementById("lsb-entropy").textContent = entropy.toFixed(3);
+
+    const verdictBox = document.getElementById("lsb-verdict-box");
+    const verdictEl = document.getElementById("lsb-verdict");
+    const verdictDesc = document.getElementById("lsb-verdict-desc");
+
+    verdictEl.textContent = result.verdict;
+
+    if (result.verdict === "Clean") {
+      verdictBox.style.background = "rgba(34, 197, 94, 0.15)";
+      verdictBox.style.border = "1px solid rgba(34, 197, 94, 0.3)";
+      verdictDesc.textContent =
+        "No significant indicators of hidden data found.";
+    } else if (result.verdict === "Suspicious") {
+      verdictBox.style.background = "rgba(234, 179, 8, 0.15)";
+      verdictBox.style.border = "1px solid rgba(234, 179, 8, 0.3)";
+      verdictDesc.textContent =
+        "Some statistical anomalies detected. May contain hidden data.";
+    } else {
+      verdictBox.style.background = "rgba(239, 68, 68, 0.15)";
+      verdictBox.style.border = "1px solid rgba(239, 68, 68, 0.3)";
+      verdictDesc.textContent =
+        "Strong indicators of steganographic manipulation detected!";
+    }
+
+    const lsbCanvas = document.getElementById("lsb-canvas");
+    lsbCanvas.width = w;
+    lsbCanvas.height = h;
+    const lsbCtx = lsbCanvas.getContext("2d");
+    const lsbData = lsbCtx.createImageData(w, h);
+
+    for (let i = 0; i < data.length; i += 4) {
+      const rLSB = (data[i] & 1) * 255;
+      const gLSB = (data[i + 1] & 1) * 255;
+      const bLSB = (data[i + 2] & 1) * 255;
+
+      lsbData.data[i] = rLSB;
+      lsbData.data[i + 1] = gLSB;
+      lsbData.data[i + 2] = bLSB;
+      lsbData.data[i + 3] = 255;
+    }
+
+    lsbCtx.putImageData(lsbData, 0, 0);
+
+    document.getElementById("lsb-results").hidden = false;
+    this.showToast("LSB Analysis complete.", "success");
   }
 
   async doSanitize() {
@@ -2647,7 +2670,6 @@ class StegoraApp {
     this.startX = 0;
     this.startY = 0;
 
-    // Dropzone
     this.setupDropzone(
       document.getElementById("redact-dropzone"),
       document.getElementById("redact-input"),
@@ -2661,7 +2683,6 @@ class StegoraApp {
       }
     );
 
-    // Toolbar
     document.getElementById("tool-pixelate")?.addEventListener("click", (e) => {
       this.redactMode = "pixelate";
       this.updateRedactToolbar(e.target);
@@ -2701,7 +2722,6 @@ class StegoraApp {
     const intensityInput = document.getElementById("redact-strength");
     if (intensityInput) {
       intensityInput.addEventListener("input", (e) => {
-        // Optional: visualized feedback or just update value
       });
     }
   }
@@ -2718,8 +2738,6 @@ class StegoraApp {
     document.getElementById("redact-editor").hidden = false;
 
     const canvas = document.getElementById("redact-canvas");
-    // Fit canvas to container but keep aspect ratio
-    // We set canvas resolution to image resolution
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
 
@@ -2731,7 +2749,6 @@ class StegoraApp {
     ];
     this.updateUndoBtn();
 
-    // Mouse Events
     this.setupRedactEvents(canvas);
   }
 
@@ -2761,10 +2778,8 @@ class StegoraApp {
       const pos = getPos(e);
       const ctx = canvas.getContext("2d");
 
-      // Restore temp snapshot to erase previous rect
       ctx.putImageData(this.tempSnapshot, 0, 0);
 
-      // Draw selection rect
       ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
       ctx.lineWidth = 2 * (canvas.width / canvas.getBoundingClientRect().width); // Scale line width
       ctx.setLineDash([5, 5]);
@@ -2772,7 +2787,6 @@ class StegoraApp {
       const h = pos.y - this.startY;
       ctx.strokeRect(this.startX, this.startY, w, h);
 
-      // Also black outline for contrast
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
       ctx.setLineDash([0, 0]);
       ctx.strokeRect(this.startX - 1, this.startY - 1, w + 2, h + 2);
@@ -2785,7 +2799,6 @@ class StegoraApp {
       const w = pos.x - this.startX;
       const h = pos.y - this.startY;
 
-      // Clear selection rect by restoring
       const ctx = canvas.getContext("2d");
       ctx.putImageData(this.tempSnapshot, 0, 0);
 
@@ -2809,7 +2822,6 @@ class StegoraApp {
     const strength =
       parseInt(document.getElementById("redact-strength").value) || 8;
 
-    // Normalize rect
     if (w < 0) {
       x += w;
       w = -w;
@@ -2819,7 +2831,6 @@ class StegoraApp {
       h = -h;
     }
 
-    // Clamp to canvas
     x = Math.max(0, x);
     y = Math.max(0, y);
     w = Math.min(w, canvas.width - x);
@@ -2834,13 +2845,11 @@ class StegoraApp {
       const pixelSize = Math.max(2, strength * 2);
       for (let py = 0; py < h; py += pixelSize) {
         for (let px = 0; px < w; px += pixelSize) {
-          // Get top-left pixel color
           const i = (py * w + px) * 4;
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
 
-          // Fill block
           for (let by = 0; by < pixelSize && py + by < h; by++) {
             for (let bx = 0; bx < pixelSize && px + bx < w; bx++) {
               const ni = ((py + by) * w + (px + bx)) * 4;
@@ -2853,18 +2862,15 @@ class StegoraApp {
       }
       ctx.putImageData(imgData, x, y);
     } else if (this.redactMode === "blur") {
-      // Simple multi-pass box blur for performance
       const radius = Math.max(1, strength);
       const passes = 3; // Approximation of Gaussian
 
-      // Use an offscreen canvas for resizing-based blur (fastest)
       const offCanvas = document.createElement("canvas");
       offCanvas.width = w;
       offCanvas.height = h;
       const offCtx = offCanvas.getContext("2d");
       offCtx.putImageData(imgData, 0, 0);
 
-      // Downscale
       const sW = Math.max(1, Math.floor(w / radius));
       const sH = Math.max(1, Math.floor(h / radius));
 
@@ -2876,7 +2882,6 @@ class StegoraApp {
       smallCtx.imageSmoothingQuality = "medium";
       smallCtx.drawImage(offCanvas, 0, 0, sW, sH);
 
-      // Upscale back
       const finalCanvas = document.createElement("canvas");
       finalCanvas.width = w;
       finalCanvas.height = h;
@@ -2885,11 +2890,9 @@ class StegoraApp {
       finalCtx.imageSmoothingQuality = "medium"; // Smooth blur
       finalCtx.drawImage(smallCanvas, 0, 0, w, h);
 
-      // Apply back to main context
       ctx.drawImage(finalCanvas, x, y);
     }
 
-    // Push to undo stack
     const newSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
     this.redactUndoStack.push(newSnapshot);
     if (this.redactUndoStack.length > 10) this.redactUndoStack.shift(); // Limit

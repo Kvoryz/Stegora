@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=2.84" />
+    <link rel="stylesheet" href="assets/css/style.css?v=2.93" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
@@ -96,10 +96,10 @@
         <!-- Metadata Panel (Exif, Sanitize) -->
       <section class="panel" id="metadata-panel">
         <nav class="inner-tabs">
-          <button class="inner-tab active" data-target="inner-exif">
+          <button class="inner-tab active" data-inner="exif">
             Exif Data
           </button>
-          <button class="inner-tab" data-target="inner-sanitize">
+          <button class="inner-tab" data-inner="sanitize">
             Sanitize
           </button>
         </nav>
@@ -183,61 +183,79 @@
             Inspect Exif Data
           </button>
 
-          <div class="analysis-results" id="analysis-results" hidden>
-            <div class="result-header">
-              <h3>Exif Data Found</h3>
+          <div class="analysis-results" id="analysis-results" hidden style="background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;">
+            <div class="result-header" style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <h3 style="font-size: 0.95rem; font-weight: 600;">Exif Data Found</h3>
             </div>
-            <div class="analysis-content">
+            <div class="analysis-content" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
               <!-- File Info -->
-              <div class="meta-section">
-                <h4>File Info</h4>
-                <div class="meta-grid">
-                  <div class="meta-row">
-                    <span class="meta-label">Type:</span>
-                    <span id="meta-type"></span>
+              <div class="meta-section" style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                  </svg>
+                  File Info
+                </h4>
+                <div class="meta-grid" style="display: grid; gap: 6px;">
+                  <div class="meta-row" style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">Type:</span>
+                    <span id="meta-type" style="font-weight: 500;"></span>
                   </div>
-                  <div class="meta-row">
-                    <span class="meta-label">Size:</span>
-                    <span id="meta-size"></span>
+                  <div class="meta-row" style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">Size:</span>
+                    <span id="meta-size" style="font-weight: 500;"></span>
                   </div>
-                  <div class="meta-row">
-                    <span class="meta-label">Dimensions:</span>
-                    <span id="meta-dims"></span>
+                  <div class="meta-row" style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">Dimensions:</span>
+                    <span id="meta-dims" style="font-weight: 500;"></span>
                   </div>
                 </div>
               </div>
 
               <!-- Privacy Scan -->
-              <div class="meta-section">
-                <h4>Privacy Scan</h4>
-                <div class="meta-warning">
-                  <span id="meta-hidden">Checking...</span>
+              <div class="meta-section" id="privacy-scan-section" style="border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  Privacy Scan
+                </h4>
+                <div class="meta-warning" style="padding: 10px; border-radius: 6px; text-align: center;">
+                  <span id="meta-hidden" style="font-size: 0.9rem; font-weight: 500;">Checking...</span>
                 </div>
               </div>
 
               <!-- Exif Data -->
-              <div class="meta-section">
-                <h4>Exif Details</h4>
-                <div class="meta-grid">
-                  <div class="meta-row" id="row-camera" hidden>
-                    <span class="meta-label">Camera:</span>
-                    <span id="meta-camera"></span>
+              <div class="meta-section" style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                  </svg>
+                  Exif Details
+                </h4>
+                <div class="meta-grid" style="display: grid; gap: 6px;">
+                  <div class="meta-row" id="row-camera" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">📷 Camera:</span>
+                    <span id="meta-camera" style="font-weight: 500;"></span>
                   </div>
-                  <div class="meta-row" id="row-date" hidden>
-                    <span class="meta-label">Date Taken:</span>
-                    <span id="meta-date"></span>
+                  <div class="meta-row" id="row-date" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">📅 Date Taken:</span>
+                    <span id="meta-date" style="font-weight: 500;"></span>
                   </div>
-                  <div class="meta-row" id="row-gps" hidden>
-                    <span class="meta-label">GPS:</span>
-                    <span id="meta-gps"></span>
+                  <div class="meta-row" id="row-gps" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">📍 GPS:</span>
+                    <span id="meta-gps" style="font-weight: 500; color: var(--error);"></span>
                   </div>
-                  <div class="meta-row" id="row-software" hidden>
-                    <span class="meta-label">Software:</span>
-                    <span id="meta-software"></span>
+                  <div class="meta-row" id="row-software" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">💻 Software:</span>
+                    <span id="meta-software" style="font-weight: 500;"></span>
                   </div>
-                  <div class="meta-row" id="row-other" hidden>
-                    <span class="meta-label">Other:</span>
-                    <span id="meta-other"></span>
+                  <div class="meta-row" id="row-other" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span class="meta-label" style="color: var(--text-secondary);">🔖 Other:</span>
+                    <span id="meta-other" style="font-weight: 500;"></span>
                   </div>
                 </div>
               </div>
@@ -325,24 +343,38 @@
       <!-- Analysis Panel (Steganalysis) -->
       <section class="panel" id="analysis-panel">
         <nav class="inner-tabs">
-          <button class="inner-tab active" data-target="inner-steganalysis">
-            Steganalysis
+          <button class="inner-tab active" data-inner="steganalysis">
+            Image Diff
+          </button>
+          <button class="inner-tab" data-inner="lsb-analysis">
+            LSB Analysis
           </button>
         </nav>
 
         <!-- Inner: Steganalysis (Image Diff) -->
         <div class="inner-panel active" id="inner-steganalysis">
-           <div class="compare-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+           <p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-bottom: 1rem;">
+             Compare two images to detect pixel-level differences that may indicate hidden data.
+           </p>
+           
+           <div class="compare-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem;">
                <!-- Original Image -->
-               <div class="compare-box" style="flex:1;">
-                   <h4 style="margin-bottom:0.5rem; text-align:center;">Original</h4>
-                   <div class="upload-zone" id="steg-orig-dropzone" style="height: 150px;">
+               <div class="compare-box" style="background: var(--bg-secondary); border-radius: 12px; padding: 12px; border: 1px solid var(--border-color);">
+                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
+                         <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                       </svg>
+                       <span style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Original</span>
+                   </div>
+                   <div class="upload-zone" id="steg-orig-dropzone" style="height: 120px; border-style: dashed;">
                         <input type="file" id="steg-orig-input" accept="image/*" hidden />
-                        <div class="upload-content">
-                            <p class="upload-text" style="font-size: 0.9rem;">Drop Original</p>
+                        <div class="upload-content" style="padding: 8px;">
+                            <p class="upload-text" style="font-size: 0.85rem;">Drop or Click</p>
+                            <span class="upload-hint" style="font-size: 0.75rem;">Before encoding</span>
                         </div>
-                        <div class="preview-thumb" id="steg-orig-preview" hidden>
-                            <img id="steg-orig-img" />
+                        <div class="preview-thumb" id="steg-orig-preview" hidden style="padding: 8px;">
+                            <img id="steg-orig-img" style="width: 40px; height: 40px;"/>
+                            <span class="preview-label" style="font-size: 0.75rem; flex: 1;">Loaded</span>
                             <div class="preview-actions">
                                 <button type="button" class="preview-remove" id="steg-orig-remove">
                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -353,15 +385,22 @@
                </div>
                
                <!-- Suspect Image -->
-               <div class="compare-box" style="flex:1;">
-                   <h4 style="margin-bottom:0.5rem; text-align:center;">Suspect</h4>
-                   <div class="upload-zone" id="steg-susp-dropzone" style="height: 150px;">
+               <div class="compare-box" style="background: var(--bg-secondary); border-radius: 12px; padding: 12px; border: 1px solid var(--border-color);">
+                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2">
+                         <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+                       </svg>
+                       <span style="font-size: 0.85rem; font-weight: 600; color: var(--error);">Suspect</span>
+                   </div>
+                   <div class="upload-zone" id="steg-susp-dropzone" style="height: 120px; border-style: dashed;">
                         <input type="file" id="steg-susp-input" accept="image/*" hidden />
-                        <div class="upload-content">
-                            <p class="upload-text" style="font-size: 0.9rem;">Drop Suspect</p>
+                        <div class="upload-content" style="padding: 8px;">
+                            <p class="upload-text" style="font-size: 0.85rem;">Drop or Click</p>
+                            <span class="upload-hint" style="font-size: 0.75rem;">After encoding</span>
                         </div>
-                        <div class="preview-thumb" id="steg-susp-preview" hidden>
-                            <img id="steg-susp-img" />
+                        <div class="preview-thumb" id="steg-susp-preview" hidden style="padding: 8px;">
+                            <img id="steg-susp-img" style="width: 40px; height: 40px;"/>
+                            <span class="preview-label" style="font-size: 0.75rem; flex: 1;">Loaded</span>
                             <div class="preview-actions">
                                 <button type="button" class="preview-remove" id="steg-susp-remove">
                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -372,10 +411,18 @@
                </div>
            </div>
 
-           <div class="controls-group" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
-               <label for="diff-amp" style="display:block; margin-bottom:0.5rem;">Amplification: <span id="amp-value">10x</span></label>
-               <input type="range" id="diff-amp" min="1" max="100" value="10" style="width:100%;">
-               <p style="font-size:0.8rem; color:rgba(255,255,255,0.5); margin-top:0.5rem;">Increase to visualize invisible differences.</p>
+           <div class="controls-group" style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border-color);">
+               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                   <label for="diff-amp" style="font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                         <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/>
+                       </svg>
+                       Amplification
+                   </label>
+                   <span id="amp-value" style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">10x</span>
+               </div>
+               <input type="range" id="diff-amp" min="1" max="100" value="10" style="width:100%; accent-color: var(--accent);">
+               <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Higher values reveal subtler pixel changes.</p>
            </div>
 
            <button class="btn primary" id="steg-compare-btn" disabled>
@@ -385,31 +432,96 @@
              Compare Images
            </button>
            
-           <div class="analysis-results" id="steg-results" hidden>
-                <h3>Difference Map</h3>
-                <canvas id="diff-canvas" style="width:100%; border-radius:8px; margin-top:1rem;"></canvas>
-                <p id="diff-stats" style="margin-top:0.5rem; text-align:center;"></p>
+           <div class="analysis-results" id="steg-results" hidden style="margin-top: 1.5rem; background: var(--bg-secondary); border-radius: 12px; padding: 1rem; border: 1px solid var(--border-color);">
+                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                    </svg>
+                    Difference Map
+                </h3>
+                <canvas id="diff-canvas" style="width:100%; border-radius:8px; border: 1px solid var(--border-color);"></canvas>
+                <p id="diff-stats" style="margin-top: 0.75rem; text-align: center; font-size: 0.9rem; padding: 8px; background: var(--bg-tertiary); border-radius: 8px;"></p>
+           </div>
+        </div>
+
+        <!-- Inner: LSB Analysis (Single Image) -->
+        <div class="inner-panel" id="inner-lsb-analysis">
+           <div class="upload-zone" id="lsb-dropzone">
+               <input type="file" id="lsb-input" accept="image/*" hidden />
+               <div class="upload-content">
+                   <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/>
+                      <path d="M11 8v6M8 11h6"/>
+                   </svg>
+                   <div class="upload-info">
+                       <p class="upload-text">Drop image to analyze</p>
+                       <span class="upload-hint">Detect hidden data using LSB statistics</span>
+                   </div>
+               </div>
+               <div class="preview-thumb" id="lsb-preview" hidden>
+                   <img id="lsb-img" />
+                   <span class="preview-label" id="lsb-filename"></span>
+                   <div class="preview-actions">
+                       <button type="button" class="preview-remove" id="lsb-remove">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                       </button>
+                   </div>
+               </div>
+           </div>
+
+           <button class="btn primary" id="lsb-analyze-btn" disabled>
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/>
+             </svg>
+             Analyze LSB
+           </button>
+           
+           <div class="lsb-results" id="lsb-results" hidden>
+                <div class="verdict-box" id="lsb-verdict-box" style="padding: 1rem; border-radius: 12px; margin-bottom: 1rem; text-align: center;">
+                    <h3 id="lsb-verdict" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Analyzing...</h3>
+                    <p id="lsb-verdict-desc" style="font-size: 0.9rem; opacity: 0.8;"></p>
+                </div>
+                
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div class="stat-box" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Chi-Square Score</p>
+                        <p id="lsb-chi" style="font-size: 1.5rem; font-weight: 600;">-</p>
+                    </div>
+                    <div class="stat-box" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">LSB Entropy</p>
+                        <p id="lsb-entropy" style="font-size: 1.5rem; font-weight: 600;">-</p>
+                    </div>
+                </div>
+                
+                <h4 style="margin-bottom: 0.5rem;">LSB Plane Visualization</h4>
+                <canvas id="lsb-canvas" style="width:100%; border-radius:8px; border: 1px solid var(--border-color);"></canvas>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: center;">Blue channel LSB extracted. Patterns may indicate hidden data.</p>
            </div>
         </div>
       </section>
 
       <!-- Redact Panel (Obfuscator) -->
       <section class="panel" id="redact-panel">
-        <div class="upload-zone" id="redact-dropzone">
-          <input type="file" id="redact-input" accept="image/*" hidden />
-          <div class="upload-content">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-               <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-            <div class="upload-info">
-              <p class="upload-text">Drop image to Redact</p>
-              <span class="upload-hint">Blur or Pixelate sensitive info</span>
+        <nav class="inner-tabs">
+          <button class="inner-tab active" data-inner="obfuscate">Obfuscate</button>
+        </nav>
+
+        <div class="inner-panel active" id="inner-obfuscate">
+          <div class="upload-zone" id="redact-dropzone">
+            <input type="file" id="redact-input" accept="image/*" hidden />
+            <div class="upload-content">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                 <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                 <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+              <div class="upload-info">
+                <p class="upload-text">Drop image to Redact</p>
+                <span class="upload-hint">Blur or Pixelate sensitive info</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="redact-editor" id="redact-editor" hidden>
+          <div class="redact-editor" id="redact-editor" hidden>
             <div class="redact-toolbar">
                 <div class="tool-group">
                     <button class="btn sm active" id="tool-pixelate" title="Pixelate">
@@ -457,6 +569,7 @@
             
             <p class="help-text" style="text-align:center; font-size:0.85rem; color:var(--text-secondary); margin-top:8px;">Drag over area to apply effect.</p>
         </div>
+        </div> <!-- Close inner-obfuscate -->
       </section>
 
         <!-- Steganography Section with Inner Tabs -->
@@ -744,18 +857,6 @@
               <path d="M7 11V7a5 5 0 0 1 9.9-1" />
             </svg>
             Decode Message
-          </button>
-
-          <button class="btn secondary" id="unscramble-btn" disabled>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-            </svg>
-            Unscramble Image
           </button>
 
           <div class="result-box" id="result-box" hidden>
@@ -1251,13 +1352,13 @@
         <!-- Analysis Panel (Exif, Steganalysis, Sanitize) -->
       <section class="panel" id="analysis-panel" hidden>
         <nav class="inner-tabs">
-          <button class="inner-tab active" data-target="inner-exif">
+          <button class="inner-tab active" data-inner="exif">
             Exif Data
           </button>
-          <button class="inner-tab" data-target="inner-steganalysis">
+          <button class="inner-tab" data-inner="steganalysis">
             Steganalysis
           </button>
-          <button class="inner-tab" data-target="inner-sanitize">
+          <button class="inner-tab" data-inner="sanitize">
             Sanitize
           </button>
         </nav>
@@ -1425,7 +1526,7 @@
 
 
 
-    <script src="assets/js/app.js?v=2.84"></script>
+    <script src="assets/js/app.js?v=2.93"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

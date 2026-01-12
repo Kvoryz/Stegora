@@ -1107,55 +1107,53 @@ body {
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
   .app-container {
-    padding: 24px 16px;
+    padding: 20px 12px;
+    overflow-x: hidden;
   }
 
   .header {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .logo-text {
-    font-size: 24px;
+    font-size: 22px;
   }
 
-  /* Scrollable tabs */
+  /* Scrollable tabs - only category and sub-tabs scroll */
   .category-tabs,
-  .sub-tabs,
-  .inner-tabs {
+  .sub-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 8px; /* space for scrollbar */
-    padding-right: 16px; /* End padding */
-    margin-right: -16px; /* Negative margin to span full width if aligned */
-    /* Reseting mask if needed or just simple padding */
-    mask-image: linear-gradient(to right, black 90%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
-  }
-
-  .app-container {
-    padding: 24px 16px;
-    overflow-x: hidden; /* Prevent body scroll */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 4px;
+    padding: 4px;
   }
 
   .category-tabs::-webkit-scrollbar,
-  .sub-tabs::-webkit-scrollbar,
-  .inner-tabs::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .category-tabs::-webkit-scrollbar-thumb,
-  .sub-tabs::-webkit-scrollbar-thumb,
-  .inner-tabs::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
+  .sub-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .category-tab,
-  .sub-tab,
-  .inner-tab {
-    flex: 0 0 auto; /* Prevent shrinking */
+  .sub-tab {
+    flex: 0 0 auto;
     white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Inner tabs stay full width like desktop */
+  .inner-tabs {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .inner-tab {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 13px;
   }
 
   /* Redact Tool */

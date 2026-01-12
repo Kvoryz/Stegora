@@ -1,106 +1,120 @@
-# Stegora - Secure Steganography & Forensics
-
-Stegora is a modern, privacy-focused web application that allows you to hide secret messages inside images and audio files using advanced steganography techniques. It combines LSB (Least Significant Bit) manipulation with AES-256 encryption to ensure your data remains hidden and secure.
-
-Beyond hiding secrets, Stegora is also a powerful **Forensics Tool**, capable of analyzing images for hidden data and privacy leaks (Metadata/GPS).
+# Stegora - Secure Steganography & Privacy Tools
 
 <p align="center">
-  <img src="assets/iconste.png" alt="Stegora Icon" width="200">
+  <img src="assets/iconste.png" alt="Stegora Icon" width="150">
 </p>
+
+Stegora is a modern, privacy-focused web application for **hiding secrets**, **analyzing images**, and **protecting your privacy**. Everything runs 100% client-side—no data leaves your device.
 
 ## ✨ Features
 
-### 🛡️ Secure Encoding
+### 🖼️ Image Tools
 
-- **Image Steganography**: Hide text messages inside PNG, JPG, and WEBP images.
-- **Audio Steganography**: Hide messages inside WAV audio files.
-- **AES-256 Encryption**: All messages are encrypted with military-grade AES encryption.
-- **Smart Capacity**: Automatically calculates how many characters you can hide based on file size.
-- **Privacy Sanitization**: Automatically strips all metadata (Exif, GPS, Camera info) during encoding.
+| Feature                | Description                                                      |
+| ---------------------- | ---------------------------------------------------------------- |
+| **Steganography**      | Hide text messages inside PNG/JPG/WEBP images using LSB encoding |
+| **Scramble**           | Visually encrypt images with password-protected pixel scrambling |
+| **Redact (Obfuscate)** | Pixelate or blur sensitive areas in images                       |
+| **Metadata Sanitize**  | Strip all EXIF, GPS, and camera info from images                 |
 
-### 🔧 Submit Workflow
+### 🔊 Audio Tools
 
-When you click **Submit**, you get two options:
+| Feature                 | Description                          |
+| ----------------------- | ------------------------------------ |
+| **Audio Steganography** | Hide messages inside WAV audio files |
 
-1. **Sanitize Only**: Removes all metadata and saves as `sanitize_filename.png` — no message hidden.
-2. **Encode Message**: Hides your secret message AND strips metadata, saving as `stegora_filename.png`.
-3. **Scramble Image**: Visually encrypts the image using XOR with your password. The image becomes unrecognizable noise. To restore, scramble again with the same password. Output: `scramble_filename.png`.
+### 🔍 Analysis Tools
 
-### 🕵️‍♂️ Hybrid Analysis (Forensics)
+| Feature            | Description                                                |
+| ------------------ | ---------------------------------------------------------- |
+| **EXIF Inspector** | Extract camera, date, GPS, software metadata from images   |
+| **Image Diff**     | Compare two images to detect pixel-level changes           |
+| **LSB Analysis**   | Detect hidden data using Chi-Square and entropy statistics |
 
-Stegora includes a dual-engine analysis tool:
+### 🔐 Security Features
 
-1. **Steganalysis**: Detects hidden messages by analyzing pixel statistics (LSB noise patterns, Chi-Square analysis).
-2. **Metadata Scan**: Parses raw file data to extract hidden tags.
-   - **GPS Location**: Extracts Latitude & Longitude if present.
-   - **Device Info**: Identifies Camera Make & Model.
-   - **Ratings**: Classifies images as **"Safe"** (Green) if anonymized, or warns you if privacy-leaking tags are found.
-
-### 🎭 Decoy Mode
-
-Protect yourself from coercion:
-
-- **Real Password**: Decrypts the actual secret message.
-- **Wrong/No Password**: Shows a **Decoy Message** ("Who are you?") instead of an error.
-
-## 🛠️ Technology Stack
-
-- **Frontend**: HTML5, Vanilla CSS3 (Plus Jakarta Sans), JavaScript (ES6+).
-- **Encryption**: CryptoJS (AES-256).
-- **Core Logic**: Custom Bit-Plane Slicing & TIFF/Exif Parsing.
-- **Deployment**: Vercel ready (Clean URLs, Secure Headers).
-- **PWA**: Fully offline-capable Progressive Web App.
+- **AES-256 Encryption**: Messages are encrypted before hiding
+- **Decoy Mode**: Wrong password shows decoy message instead of error
+- **Password-Protected Scramble**: Images with embedded password verification
+- **Client-Side Only**: Zero server uploads, 100% browser-based
 
 ## 🚀 How to Use
 
-### 1. Encode (Hide)
+### Steganography → Encode
 
-1. Upload an image or audio file.
-2. Enter your secret message.
-3. (Optional) Set a password for encryption.
-4. Click **Submit** → Choose **Encode Message**.
-5. Download the secured file (prefixed with `stegora_`).
+1. Upload an image
+2. Enter your secret message
+3. (Optional) Set a password
+4. Click **Encode Message** → Download
 
-### 2. Sanitize (Clean Metadata Only)
+### Steganography → Decode
 
-1. Upload an image.
-2. Click **Submit** → Choose **Sanitize Only**.
-3. Download the clean file (prefixed with `sanitize_`).
+1. Upload the encoded image
+2. Enter the password (if encrypted)
+3. Click **Decode Message** → Read the secret
 
-### 3. Scramble (Visual Encryption)
+### Scramble → Scramble
 
-1. Upload an image.
-2. Enter a password (required).
-3. Click **Submit** → Choose **Scramble Image**.
-4. Download the scrambled file (prefixed with `scramble_`).
-5. To **restore**: Upload the scrambled image, enter the same password, and Scramble again.
+1. Upload an image
+2. Enter a password
+3. Click **Scramble Image** → Download scrambled image
 
-### 3. Decode (Reveal)
+### Scramble → Unscramble
 
-1. Upload the encoded file.
-2. Enter the password.
-3. Click **Decode** to reveal the secret.
-   - _Note: Wrong password triggers Decoy Mode._
+1. Upload the scrambled image
+2. Enter the same password
+3. Click **Unscramble Image** → Original restored
 
-### 4. Analyze (Forensics)
+### Metadata → Exif Data
 
-1. Upload any image to the **Analyze** tab.
-2. View the **Verdict** (Clean/Suspicious/Detected).
-3. Check the **Metadata Report**:
-   - **Green**: Safe! (No tracking data found).
-   - **Red**: Warning! (Contains Exif or GPS data).
+1. Upload any image
+2. Click **Inspect Exif Data**
+3. View: File info, Privacy scan, Camera/GPS/Date details
 
-## 📱 Installation (PWA)
+### Metadata → Sanitize
 
-Stegora works offline! Install it on your device:
+1. Upload an image
+2. Click **Sanitize & Download**
+3. Clean image with all metadata stripped
 
-- **Mobile (iOS/Android)**: Tap "Share" → "Add to Home Screen".
-- **Desktop**: Click the install icon in the URL bar.
+### Analysis → Image Diff
 
-## 🔒 Privacy
+1. Upload Original image
+2. Upload Suspect image
+3. Adjust Amplification slider
+4. Click **Compare Images** → See difference map
 
-Stegora runs **entirely in your browser**. No images, audio files, or passwords are ever uploaded to a server. Your secrets stay on your device.
+### Analysis → LSB Analysis
+
+1. Upload any image
+2. Click **Analyze LSB**
+3. View: Verdict (Clean/Suspicious/Detected), Chi-Square, Entropy, LSB Plane
+
+### Redact → Obfuscate
+
+1. Upload an image
+2. Choose Pixelate or Blur tool
+3. Adjust strength slider
+4. Draw over sensitive areas
+5. Download the redacted image
+
+## 🛠️ Tech Stack
+
+- **Frontend**: HTML5, Vanilla CSS3, JavaScript ES6+
+- **Encryption**: Web Crypto API (AES-256, PBKDF2)
+- **Fonts**: Plus Jakarta Sans (Google Fonts)
+- **Deployment**: Vercel-ready with PWA support
+- **Offline**: Service Worker for full offline capability
+
+## 📱 Install as App (PWA)
+
+- **Mobile**: Tap Share → Add to Home Screen
+- **Desktop**: Click install icon in URL bar
+
+## 🔒 Privacy Promise
+
+All processing happens **in your browser**. No images, audio, passwords, or messages are ever uploaded. Your secrets stay on your device.
 
 ---
 
-_Hide secrets in plain sight._
+<p align="center"><em>Hide secrets in plain sight.</em></p>
