@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=2.995" />
+    <link rel="stylesheet" href="assets/css/style.css?v=3.06" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
@@ -98,524 +98,1246 @@
 
       <main class="main-content">
         <!-- Metadata Panel (Exif, Sanitize) -->
-      <section class="panel" id="metadata-panel">
-        <nav class="inner-tabs">
-          <button class="inner-tab active" data-inner="exif">
-            Exif Data
-          </button>
-          <button class="inner-tab" data-inner="sanitize">
-            Sanitize
-          </button>
-        </nav>
+        <section class="panel" id="metadata-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="exif">
+              Exif Data
+            </button>
+            <button class="inner-tab" data-inner="sanitize">Sanitize</button>
+          </nav>
 
-        <!-- Inner: Exif Data (formerly Analyze) -->
-        <div class="inner-panel active" id="inner-exif">
-          <div class="upload-zone" id="analyze-dropzone">
-            <input
-              type="file"
-              id="analyze-input"
-              accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
-              hidden
-            />
-            <div class="upload-content">
-              <svg
-                class="upload-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-              <div class="upload-info">
-                <p class="upload-text">Drop image to inspect Exif</p>
-                <span class="upload-hint"
-                  >Select Original File (not Gallery)</span
+          <!-- Inner: Exif Data (formerly Analyze) -->
+          <div class="inner-panel active" id="inner-exif">
+            <div class="upload-zone" id="analyze-dropzone">
+              <input
+                type="file"
+                id="analyze-input"
+                accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
                 >
-              </div>
-            </div>
-            <div class="preview-thumb" id="analyze-preview" hidden>
-              <img id="analyze-preview-img" alt="Preview" />
-              <div class="preview-actions">
-                <button
-                  type="button"
-                  class="preview-view"
-                  data-target="analyze-preview-img"
-                  title="View"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to inspect Exif</p>
+                  <span class="upload-hint"
+                    >Select Original File (not Gallery)</span
                   >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="preview-remove"
-                  id="analyze-remove"
-                  title="Remove"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <span class="preview-label">Image loaded</span>
-            </div>
-          </div>
-
-          <button class="btn primary" id="analyze-btn" disabled>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            Inspect Exif Data
-          </button>
-
-          <div class="analysis-results" id="analysis-results" hidden style="background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;">
-            <div class="result-header" style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-              </svg>
-              <h3 style="font-size: 0.95rem; font-weight: 600;">Exif Data Found</h3>
-            </div>
-            <div class="analysis-content" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
-              <!-- File Info -->
-              <div class="meta-section" style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px;">
-                <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
-                  </svg>
-                  File Info
-                </h4>
-                <div class="meta-grid" style="display: grid; gap: 6px;">
-                  <div class="meta-row" style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">Type:</span>
-                    <span id="meta-type" style="font-weight: 500;"></span>
-                  </div>
-                  <div class="meta-row" style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">Size:</span>
-                    <span id="meta-size" style="font-weight: 500;"></span>
-                  </div>
-                  <div class="meta-row" style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">Dimensions:</span>
-                    <span id="meta-dims" style="font-weight: 500;"></span>
-                  </div>
                 </div>
               </div>
-
-              <!-- Privacy Scan -->
-              <div class="meta-section" id="privacy-scan-section" style="border-radius: 8px; padding: 12px;">
-                <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
-                  Privacy Scan
-                </h4>
-                <div class="meta-warning" style="padding: 10px; border-radius: 6px; text-align: center;">
-                  <span id="meta-hidden" style="font-size: 0.9rem; font-weight: 500;">Checking...</span>
-                </div>
-              </div>
-
-              <!-- Exif Data -->
-              <div class="meta-section" style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px;">
-                <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-                  </svg>
-                  Exif Details
-                </h4>
-                <div class="meta-grid" style="display: grid; gap: 6px;">
-                  <div class="meta-row" id="row-camera" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">📷 Camera:</span>
-                    <span id="meta-camera" style="font-weight: 500;"></span>
-                  </div>
-                  <div class="meta-row" id="row-date" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">📅 Date Taken:</span>
-                    <span id="meta-date" style="font-weight: 500;"></span>
-                  </div>
-                  <div class="meta-row" id="row-gps" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">📍 GPS:</span>
-                    <span id="meta-gps" style="font-weight: 500; color: var(--error);"></span>
-                  </div>
-                  <div class="meta-row" id="row-software" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">💻 Software:</span>
-                    <span id="meta-software" style="font-weight: 500;"></span>
-                  </div>
-                  <div class="meta-row" id="row-other" hidden style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span class="meta-label" style="color: var(--text-secondary);">🔖 Other:</span>
-                    <span id="meta-other" style="font-weight: 500;"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Inner: Sanitize -->
-        <div class="inner-panel" id="inner-sanitize">
-          <div class="upload-zone" id="sanitize-dropzone">
-            <input
-              type="file"
-              id="sanitize-input"
-              accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
-              hidden
-            />
-            <div class="upload-content">
-              <svg
-                class="upload-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <div class="upload-info">
-                <p class="upload-text">Drop image to sanitize</p>
-                <span class="upload-hint">Removes Exif & Metadata</span>
-              </div>
-            </div>
-            <div class="preview-thumb" id="sanitize-preview" hidden>
-              <img id="sanitize-preview-img" alt="Preview" />
-              <div class="preview-actions">
-                <button
-                  type="button"
-                  class="preview-view"
-                  data-target="sanitize-preview-img"
-                  title="View"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
+              <div class="preview-thumb" id="analyze-preview" hidden>
+                <img id="analyze-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="analyze-preview-img"
+                    title="View"
                   >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="preview-remove"
-                  id="sanitize-remove"
-                  title="Remove"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <span class="preview-label">Image loaded</span>
-            </div>
-          </div>
-
-          <button class="btn secondary" id="sanitize-action-btn" disabled>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Sanitize & Download
-          </button>
-        </div>
-      </section>
-
-      <!-- Analysis Panel (Steganalysis) -->
-      <section class="panel" id="analysis-panel">
-        <nav class="inner-tabs">
-          <button class="inner-tab active" data-inner="steganalysis">
-            Image Diff
-          </button>
-          <button class="inner-tab" data-inner="lsb-analysis">
-            LSB Analysis
-          </button>
-        </nav>
-
-        <!-- Inner: Steganalysis (Image Diff) -->
-        <div class="inner-panel active" id="inner-steganalysis">
-           <div class="compare-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem;">
-               <!-- Original Image -->
-               <div class="compare-box" style="background: var(--bg-secondary); border-radius: 12px; padding: 12px; border: 1px solid var(--border-color);">
-                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
-                         <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-                       </svg>
-                       <span style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Original</span>
-                   </div>
-                   <div class="upload-zone" id="steg-orig-dropzone" style="height: 120px; border-style: dashed;">
-                        <input type="file" id="steg-orig-input" accept="image/*" hidden />
-                        <div class="upload-content" style="padding: 8px;">
-                            <p class="upload-text" style="font-size: 0.85rem;">Drop or Click</p>
-                            <span class="upload-hint" style="font-size: 0.75rem;">Before encoding</span>
-                        </div>
-                        <div class="preview-thumb" id="steg-orig-preview" hidden style="padding: 8px;">
-                            <img id="steg-orig-img" style="width: 40px; height: 40px;"/>
-                            <span class="preview-label" style="font-size: 0.75rem; flex: 1;">Loaded</span>
-                            <div class="preview-actions">
-                                <button type="button" class="preview-remove" id="steg-orig-remove">
-                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                   </div>
-               </div>
-               
-               <!-- Suspect Image -->
-               <div class="compare-box" style="background: var(--bg-secondary); border-radius: 12px; padding: 12px; border: 1px solid var(--border-color);">
-                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2">
-                         <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-                       </svg>
-                       <span style="font-size: 0.85rem; font-weight: 600; color: var(--error);">Suspect</span>
-                   </div>
-                   <div class="upload-zone" id="steg-susp-dropzone" style="height: 120px; border-style: dashed;">
-                        <input type="file" id="steg-susp-input" accept="image/*" hidden />
-                        <div class="upload-content" style="padding: 8px;">
-                            <p class="upload-text" style="font-size: 0.85rem;">Drop or Click</p>
-                            <span class="upload-hint" style="font-size: 0.75rem;">After encoding</span>
-                        </div>
-                        <div class="preview-thumb" id="steg-susp-preview" hidden style="padding: 8px;">
-                            <img id="steg-susp-img" style="width: 40px; height: 40px;"/>
-                            <span class="preview-label" style="font-size: 0.75rem; flex: 1;">Loaded</span>
-                            <div class="preview-actions">
-                                <button type="button" class="preview-remove" id="steg-susp-remove">
-                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                   </div>
-               </div>
-           </div>
-
-           <div class="controls-group" style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border-color);">
-               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                   <label for="diff-amp" style="font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 6px;">
-                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                         <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/>
-                       </svg>
-                       Amplification
-                   </label>
-                   <span id="amp-value" style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">10x</span>
-               </div>
-               <input type="range" id="diff-amp" min="1" max="100" value="10" style="width:100%; accent-color: var(--accent);">
-               <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Higher values reveal subtler pixel changes.</p>
-           </div>
-
-           <button class="btn primary" id="steg-compare-btn" disabled>
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-               <path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/>
-             </svg>
-             Compare Images
-           </button>
-           
-           <div class="analysis-results" id="steg-results" hidden style="margin-top: 1.5rem; background: var(--bg-secondary); border-radius: 12px; padding: 1rem; border: 1px solid var(--border-color);">
-                <h3 style="font-size: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
-                    Difference Map
+                  </button>
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="analyze-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="preview-label">Image loaded</span>
+              </div>
+            </div>
+
+            <div id="exif-actions" hidden>
+              <button class="btn primary" id="analyze-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                Inspect Exif Data
+              </button>
+            </div>
+
+            <div
+              class="analysis-results"
+              id="analysis-results"
+              hidden
+              style="
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                overflow: hidden;
+              "
+            >
+              <div
+                class="result-header"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 12px 16px;
+                  background: var(--bg-tertiary);
+                  border-bottom: 1px solid var(--border-color);
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <h3 style="font-size: 0.95rem; font-weight: 600">
+                  Exif Data Found
                 </h3>
-                <canvas id="diff-canvas" style="width:100%; border-radius:8px; border: 1px solid var(--border-color);"></canvas>
-                <p id="diff-stats" style="margin-top: 0.75rem; text-align: center; font-size: 0.9rem; padding: 8px; background: var(--bg-tertiary); border-radius: 8px;"></p>
-           </div>
-        </div>
-
-        <!-- Inner: LSB Analysis (Single Image) -->
-        <div class="inner-panel" id="inner-lsb-analysis">
-           <div class="upload-zone" id="lsb-dropzone">
-               <input type="file" id="lsb-input" accept="image/*" hidden />
-               <div class="upload-content">
-                   <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/>
-                      <path d="M11 8v6M8 11h6"/>
-                   </svg>
-                   <div class="upload-info">
-                       <p class="upload-text">Drop image to analyze</p>
-                       <span class="upload-hint">Detect hidden data using LSB statistics</span>
-                   </div>
-               </div>
-               <div class="preview-thumb" id="lsb-preview" hidden>
-                   <img id="lsb-img" />
-                   <span class="preview-label" id="lsb-filename"></span>
-                   <div class="preview-actions">
-                       <button type="button" class="preview-remove" id="lsb-remove">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                       </button>
-                   </div>
-               </div>
-           </div>
-
-           <button class="btn primary" id="lsb-analyze-btn" disabled>
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-               <path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/>
-             </svg>
-             Analyze LSB
-           </button>
-           
-           <div class="lsb-results" id="lsb-results" hidden>
-                <div class="verdict-box" id="lsb-verdict-box" style="padding: 1rem; border-radius: 12px; margin-bottom: 1rem; text-align: center;">
-                    <h3 id="lsb-verdict" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Analyzing...</h3>
-                    <p id="lsb-verdict-desc" style="font-size: 0.9rem; opacity: 0.8;"></p>
-                </div>
-                
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
-                    <div class="stat-box" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Chi-Square Score</p>
-                        <p id="lsb-chi" style="font-size: 1.5rem; font-weight: 600;">-</p>
+              </div>
+              <div
+                class="analysis-content"
+                style="
+                  padding: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 16px;
+                "
+              >
+                <!-- File Info -->
+                <div
+                  class="meta-section"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <h4
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      margin-bottom: 10px;
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                    "
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--text-secondary)"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                      />
+                      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                    </svg>
+                    File Info
+                  </h4>
+                  <div class="meta-grid" style="display: grid; gap: 6px">
+                    <div
+                      class="meta-row"
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >Type:</span
+                      >
+                      <span id="meta-type" style="font-weight: 500"></span>
                     </div>
-                    <div class="stat-box" style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary);">LSB Entropy</p>
-                        <p id="lsb-entropy" style="font-size: 1.5rem; font-weight: 600;">-</p>
+                    <div
+                      class="meta-row"
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >Size:</span
+                      >
+                      <span id="meta-size" style="font-weight: 500"></span>
                     </div>
+                    <div
+                      class="meta-row"
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >Dimensions:</span
+                      >
+                      <span id="meta-dims" style="font-weight: 500"></span>
+                    </div>
+                  </div>
                 </div>
-                
-                <h4 style="margin-bottom: 0.5rem;">LSB Plane Visualization</h4>
-                <canvas id="lsb-canvas" style="width:100%; border-radius:8px; border: 1px solid var(--border-color);"></canvas>
-                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: center;">Blue channel LSB extracted. Patterns may indicate hidden data.</p>
-           </div>
-        </div>
-      </section>
 
-      <!-- Redact Panel (Obfuscator) -->
-      <section class="panel" id="redact-panel">
-        <nav class="inner-tabs">
-          <button class="inner-tab active" data-inner="obfuscate">Obfuscate</button>
-          <button class="inner-tab" data-inner="color-picker">Color Extract</button>
-        </nav>
+                <!-- Privacy Scan -->
+                <div
+                  class="meta-section"
+                  id="privacy-scan-section"
+                  style="border-radius: 8px; padding: 12px"
+                >
+                  <h4
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      margin-bottom: 10px;
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                    "
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--text-secondary)"
+                      stroke-width="2"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Privacy Scan
+                  </h4>
+                  <div
+                    class="meta-warning"
+                    style="
+                      padding: 10px;
+                      border-radius: 6px;
+                      text-align: center;
+                    "
+                  >
+                    <span
+                      id="meta-hidden"
+                      style="font-size: 0.9rem; font-weight: 500"
+                      >Checking...</span
+                    >
+                  </div>
+                </div>
 
-        <div class="inner-panel active" id="inner-obfuscate">
-          <div class="upload-zone" id="redact-dropzone">
-            <input type="file" id="redact-input" accept="image/*" hidden />
-            <div class="upload-content">
-              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                 <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                 <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
-              <div class="upload-info">
-                <p class="upload-text">Drop image to Redact</p>
-                <span class="upload-hint">Blur or Pixelate sensitive info</span>
+                <!-- Exif Data -->
+                <div
+                  class="meta-section"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <h4
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      margin-bottom: 10px;
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                    "
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--text-secondary)"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <path d="M21 15l-5-5L5 21" />
+                    </svg>
+                    Exif Details
+                  </h4>
+                  <div class="meta-grid" style="display: grid; gap: 6px">
+                    <div
+                      class="meta-row"
+                      id="row-camera"
+                      hidden
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >📷 Camera:</span
+                      >
+                      <span id="meta-camera" style="font-weight: 500"></span>
+                    </div>
+                    <div
+                      class="meta-row"
+                      id="row-date"
+                      hidden
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >📅 Date Taken:</span
+                      >
+                      <span id="meta-date" style="font-weight: 500"></span>
+                    </div>
+                    <div
+                      class="meta-row"
+                      id="row-gps"
+                      hidden
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >📍 GPS:</span
+                      >
+                      <span
+                        id="meta-gps"
+                        style="font-weight: 500; color: var(--error)"
+                      ></span>
+                    </div>
+                    <div
+                      class="meta-row"
+                      id="row-software"
+                      hidden
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >💻 Software:</span
+                      >
+                      <span id="meta-software" style="font-weight: 500"></span>
+                    </div>
+                    <div
+                      class="meta-row"
+                      id="row-other"
+                      hidden
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                      "
+                    >
+                      <span
+                        class="meta-label"
+                        style="color: var(--text-secondary)"
+                        >🔖 Other:</span
+                      >
+                      <span id="meta-other" style="font-weight: 500"></span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="redact-editor" id="redact-editor" hidden>
-            <div class="redact-toolbar">
-                <div class="tool-group">
-                    <button class="btn sm active" id="tool-pixelate" title="Pixelate">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                           <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
-                        </svg>
-                        <span>Pixelate</span>
-                    </button>
-                    <button class="btn sm" id="tool-blur" title="Blur">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                           <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
-                           <path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6z" opacity="0.5"/>
-                        </svg>
-                        <span>Blur</span>
-                    </button>
+          <!-- Inner: Sanitize -->
+          <div class="inner-panel" id="inner-sanitize">
+            <div class="upload-zone" id="sanitize-dropzone">
+              <input
+                type="file"
+                id="sanitize-input"
+                accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to sanitize</p>
+                  <span class="upload-hint">Removes Exif & Metadata</span>
                 </div>
-                
-                <div class="tool-group flex-grow">
-                     <label class="compact-label">Strength</label>
-                     <input type="range" id="redact-strength" min="1" max="20" value="8">
+              </div>
+              <div class="preview-thumb" id="sanitize-preview" hidden>
+                <img id="sanitize-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="sanitize-preview-img"
+                    title="View"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="sanitize-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-
-                <div class="tool-group">
-                    <button class="btn sm secondary icon-only" id="redact-undo" title="Undo Last">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
-                    </button>
-                    <button class="btn sm secondary icon-only" id="redact-reset" title="Reset Changes">
-                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                    </button>
-                    <button class="btn sm danger icon-only" id="redact-delete" title="Remove Image">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                    <button class="btn sm primary icon-only" id="redact-download" title="Download">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="canvas-container" id="redact-container" style="position:relative; overflow:hidden; border-radius:8px; display:inline-block; max-width:100%; border:1px solid var(--border-color);">
-                <canvas id="redact-canvas" style="display:block; max-width:100%; cursor:crosshair;"></canvas>
-            </div>
-            
-            <p class="help-text" style="text-align:center; font-size:0.85rem; color:var(--text-secondary); margin-top:8px;">Drag over area to apply effect.</p>
-        </div>
-        </div> <!-- Close inner-obfuscate -->
-
-        <!-- Inner: Color Picker -->
-        <div class="inner-panel" id="inner-color-picker">
-          <div class="upload-zone" id="color-dropzone">
-            <input type="file" id="color-input" accept="image/*" hidden />
-            <div class="upload-content">
-              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-              <div class="upload-info">
-                <p class="upload-text">Drop image to extract colors</p>
-                <span class="upload-hint">Get dominant palette & hex codes</span>
+                <span class="preview-label">Image loaded</span>
               </div>
             </div>
-            
-            <div class="preview-thumb" id="color-preview" hidden>
-              <img id="color-preview-img" alt="Preview" />
-              <div class="preview-actions">
-                <button type="button" class="preview-remove" id="color-remove" title="Remove">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+
+            <div id="sanitize-actions" hidden>
+              <button class="btn secondary" id="sanitize-action-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Sanitize & Download
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Analysis Panel (Steganalysis) -->
+        <section class="panel" id="analysis-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="steganalysis">
+              Image Diff
+            </button>
+            <button class="inner-tab" data-inner="lsb-analysis">
+              LSB Analysis
+            </button>
+          </nav>
+
+          <!-- Inner: Steganalysis (Image Diff) -->
+          <div class="inner-panel active" id="inner-steganalysis">
+            <div
+              class="compare-container"
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <!-- Original Image -->
+              <div
+                class="compare-box"
+                style="
+                  background: var(--bg-secondary);
+                  border-radius: 12px;
+                  padding: 12px;
+                  border: 1px solid var(--border-color);
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--success)"
+                    stroke-width="2"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
                   </svg>
-                </button>
+                  <span
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      color: var(--success);
+                    "
+                    >Original</span
+                  >
+                </div>
+                <div
+                  class="upload-zone"
+                  id="steg-orig-dropzone"
+                  style="height: 120px; border-style: dashed"
+                >
+                  <input
+                    type="file"
+                    id="steg-orig-input"
+                    accept="image/*"
+                    hidden
+                  />
+                  <div class="upload-content" style="padding: 8px">
+                    <p class="upload-text" style="font-size: 0.85rem">
+                      Drop or Click
+                    </p>
+                    <span class="upload-hint" style="font-size: 0.75rem"
+                      >Before encoding</span
+                    >
+                  </div>
+                  <div
+                    class="preview-thumb"
+                    id="steg-orig-preview"
+                    hidden
+                    style="padding: 8px"
+                  >
+                    <img id="steg-orig-img" style="width: 40px; height: 40px" />
+                    <span
+                      class="preview-label"
+                      style="font-size: 0.75rem; flex: 1"
+                      >Loaded</span
+                    >
+                    <div class="preview-actions">
+                      <button
+                        type="button"
+                        class="preview-remove"
+                        id="steg-orig-remove"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              <!-- Suspect Image -->
+              <div
+                class="compare-box"
+                style="
+                  background: var(--bg-secondary);
+                  border-radius: 12px;
+                  padding: 12px;
+                  border: 1px solid var(--border-color);
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--error)"
+                    stroke-width="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <span
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      color: var(--error);
+                    "
+                    >Suspect</span
+                  >
+                </div>
+                <div
+                  class="upload-zone"
+                  id="steg-susp-dropzone"
+                  style="height: 120px; border-style: dashed"
+                >
+                  <input
+                    type="file"
+                    id="steg-susp-input"
+                    accept="image/*"
+                    hidden
+                  />
+                  <div class="upload-content" style="padding: 8px">
+                    <p class="upload-text" style="font-size: 0.85rem">
+                      Drop or Click
+                    </p>
+                    <span class="upload-hint" style="font-size: 0.75rem"
+                      >After encoding</span
+                    >
+                  </div>
+                  <div
+                    class="preview-thumb"
+                    id="steg-susp-preview"
+                    hidden
+                    style="padding: 8px"
+                  >
+                    <img id="steg-susp-img" style="width: 40px; height: 40px" />
+                    <span
+                      class="preview-label"
+                      style="font-size: 0.75rem; flex: 1"
+                      >Loaded</span
+                    >
+                    <div class="preview-actions">
+                      <button
+                        type="button"
+                        class="preview-remove"
+                        id="steg-susp-remove"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="steg-actions" hidden>
+              <div
+                class="controls-group"
+                style="
+                  background: var(--bg-secondary);
+                  padding: 1rem;
+                  border-radius: 12px;
+                  margin-bottom: 1rem;
+                  border: 1px solid var(--border-color);
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <label
+                    for="diff-amp"
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 500;
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                    "
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--accent)"
+                      stroke-width="2"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="M21 21l-4.35-4.35" />
+                      <path d="M11 8v6M8 11h6" />
+                    </svg>
+                    Amplification
+                  </label>
+                  <span
+                    id="amp-value"
+                    style="
+                      font-size: 0.85rem;
+                      font-weight: 600;
+                      color: var(--accent);
+                    "
+                    >10x</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="diff-amp"
+                  min="1"
+                  max="100"
+                  value="10"
+                  style="width: 100%; accent-color: var(--accent)"
+                />
+                <p
+                  style="
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin-top: 6px;
+                  "
+                >
+                  Higher values reveal subtler pixel changes.
+                </p>
+              </div>
+
+              <button class="btn primary" id="steg-compare-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 21l-4.35-4.35" />
+                  <circle cx="11" cy="11" r="8" />
+                </svg>
+                Compare Images
+              </button>
+            </div>
+
+            <div
+              class="analysis-results"
+              id="steg-results"
+              hidden
+              style="
+                margin-top: 1.5rem;
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                padding: 1rem;
+                border: 1px solid var(--border-color);
+              "
+            >
+              <h3
+                style="
+                  font-size: 1rem;
+                  margin-bottom: 0.75rem;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M3 9h18M9 21V9" />
+                </svg>
+                Difference Map
+              </h3>
+              <canvas
+                id="diff-canvas"
+                style="
+                  width: 100%;
+                  border-radius: 8px;
+                  border: 1px solid var(--border-color);
+                "
+              ></canvas>
+              <p
+                id="diff-stats"
+                style="
+                  margin-top: 0.75rem;
+                  text-align: center;
+                  font-size: 0.9rem;
+                  padding: 8px;
+                  background: var(--bg-tertiary);
+                  border-radius: 8px;
+                "
+              ></p>
             </div>
           </div>
 
-          <div class="result-box" id="color-results" hidden>
-             <div class="result-header">
-                <h3>Dominant Colors</h3>
-             </div>
-             <div style="padding: 16px;">
-                <div id="color-palette" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-                   <!-- Swatches injected here -->
+          <!-- Inner: LSB Analysis (Single Image) -->
+          <div class="inner-panel" id="inner-lsb-analysis">
+            <div class="upload-zone" id="lsb-dropzone">
+              <input type="file" id="lsb-input" accept="image/*" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M21 21l-4.35-4.35" />
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M11 8v6M8 11h6" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to analyze</p>
+                  <span class="upload-hint"
+                    >Detect hidden data using LSB statistics</span
+                  >
                 </div>
-                
-                <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">Color List</h4>
-                <div id="color-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;">
-                   <!-- List items injected here -->
+              </div>
+              <div class="preview-thumb" id="lsb-preview" hidden>
+                <img id="lsb-img" />
+                <span class="preview-label" id="lsb-filename"></span>
+                <div class="preview-actions">
+                  <button type="button" class="preview-remove" id="lsb-remove">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-             </div>
+              </div>
+            </div>
+
+            <div id="lsb-actions" hidden>
+              <button class="btn primary" id="lsb-analyze-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 21l-4.35-4.35" />
+                  <circle cx="11" cy="11" r="8" />
+                </svg>
+                Analyze LSB
+              </button>
+            </div>
+
+            <div class="lsb-results" id="lsb-results" hidden>
+              <div
+                class="verdict-box"
+                id="lsb-verdict-box"
+                style="
+                  padding: 1rem;
+                  border-radius: 12px;
+                  margin-bottom: 1rem;
+                  text-align: center;
+                "
+              >
+                <h3
+                  id="lsb-verdict"
+                  style="font-size: 1.5rem; margin-bottom: 0.5rem"
+                >
+                  Analyzing...
+                </h3>
+                <p
+                  id="lsb-verdict-desc"
+                  style="font-size: 0.9rem; opacity: 0.8"
+                ></p>
+              </div>
+
+              <div
+                class="stats-grid"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(2, 1fr);
+                  gap: 1rem;
+                  margin-bottom: 1rem;
+                "
+              >
+                <div
+                  class="stat-box"
+                  style="
+                    background: var(--bg-secondary);
+                    padding: 1rem;
+                    border-radius: 8px;
+                    text-align: center;
+                  "
+                >
+                  <p style="font-size: 0.8rem; color: var(--text-secondary)">
+                    Chi-Square Score
+                  </p>
+                  <p id="lsb-chi" style="font-size: 1.5rem; font-weight: 600">
+                    -
+                  </p>
+                </div>
+                <div
+                  class="stat-box"
+                  style="
+                    background: var(--bg-secondary);
+                    padding: 1rem;
+                    border-radius: 8px;
+                    text-align: center;
+                  "
+                >
+                  <p style="font-size: 0.8rem; color: var(--text-secondary)">
+                    LSB Entropy
+                  </p>
+                  <p
+                    id="lsb-entropy"
+                    style="font-size: 1.5rem; font-weight: 600"
+                  >
+                    -
+                  </p>
+                </div>
+              </div>
+
+              <h4 style="margin-bottom: 0.5rem">LSB Plane Visualization</h4>
+              <canvas
+                id="lsb-canvas"
+                style="
+                  width: 100%;
+                  border-radius: 8px;
+                  border: 1px solid var(--border-color);
+                "
+              ></canvas>
+              <p
+                style="
+                  font-size: 0.75rem;
+                  color: var(--text-secondary);
+                  margin-top: 0.5rem;
+                  text-align: center;
+                "
+              >
+                Blue channel LSB extracted. Patterns may indicate hidden data.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <!-- Redact Panel (Obfuscator) -->
+        <section class="panel" id="redact-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="obfuscate">
+              Obfuscate
+            </button>
+            <button class="inner-tab" data-inner="color-picker">
+              Color Extract
+            </button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-obfuscate">
+            <div class="upload-zone" id="redact-dropzone">
+              <input type="file" id="redact-input" accept="image/*" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to Redact</p>
+                  <span class="upload-hint"
+                    >Blur or Pixelate sensitive info</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="redact-editor" id="redact-editor" hidden>
+              <div class="redact-toolbar">
+                <div class="tool-group">
+                  <button
+                    class="btn sm active"
+                    id="tool-pixelate"
+                    title="Pixelate"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"
+                      />
+                    </svg>
+                    <span>Pixelate</span>
+                  </button>
+                  <button class="btn sm" id="tool-blur" title="Blur">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"
+                      />
+                      <path
+                        d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6z"
+                        opacity="0.5"
+                      />
+                    </svg>
+                    <span>Blur</span>
+                  </button>
+                </div>
+
+                <div class="tool-group flex-grow">
+                  <label class="compact-label">Strength</label>
+                  <input
+                    type="range"
+                    id="redact-strength"
+                    min="1"
+                    max="20"
+                    value="8"
+                  />
+                </div>
+
+                <div class="tool-group">
+                  <button
+                    class="btn sm secondary icon-only"
+                    id="redact-undo"
+                    title="Undo Last"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M3 7v6h6" />
+                      <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
+                    </svg>
+                  </button>
+                  <button
+                    class="btn sm secondary icon-only"
+                    id="redact-reset"
+                    title="Reset Changes"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M23 4v6h-6" />
+                      <path d="M1 20v-6h6" />
+                      <path
+                        d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    class="btn sm danger icon-only"
+                    id="redact-delete"
+                    title="Remove Image"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path
+                        d="M19 6v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                      ></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="btn sm primary icon-only"
+                    id="redact-download"
+                    title="Download"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="canvas-container"
+                id="redact-container"
+                style="
+                  position: relative;
+                  overflow: hidden;
+                  border-radius: 8px;
+                  display: inline-block;
+                  max-width: 100%;
+                  border: 1px solid var(--border-color);
+                "
+              >
+                <canvas
+                  id="redact-canvas"
+                  style="display: block; max-width: 100%; cursor: crosshair"
+                ></canvas>
+              </div>
+
+              <p
+                class="help-text"
+                style="
+                  text-align: center;
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin-top: 8px;
+                "
+              >
+                Drag over area to apply effect.
+              </p>
+            </div>
+          </div>
+          <!-- Close inner-obfuscate -->
+
+          <!-- Inner: Color Picker -->
+          <div class="inner-panel" id="inner-color-picker">
+            <div class="upload-zone" id="color-dropzone">
+              <input type="file" id="color-input" accept="image/*" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                  />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to extract colors</p>
+                  <span class="upload-hint"
+                    >Get dominant palette & hex codes</span
+                  >
+                </div>
+              </div>
+
+              <div class="preview-thumb" id="color-preview" hidden>
+                <img id="color-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="color-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-box" id="color-results" hidden>
+              <div class="result-header">
+                <h3>Dominant Colors</h3>
+              </div>
+              <div style="padding: 16px">
+                <div
+                  id="color-palette"
+                  style="
+                    display: flex;
+                    gap: 8px;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <!-- Swatches injected here -->
+                </div>
+
+                <h4
+                  style="
+                    font-size: 0.85rem;
+                    color: var(--text-secondary);
+                    margin-bottom: 10px;
+                  "
+                >
+                  Color List
+                </h4>
+                <div
+                  id="color-list"
+                  style="
+                    display: grid;
+                    grid-template-columns: repeat(
+                      auto-fill,
+                      minmax(140px, 1fr)
+                    );
+                    gap: 8px;
+                  "
+                >
+                  <!-- List items injected here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <!-- Steganography Section with Inner Tabs -->
         <section class="panel active" id="stego-panel">
@@ -633,154 +1355,158 @@
                 accept="image/png,image/jpeg,image/webp"
                 hidden
               />
-            <div class="upload-content">
-              <svg
-                class="upload-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="M21 15l-5-5L5 21" />
-              </svg>
-              <div class="upload-info">
-                <p class="upload-text">Drop your image here</p>
-                <span class="upload-hint">Any image format</span>
-              </div>
-            </div>
-            <div class="preview-thumb" id="encode-preview" hidden>
-              <img id="encode-preview-img" alt="Preview" />
-              <div class="preview-actions">
-                <button
-                  type="button"
-                  class="preview-view"
-                  data-target="encode-preview-img"
-                  title="View"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="preview-remove"
-                  id="encode-remove"
-                  title="Remove"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <span class="preview-label">Image loaded</span>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="secret-message">Secret Message</label>
-            <textarea
-              id="secret-message"
-              placeholder="Enter your secret message here..."
-              rows="4"
-            ></textarea>
-            <div class="input-help">
-              <span id="char-count">0</span> /
-              <span id="max-chars">0</span> characters
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="encode-password">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                class="label-icon"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0110 0v4" />
-              </svg>
-              Password <span class="optional">(optional)</span>
-            </label>
-            <div class="password-input">
-              <input
-                type="password"
-                id="encode-password"
-                placeholder="Encrypt with password..."
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
-              />
-              <button
-                type="button"
-                class="toggle-password"
-                id="toggle-encode-password"
-              >
+              <div class="upload-content">
                 <svg
+                  class="upload-icon"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  class="eye-icon"
+                  stroke-width="1.5"
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
                 </svg>
-              </button>
+                <div class="upload-info">
+                  <p class="upload-text">Drop your image here</p>
+                  <span class="upload-hint">Any image format</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="encode-preview" hidden>
+                <img id="encode-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="encode-preview-img"
+                    title="View"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="encode-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="preview-label">Image loaded</span>
+              </div>
             </div>
-          </div>
 
-          <button class="btn primary" id="submit-btn" disabled>Submit</button>
+            <div id="hide-actions" hidden>
+              <div class="input-group">
+                <label for="secret-message">Secret Message</label>
+                <textarea
+                  id="secret-message"
+                  placeholder="Enter your secret message here..."
+                  rows="4"
+                ></textarea>
+                <div class="input-help">
+                  <span id="char-count">0</span> /
+                  <span id="max-chars">0</span> characters
+                </div>
+              </div>
 
-          <div class="hash-display" id="encode-hash-display" hidden>
-            <div class="hash-header">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <span>Message Hash (SHA-256)</span>
-            </div>
-            <div class="hash-value">
-              <code id="encode-hash-value"></code>
-              <button
-                type="button"
-                class="copy-hash"
-                id="copy-encode-hash"
-                title="Copy"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" />
-                  <path
-                    d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+              <div class="input-group">
+                <label for="encode-password">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="label-icon"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                  Password <span class="optional">(optional)</span>
+                </label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="encode-password"
+                    placeholder="Encrypt with password..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
                   />
-                </svg>
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-encode-password"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn primary" id="submit-btn" disabled>
+                Submit
               </button>
+
+              <div class="hash-display" id="encode-hash-display" hidden>
+                <div class="hash-header">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span>Message Hash (SHA-256)</span>
+                </div>
+                <div class="hash-value">
+                  <code id="encode-hash-value"></code>
+                  <button
+                    type="button"
+                    class="copy-hash"
+                    id="copy-encode-hash"
+                    title="Copy"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path
+                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
           </div>
 
           <!-- Inner: Decode -->
@@ -792,6 +1518,571 @@
                 accept="image/*"
                 hidden
               />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop encoded image here</p>
+                  <span class="upload-hint">Any image format</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="decode-preview" hidden>
+                <img id="decode-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="decode-preview-img"
+                    title="View"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="decode-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="preview-label">Image loaded</span>
+              </div>
+            </div>
+
+            <div id="extract-actions" hidden>
+              <div class="input-group">
+                <label for="decode-password">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="label-icon"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                  Password <span class="optional">(if encrypted)</span>
+                </label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="decode-password"
+                    placeholder="Enter password to decrypt..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-decode-password"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn primary" id="decode-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                </svg>
+                Decode Message
+              </button>
+
+              <div class="result-box" id="result-box" hidden>
+                <div class="result-header">
+                  <h3>Hidden Message</h3>
+                  <button class="copy-btn" id="copy-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path
+                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                      />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <p class="result-message" id="result-message"></p>
+                <div class="hash-display decode-hash">
+                  <div class="hash-header">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    <span>Hash (SHA-256)</span>
+                  </div>
+                  <div class="hash-value">
+                    <code id="decode-hash-value"></code>
+                    <button
+                      type="button"
+                      class="copy-hash"
+                      id="copy-decode-hash"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- File Tab Panels -->
+
+        <!-- 1. File Encryption Panel -->
+        <section class="panel" id="file-encrypt-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="file-enc">
+              Encrypt
+            </button>
+            <button class="inner-tab" data-inner="file-dec">Decrypt</button>
+          </nav>
+
+          <!-- Encrypt -->
+          <div class="inner-panel active" id="inner-file-enc">
+            <div class="upload-zone" id="file-enc-dropzone">
+              <input type="file" id="file-enc-input" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4zm0 0v6m-6-6h12"
+                  />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop file to Encrypt</p>
+                  <span class="upload-hint">Any file type supported</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="file-enc-preview" hidden>
+                <div style="display: flex; gap: 10px; align-items: center">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
+                    />
+                    <polyline points="13 2 13 9 20 9" />
+                  </svg>
+                  <span
+                    class="preview-label"
+                    id="file-enc-name"
+                    style="word-break: break-all"
+                    >filename.ext</span
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="file-enc-remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="file-enc-actions" hidden>
+              <div class="input-group">
+                <label>Password</label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="file-enc-password"
+                    placeholder="Encryption password"
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-file-enc-pass"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button class="btn primary" id="btn-file-encrypt" disabled>
+                Encrypt File
+              </button>
+            </div>
+          </div>
+
+          <!-- Decrypt -->
+          <div class="inner-panel" id="inner-file-dec">
+            <div class="upload-zone" id="file-dec-dropzone">
+              <input type="file" id="file-dec-input" accept=".enc" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop .enc file to Decrypt</p>
+                  <span class="upload-hint">Must match password</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="file-dec-preview" hidden>
+                <div style="display: flex; gap: 10px; align-items: center">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
+                    />
+                    <polyline points="13 2 13 9 20 9" />
+                  </svg>
+                  <span class="preview-label" id="file-dec-name"
+                    >encrypted.enc</span
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="file-dec-remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="file-dec-actions" hidden>
+              <div class="input-group">
+                <label>Password</label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="file-dec-password"
+                    placeholder="Original password"
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-file-dec-pass"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button class="btn primary" id="btn-file-decrypt" disabled>
+                Decrypt File
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Base64 Converter Panel -->
+        <section class="panel" id="file-base64-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="base64-enc">
+              Encode
+            </button>
+            <button class="inner-tab" data-inner="base64-dec">Decode</button>
+          </nav>
+
+          <!-- Encode Tab -->
+          <div class="inner-panel active" id="inner-base64-enc">
+            <div class="upload-zone" id="base64-dropzone">
+              <input type="file" id="base64-input" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Convert File to Base64</p>
+                  <span class="upload-hint"
+                    >Useful for embedding files as text</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div id="base64-enc-actions" hidden>
+              <div class="input-group">
+                <label>Base64 Output</label>
+                <div class="textarea-wrap">
+                  <textarea
+                    id="base64-output"
+                    rows="8"
+                    placeholder="Base64 string will appear here..."
+                    readonly
+                    style="font-family: monospace; font-size: 11px"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="textarea-clear"
+                    id="base64-output-clear"
+                    title="Clear"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; margin-top: 10px">
+                <button class="btn secondary" id="base64-copy" style="flex: 1">
+                  Copy
+                </button>
+                <button
+                  class="btn secondary"
+                  id="base64-download"
+                  style="flex: 1"
+                >
+                  Download .txt
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decode Tab -->
+          <div class="inner-panel" id="inner-base64-dec">
+            <!-- New Dropzone for Base64 Decode -->
+            <div class="upload-zone" id="base64-dec-dropzone">
+              <input
+                type="file"
+                id="base64-dec-upload-txt"
+                accept=".txt"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop .txt file to Load</p>
+                  <span class="upload-hint"
+                    >Loads content into input below</span
+                  >
+                </div>
+              </div>
+              <div class="preview-thumb" id="base64-dec-preview" hidden>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    width: 100%;
+                  "
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="width: 24px; height: 24px"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    ></path>
+                  </svg>
+                  <span
+                    class="preview-label"
+                    id="base64-dec-filename"
+                    style="flex: 1; text-align: left"
+                  ></span>
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="base64-dec-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="base64-dec-actions" hidden>
+              <div class="input-group">
+                <label>Base64 Input</label>
+                <div class="textarea-wrap">
+                  <textarea
+                    id="base64-decode-input"
+                    rows="8"
+                    placeholder="Paste Base64 here (e.g., data:image/png;base64,...)"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="textarea-clear"
+                    id="base64-decode-clear"
+                    title="Clear"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn primary" id="btn-base64-decode">
+                Decode & Download
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. File Splitter Panel -->
+        <section class="panel" id="file-splitter-panel">
+          <div class="upload-zone" id="splitter-dropzone">
+            <input type="file" id="splitter-input" hidden />
             <div class="upload-content">
               <svg
                 class="upload-icon"
@@ -800,361 +2091,129 @@
                 stroke="currentColor"
                 stroke-width="1.5"
               >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="M21 15l-5-5L5 21" />
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                <line x1="6" y1="6" x2="6.01" y2="6" />
+                <line x1="6" y1="18" x2="6.01" y2="18" />
               </svg>
               <div class="upload-info">
-                <p class="upload-text">Drop encoded image here</p>
-                <span class="upload-hint">Any image format</span>
+                <p class="upload-text">Split Large File</p>
+                <span class="upload-hint">Divide into smaller chunks</span>
               </div>
             </div>
-            <div class="preview-thumb" id="decode-preview" hidden>
-              <img id="decode-preview-img" alt="Preview" />
-              <div class="preview-actions">
-                <button
-                  type="button"
-                  class="preview-view"
-                  data-target="decode-preview-img"
-                  title="View"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="preview-remove"
-                  id="decode-remove"
-                  title="Remove"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <span class="preview-label">Image loaded</span>
+            <div class="preview-thumb" id="splitter-preview" hidden>
+              <span class="preview-label" id="splitter-name">filename</span>
+              <button type="button" class="preview-remove" id="splitter-remove">
+                x
+              </button>
             </div>
           </div>
 
-          <div class="input-group">
-            <label for="decode-password">
+          <div id="splitter-actions" hidden>
+            <div class="input-group">
+              <label>Chunk Size</label>
+              <div class="custom-number-input">
+                <input
+                  type="number"
+                  id="splitter-size"
+                  value="10"
+                  min="1"
+                  placeholder="Enter size"
+                />
+                <span class="input-suffix">MB</span>
+              </div>
+
+              <div class="size-presets">
+                <button class="size-chip" data-size="10">10MB</button>
+                <button class="size-chip" data-size="50">50MB</button>
+                <button class="size-chip" data-size="100">100MB</button>
+                <button class="size-chip" data-size="500">500MB</button>
+              </div>
+
+              <p class="char-count" style="text-align: left; margin-top: 4px">
+                Files will be split into parts of this size.
+              </p>
+            </div>
+            <button class="btn primary" id="btn-split-file" disabled>
+              Split & Download
+            </button>
+          </div>
+        </section>
+
+        <!-- 4. Magic Bytes Panel -->
+        <section class="panel" id="magic-bytes-panel">
+          <div class="upload-zone" id="magic-dropzone">
+            <input type="file" id="magic-input" hidden />
+            <div class="upload-content">
               <svg
+                class="upload-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
-                class="label-icon"
+                stroke-width="1.5"
               >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0110 0v4" />
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
-              Password <span class="optional">(if encrypted)</span>
-            </label>
-            <div class="password-input">
-              <input
-                type="password"
-                id="decode-password"
-                placeholder="Enter password to decrypt..."
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
-              />
-              <button
-                type="button"
-                class="toggle-password"
-                id="toggle-decode-password"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  class="eye-icon"
+              <div class="upload-info">
+                <p class="upload-text">Detect Real File Type</p>
+                <span class="upload-hint"
+                  >Analyze file signature (magic bytes)</span
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </button>
+              </div>
             </div>
           </div>
 
-          <button class="btn primary" id="decode-btn" disabled>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
+          <div
+            class="result-box"
+            id="magic-result"
+            hidden
+            style="margin-top: 20px; padding: 20px; text-align: center"
+          >
+            <h3 style="margin-bottom: 10px; color: var(--text-secondary)">
+              Detected Type
+            </h3>
+            <div
+              id="magic-type"
+              style="
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: var(--accent);
+                margin-bottom: 5px;
+              "
             >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-            </svg>
-            Decode Message
-          </button>
-
-          <div class="result-box" id="result-box" hidden>
-            <div class="result-header">
-              <h3>Hidden Message</h3>
-              <button class="copy-btn" id="copy-btn">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" />
-                  <path
-                    d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
-                  />
-                </svg>
-                Copy
-              </button>
+              PNG Image
             </div>
-            <p class="result-message" id="result-message"></p>
-            <div class="hash-display decode-hash">
-              <div class="hash-header">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <span>Hash (SHA-256)</span>
-              </div>
-              <div class="hash-value">
-                <code id="decode-hash-value"></code>
-                <button
-                  type="button"
-                  class="copy-hash"
-                  id="copy-decode-hash"
-                  title="Copy"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path
-                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
-                    />
-                  </svg>
-                </button>
-              </div>
+            <div
+              id="magic-mime"
+              style="font-family: monospace; color: var(--text-muted)"
+            >
+              image/png
+            </div>
+            <div
+              id="magic-hex"
+              style="
+                margin-top: 15px;
+                font-family: monospace;
+                background: var(--bg-tertiary);
+                padding: 10px;
+                border-radius: 6px;
+                font-size: 12px;
+              "
+            >
+              89 50 4E 47 0D 0A 1A 0A
             </div>
           </div>
         </section>
 
-      <!-- File Tab Panels -->
-
-      <!-- 1. File Encryption Panel -->
-      <section class="panel" id="file-encrypt-panel">
-        <nav class="inner-tabs">
-          <button class="inner-tab active" data-inner="file-enc">Encrypt</button>
-          <button class="inner-tab" data-inner="file-dec">Decrypt</button>
-        </nav>
-
-        <!-- Encrypt -->
-        <div class="inner-panel active" id="inner-file-enc">
-           <div class="upload-zone" id="file-enc-dropzone">
-             <input type="file" id="file-enc-input" hidden />
-             <div class="upload-content">
-               <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4zm0 0v6m-6-6h12"/>
-               </svg>
-               <div class="upload-info">
-                 <p class="upload-text">Drop file to Encrypt</p>
-                 <span class="upload-hint">Any file type supported</span>
-               </div>
-             </div>
-             <div class="preview-thumb" id="file-enc-preview" hidden>
-                <div style="display:flex; gap:10px; align-items:center;">
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                   <span class="preview-label" id="file-enc-name" style="word-break:break-all;">filename.ext</span>
-                </div>
-                <button type="button" class="preview-remove" id="file-enc-remove">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-             </div>
-           </div>
-           
-           <div class="input-group">
-              <label>Password</label>
-              <div class="password-input">
-                <input type="password" id="file-enc-password" placeholder="Encryption password" />
-                <button type="button" class="toggle-password" id="toggle-file-enc-pass">
-                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
-           </div>
-           <button class="btn primary" id="btn-file-encrypt" disabled>Encrypt File</button>
-        </div>
-
-        <!-- Decrypt -->
-        <div class="inner-panel" id="inner-file-dec">
-           <div class="upload-zone" id="file-dec-dropzone">
-             <input type="file" id="file-dec-input" accept=".enc" hidden />
-             <div class="upload-content">
-               <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0110 0v4"/>
-               </svg>
-               <div class="upload-info">
-                 <p class="upload-text">Drop .enc file to Decrypt</p>
-                 <span class="upload-hint">Must match password</span>
-               </div>
-             </div>
-             <div class="preview-thumb" id="file-dec-preview" hidden>
-                <div style="display:flex; gap:10px; align-items:center;">
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                   <span class="preview-label" id="file-dec-name">encrypted.enc</span>
-                </div>
-                <button type="button" class="preview-remove" id="file-dec-remove">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-             </div>
-           </div>
-           
-           <div class="input-group">
-              <label>Password</label>
-              <div class="password-input">
-                <input type="password" id="file-dec-password" placeholder="Original password" />
-                <button type="button" class="toggle-password" id="toggle-file-dec-pass">
-                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
-           </div>
-           <button class="btn primary" id="btn-file-decrypt" disabled>Decrypt File</button>
-        </div>
-      </section>
-
-      <!-- 2. Base64 Converter Panel -->
-      <section class="panel" id="file-base64-panel">
-         <nav class="inner-tabs">
-            <button class="inner-tab active" data-inner="base64-enc">Encode</button>
-            <button class="inner-tab" data-inner="base64-dec">Decode</button>
-         </nav>
-
-         <!-- Encode Tab -->
-         <div class="inner-panel active" id="inner-base64-enc">
-             <div class="upload-zone" id="base64-dropzone">
-                 <input type="file" id="base64-input" hidden />
-                 <div class="upload-content">
-                   <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-                   </svg>
-                   <div class="upload-info">
-                     <p class="upload-text">Convert File to Base64</p>
-                     <span class="upload-hint">Useful for embedding files as text</span>
-                   </div>
-                 </div>
-             </div>
-
-             <div class="input-group">
-                <label>Base64 Output</label>
-                <textarea id="base64-output" rows="8" placeholder="Base64 string will appear here..." readonly style="font-family:monospace; font-size:11px;"></textarea>
-             </div>
-             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="btn secondary" id="base64-copy" style="flex:1;">Copy</button>
-                <button class="btn secondary" id="base64-download" style="flex:1;">Download .txt</button>
-             </div>
-         </div>
-
-         <!-- Decode Tab -->
-         <div class="inner-panel" id="inner-base64-dec">
-            <p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem; font-size:0.9rem;">
-              Paste Base64 string to restore original file.
-            </p>
-            <div class="input-group">
-               <label>Base64 Input</label>
-               <textarea id="base64-decode-input" rows="8" placeholder="Paste Base64 here (e.g., data:image/png;base64,...)"></textarea>
-            </div>
-            
-            <button class="btn primary" id="btn-base64-decode">Decode & Download</button>
-         </div>
-      </section>
-
-      <!-- 3. File Splitter Panel -->
-      <section class="panel" id="file-splitter-panel">
-         <div class="upload-zone" id="splitter-dropzone">
-             <input type="file" id="splitter-input" hidden />
-             <div class="upload-content">
-               <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
-               </svg>
-               <div class="upload-info">
-                 <p class="upload-text">Split Large File</p>
-                 <span class="upload-hint">Divide into smaller chunks</span>
-               </div>
-             </div>
-             <div class="preview-thumb" id="splitter-preview" hidden>
-                <span class="preview-label" id="splitter-name">filename</span>
-                <button type="button" class="preview-remove" id="splitter-remove">x</button>
-             </div>
-         </div>
-
-         <div class="input-group">
-            <label>Chunk Size</label>
-            <div class="custom-number-input">
-              <input type="number" id="splitter-size" value="10" min="1" placeholder="Enter size" />
-              <span class="input-suffix">MB</span>
-            </div>
-            
-            <div class="size-presets">
-               <button class="size-chip" data-size="10">10MB</button>
-               <button class="size-chip" data-size="50">50MB</button>
-               <button class="size-chip" data-size="100">100MB</button>
-               <button class="size-chip" data-size="500">500MB</button>
-            </div>
-            
-            <p class="char-count" style="text-align:left; margin-top:4px;">Files will be split into parts of this size.</p>
-         </div>
-         <button class="btn primary" id="btn-split-file" disabled>Split & Download</button>
-      </section>
-
-      <!-- 4. Magic Bytes Panel -->
-      <section class="panel" id="magic-bytes-panel">
-          <div class="upload-zone" id="magic-dropzone">
-             <input type="file" id="magic-input" hidden />
-             <div class="upload-content">
-               <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-               </svg>
-               <div class="upload-info">
-                 <p class="upload-text">Detect Real File Type</p>
-                 <span class="upload-hint">Analyze file signature (magic bytes)</span>
-               </div>
-             </div>
-         </div>
-         
-         <div class="result-box" id="magic-result" hidden style="margin-top:20px; padding:20px; text-align:center;">
-             <h3 style="margin-bottom:10px; color:var(--text-secondary);">Detected Type</h3>
-             <div id="magic-type" style="font-size:1.5rem; font-weight:bold; color:var(--accent); margin-bottom:5px;">PNG Image</div>
-             <div id="magic-mime" style="font-family:monospace; color:var(--text-muted);">image/png</div>
-             <div id="magic-hex" style="margin-top:15px; font-family:monospace; background:var(--bg-tertiary); padding:10px; border-radius:6px; font-size:12px;">89 50 4E 47 0D 0A 1A 0A</div>
-         </div>
-      </section>
-
         <!-- Audio Section -->
         <section class="panel" id="audio-panel">
           <nav class="inner-tabs">
-            <button class="inner-tab active" data-inner="audio-encode">Hide in Audio</button>
-            <button class="inner-tab" data-inner="audio-decode">Extract from Audio</button>
+            <button class="inner-tab active" data-inner="audio-encode">
+              Hide in Audio
+            </button>
+            <button class="inner-tab" data-inner="audio-decode">
+              Extract from Audio
+            </button>
           </nav>
 
           <!-- Audio Encode -->
@@ -1218,68 +2277,70 @@
               </div>
             </div>
 
-            <div class="input-group">
-              <label for="audio-secret-message">Secret Message</label>
-              <textarea
-                id="audio-secret-message"
-                placeholder="Enter your secret message here..."
-                rows="3"
-              ></textarea>
-            </div>
+            <div id="audio-enc-actions" hidden>
+              <div class="input-group">
+                <label for="audio-secret-message">Secret Message</label>
+                <textarea
+                  id="audio-secret-message"
+                  placeholder="Enter your secret message here..."
+                  rows="3"
+                ></textarea>
+              </div>
 
-            <div class="input-group">
-              <label for="audio-encode-password">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  class="label-icon"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                Password <span class="optional">(optional)</span>
-              </label>
-              <div class="password-input">
-                <input
-                  type="password"
-                  id="audio-encode-password"
-                  placeholder="Encrypt with password..."
-                />
-                <button
-                  type="button"
-                  class="toggle-password"
-                  id="toggle-audio-encode-password"
-                >
+              <div class="input-group">
+                <label for="audio-encode-password">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                    class="eye-icon"
+                    class="label-icon"
                   >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
-                </button>
+                  Password <span class="optional">(optional)</span>
+                </label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="audio-encode-password"
+                    placeholder="Encrypt with password..."
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-audio-encode-password"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <button class="btn primary" id="audio-encode-btn" disabled>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M12 15V3M12 3L7 8M12 3l5 5" />
-                <path
-                  d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"
-                />
-              </svg>
-              Encode & Download
-            </button>
+              <button class="btn primary" id="audio-encode-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 15V3M12 3L7 8M12 3l5 5" />
+                  <path
+                    d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"
+                  />
+                </svg>
+                Encode & Download
+              </button>
+            </div>
           </div>
 
           <!-- Audio Decode -->
@@ -1343,77 +2404,79 @@
               </div>
             </div>
 
-            <div class="input-group">
-              <label for="audio-decode-password">
+            <div id="audio-dec-actions" hidden>
+              <div class="input-group">
+                <label for="audio-decode-password">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="label-icon"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                  Password <span class="optional">(if encrypted)</span>
+                </label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="audio-decode-password"
+                    placeholder="Enter password to decrypt..."
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-audio-decode-password"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn primary" id="audio-decode-btn" disabled>
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
-                  class="label-icon"
                 >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                  <path d="M21 21l-6-6M10 4v6M7 7h6" />
+                  <circle cx="10" cy="10" r="7" />
                 </svg>
-                Password <span class="optional">(if encrypted)</span>
-              </label>
-              <div class="password-input">
-                <input
-                  type="password"
-                  id="audio-decode-password"
-                  placeholder="Enter password to decrypt..."
-                />
-                <button
-                  type="button"
-                  class="toggle-password"
-                  id="toggle-audio-decode-password"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    class="eye-icon"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+                Decode Message
+              </button>
 
-            <button class="btn primary" id="audio-decode-btn" disabled>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M21 21l-6-6M10 4v6M7 7h6" />
-                <circle cx="10" cy="10" r="7" />
-              </svg>
-              Decode Message
-            </button>
-
-            <div class="result-box" id="audio-result-box" hidden>
-              <div class="result-header">
-                <h3>Hidden Message</h3>
-                <button class="copy-btn" id="audio-copy-btn">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path
-                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
-                    />
-                  </svg>
-                  Copy
-                </button>
+              <div class="result-box" id="audio-result-box" hidden>
+                <div class="result-header">
+                  <h3>Hidden Message</h3>
+                  <button class="copy-btn" id="audio-copy-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path
+                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                      />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <p class="result-message" id="audio-result-message"></p>
               </div>
-              <p class="result-message" id="audio-result-message"></p>
             </div>
           </div>
         </section>
@@ -1421,19 +2484,18 @@
         <!-- Scramble Section -->
         <section class="panel" id="scramble-panel">
           <nav class="inner-tabs">
-            <button class="inner-tab active" data-inner="scramble">Scramble</button>
-            <button class="inner-tab" data-inner="unscramble">Unscramble</button>
+            <button class="inner-tab active" data-inner="scramble">
+              Scramble
+            </button>
+            <button class="inner-tab" data-inner="unscramble">
+              Unscramble
+            </button>
           </nav>
 
           <!-- Inner: Scramble -->
           <div class="inner-panel active" id="inner-scramble">
             <div class="upload-zone" id="scramble-dropzone">
-              <input
-                type="file"
-                id="scramble-input"
-                accept="image/*"
-                hidden
-              />
+              <input type="file" id="scramble-input" accept="image/*" hidden />
               <div class="upload-content">
                 <svg
                   class="upload-icon"
@@ -1449,20 +2511,42 @@
                 </svg>
                 <div class="upload-info">
                   <p class="upload-text">Drop image to scramble</p>
-                  <span class="upload-hint">Password-based pixel scrambling</span>
+                  <span class="upload-hint"
+                    >Password-based pixel scrambling</span
+                  >
                 </div>
               </div>
               <div class="preview-thumb" id="scramble-preview" hidden>
                 <img id="scramble-preview-img" alt="Preview" />
                 <div class="preview-actions">
-                  <button type="button" class="preview-view" data-target="scramble-preview-img" title="View">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="scramble-preview-img"
+                    title="View"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                   </button>
-                  <button type="button" class="preview-remove" id="scramble-remove" title="Remove">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="scramble-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
                       <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </button>
@@ -1471,39 +2555,62 @@
               </div>
             </div>
 
-            <div class="input-group">
-              <label for="scramble-password">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="label-icon">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                Password <span class="optional">(required)</span>
-              </label>
-              <div class="password-input">
-                <input
-                  type="password"
-                  id="scramble-password"
-                  placeholder="Enter password to scramble..."
-                  autocomplete="off"
-                />
-                <button type="button" class="toggle-password" id="toggle-scramble-password">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-icon">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
+            <div id="scramble-actions" hidden>
+              <div class="input-group">
+                <label for="scramble-password">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="label-icon"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
-                </button>
+                  Password <span class="optional">(required)</span>
+                </label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="scramble-password"
+                    placeholder="Enter password to scramble..."
+                    autocomplete="off"
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-scramble-password"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <button class="btn primary" id="scramble-action-btn" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-              </svg>
-              Scramble Image
-            </button>
+              <button class="btn primary" id="scramble-action-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Scramble Image
+              </button>
+            </div>
           </div>
 
           <!-- Inner: Unscramble -->
@@ -1534,14 +2641,34 @@
               <div class="preview-thumb" id="unscramble-preview" hidden>
                 <img id="unscramble-preview-img" alt="Preview" />
                 <div class="preview-actions">
-                  <button type="button" class="preview-view" data-target="unscramble-preview-img" title="View">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="unscramble-preview-img"
+                    title="View"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                   </button>
-                  <button type="button" class="preview-remove" id="unscramble-remove" title="Remove">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="unscramble-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
                       <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </button>
@@ -1550,37 +2677,60 @@
               </div>
             </div>
 
-            <div class="input-group">
-              <label for="unscramble-password">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="label-icon">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                Password <span class="optional">(required)</span>
-              </label>
-              <div class="password-input">
-                <input
-                  type="password"
-                  id="unscramble-password"
-                  placeholder="Enter password to unscramble..."
-                  autocomplete="off"
-                />
-                <button type="button" class="toggle-password" id="toggle-unscramble-password">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-icon">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
+            <div id="unscramble-actions" hidden>
+              <div class="input-group">
+                <label for="unscramble-password">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="label-icon"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
-                </button>
+                  Password <span class="optional">(required)</span>
+                </label>
+                <div class="password-input">
+                  <input
+                    type="password"
+                    id="unscramble-password"
+                    placeholder="Enter password to unscramble..."
+                    autocomplete="off"
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggle-unscramble-password"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="eye-icon"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <button class="btn primary" id="unscramble-action-btn" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 12l2 2 4-4" />
-              </svg>
-              Unscramble Image
-            </button>
+              <button class="btn primary" id="unscramble-action-btn" disabled>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+                Unscramble Image
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -1606,9 +2756,7 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-
-
-    <script src="assets/js/app.js?v=2.995"></script>
+    <script src="assets/js/app.js?v=3.06"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

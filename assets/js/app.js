@@ -654,73 +654,70 @@ class MetadataScanner {
     const ifdOffset = tiffStart + firstIFDOffset;
     const entries = view.getUint16(ifdOffset, littleEndian);
 
+    const getBytesPerComponent = (type) => {
+      if (type === 1 || type === 2 || type === 7) return 1; // Byte, Ascii, Undefined
+      if (type === 3) return 2; // Short
+      if (type === 4 || type === 9 || type === 11) return 4; // Long, SLong, Float
+      if (type === 5 || type === 10 || type === 12) return 8; // Rational, SRational, Double
+      return 0;
+    };
+
     for (let i = 0; i < entries; i++) {
-      const entryOffset = ifdOffset + 2 + i * 12;
-      const tag = view.getUint16(entryOffset, littleEndian);
-      const type = view.getUint16(entryOffset + 2, littleEndian);
-      const count = view.getUint32(entryOffset + 4, littleEndian);
-      const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
+      try {
+        const entryOffset = ifdOffset + 2 + i * 12;
+        const tag = view.getUint16(entryOffset, littleEndian);
+        const type = view.getUint16(entryOffset + 2, littleEndian);
+        const count = view.getUint32(entryOffset + 4, littleEndian);
+        const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
 
-      const dataOffset =
-        count * (type === 3 ? 2 : type === 5 || type === 10 ? 8 : 1) > 4
-          ? tiffStart + valueOffset
-          : entryOffset + 8;
+        const typeSize = getBytesPerComponent(type);
+        const dataSize = count * typeSize;
 
-      if (tag === 0x0110) tags.model = this.readString(view, dataOffset, count);
-      if (tag === 0x010f) tags.make = this.readString(view, dataOffset, count);
-      if (tag === 0x0132 || tag === 0x9003)
-        tags.date = this.readString(view, dataOffset, count);
-      if (tag === 0x0131)
-        tags.software = this.readString(view, dataOffset, count);
-      if (tag === 0x013b)
-        tags.artist = this.readString(view, dataOffset, count);
-      if (tag === 0x8298)
-        tags.copyright = this.readString(view, dataOffset, count);
-      if (tag === 0x010e) tags.desc = this.readString(view, dataOffset, count);
+        const dataOffset =
+          dataSize > 4 ? tiffStart + valueOffset : entryOffset + 8;
 
-      if (tag === 0x8825 && type === 4) {
-        const gpsIfdOffset = tiffStart + valueOffset;
-        console.log(
-          "GPS IFD found at:",
-          gpsIfdOffset,
-          "tiffStart:",
-          tiffStart,
-          "valueOffset:",
-          valueOffset,
-          "byteLength:",
-          view.byteLength
-        );
-        if (gpsIfdOffset < view.byteLength) {
-          try {
-            const gpsData = this.parseGPS(
-              view,
-              gpsIfdOffset,
-              littleEndian,
-              tiffStart
+        if (tag === 0x0110)
+          tags.model = this.readString(view, dataOffset, count);
+        if (tag === 0x010f)
+          tags.make = this.readString(view, dataOffset, count);
+        if (tag === 0x0132 || tag === 0x9003)
+          tags.date = this.readString(view, dataOffset, count);
+        if (tag === 0x0131)
+          tags.software = this.readString(view, dataOffset, count);
+        if (tag === 0x013b)
+          tags.artist = this.readString(view, dataOffset, count);
+        if (tag === 0x8298)
+          tags.copyright = this.readString(view, dataOffset, count);
+        if (tag === 0x010e)
+          tags.desc = this.readString(view, dataOffset, count);
+
+        // GPS Info IFD Pointer
+        if (tag === 0x8825) {
+          // Type 4 usually
+          const gpsIfdOffset = tiffStart + valueOffset;
+          if (gpsIfdOffset < view.byteLength) {
+            Object.assign(
+              tags,
+              this.parseGPS(view, gpsIfdOffset, littleEndian, tiffStart)
             );
-            console.log("GPS data parsed:", gpsData);
-            Object.assign(tags, gpsData);
-          } catch (e) {
-            console.warn("GPS parsing failed:", e);
           }
-        } else {
-          console.warn("GPS IFD offset out of bounds:", gpsIfdOffset);
         }
-      }
 
-      if (tag === 0x8769 && type === 4) {
-        const exifIfdOffset = tiffStart + valueOffset;
-        try {
+        // Exif SubIFD Pointer
+        if (tag === 0x8769) {
+          // Type 4 usually
+          const exifIfdOffset = tiffStart + valueOffset;
           const exifEntries = view.getUint16(exifIfdOffset, littleEndian);
           for (let j = 0; j < exifEntries; j++) {
             const exifEntryOffset = exifIfdOffset + 2 + j * 12;
             const exifTag = view.getUint16(exifEntryOffset, littleEndian);
-            const exifType = view.getUint16(exifEntryOffset + 2, littleEndian);
             const exifValOffset = view.getUint32(
               exifEntryOffset + 8,
               littleEndian
             );
-            if (exifTag === 0x8825 && exifType === 4) {
+
+            // Check for GPS inside Exif SubIFD (Rare but possible)
+            if (exifTag === 0x8825) {
               const gpsIfdOffset = tiffStart + exifValOffset;
               Object.assign(
                 tags,
@@ -728,9 +725,9 @@ class MetadataScanner {
               );
             }
           }
-        } catch (e) {
-          console.warn("EXIF sub-IFD parsing failed:", e);
         }
+      } catch (e) {
+        /* Skip malformed tag */
       }
     }
     return tags;
@@ -1039,6 +1036,7 @@ class StegoraApp {
           previewImg.src = URL.createObjectURL(file);
           preview.hidden = false;
           dropzone.querySelector(".upload-content").hidden = true;
+          document.getElementById("hide-actions").hidden = false;
           this.updateEncodeButton(maxAllowedChars);
         })
         .catch((err) => {
@@ -1055,6 +1053,7 @@ class StegoraApp {
       charCount.textContent = "0";
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
+      document.getElementById("hide-actions").hidden = true;
       input.value = "";
 
       document.getElementById("secret-message").value = "";
@@ -1106,6 +1105,7 @@ class StegoraApp {
           previewImg.src = URL.createObjectURL(file);
           preview.hidden = false;
           dropzone.querySelector(".upload-content").hidden = true;
+          document.getElementById("extract-actions").hidden = false;
 
           const isScrambledFile = file.name.startsWith("scramble_");
           decodeBtn.disabled = isScrambledFile;
@@ -1129,6 +1129,7 @@ class StegoraApp {
       this.decodeFile = null;
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
+      document.getElementById("extract-actions").hidden = true;
       input.value = "";
       passwordInput.value = "";
       decodeBtn.disabled = true;
@@ -1653,6 +1654,7 @@ class StegoraApp {
         encodeFilename.textContent = file.name;
         encodePreview.hidden = false;
         encodeDropzone.querySelector(".upload-content").hidden = true;
+        document.getElementById("audio-enc-actions").hidden = false;
         this.updateAudioEncodeButton();
       });
     });
@@ -1662,6 +1664,7 @@ class StegoraApp {
       this.audioEncodeBuffer = null;
       encodePreview.hidden = true;
       encodeDropzone.querySelector(".upload-content").hidden = false;
+      document.getElementById("audio-enc-actions").hidden = true;
       encodeInput.value = "";
       audioMessage.value = "";
       document.getElementById("audio-encode-password").value = "";
@@ -1688,6 +1691,7 @@ class StegoraApp {
         decodeFilename.textContent = file.name;
         decodePreview.hidden = false;
         decodeDropzone.querySelector(".upload-content").hidden = true;
+        document.getElementById("audio-dec-actions").hidden = false;
         audioDecodeBtn.disabled = false;
         document.getElementById("audio-result-box").hidden = true;
       });
@@ -1698,6 +1702,7 @@ class StegoraApp {
       this.audioDecodeBuffer = null;
       decodePreview.hidden = true;
       decodeDropzone.querySelector(".upload-content").hidden = false;
+      document.getElementById("audio-dec-actions").hidden = true;
       decodeInput.value = "";
       document.getElementById("audio-decode-password").value = "";
       audioDecodeBtn.disabled = true;
@@ -1861,6 +1866,7 @@ class StegoraApp {
           previewImg.src = URL.createObjectURL(file);
           preview.hidden = false;
           dropzone.querySelector(".upload-content").hidden = true;
+          document.getElementById("exif-actions").hidden = false;
           analyzeBtn.disabled = false;
           results.hidden = true;
         })
@@ -1874,6 +1880,7 @@ class StegoraApp {
       previewImg.src = "";
       preview.hidden = true;
       dropzone.querySelector(".upload-content").hidden = false;
+      document.getElementById("exif-actions").hidden = true;
       input.value = "";
       analyzeBtn.disabled = true;
       results.hidden = true;
@@ -2022,6 +2029,7 @@ class StegoraApp {
           document.querySelector(
             "#scramble-dropzone .upload-content"
           ).hidden = true;
+          document.getElementById("scramble-actions").hidden = false;
           this.updateScrambleBtn();
         };
       });
@@ -2036,6 +2044,8 @@ class StegoraApp {
         document.querySelector(
           "#scramble-dropzone .upload-content"
         ).hidden = false;
+        document.getElementById("scramble-actions").hidden = true;
+        document.getElementById("scramble-password").value = "";
         this.updateScrambleBtn();
       });
 
@@ -2060,6 +2070,7 @@ class StegoraApp {
           document.querySelector(
             "#unscramble-dropzone .upload-content"
           ).hidden = true;
+          document.getElementById("unscramble-actions").hidden = false;
           this.updateUnscrambleBtn();
         };
       });
@@ -2074,6 +2085,8 @@ class StegoraApp {
         document.querySelector(
           "#unscramble-dropzone .upload-content"
         ).hidden = false;
+        document.getElementById("unscramble-actions").hidden = true;
+        document.getElementById("unscramble-password").value = "";
         this.updateUnscrambleBtn();
       });
 
@@ -2354,6 +2367,7 @@ class StegoraApp {
           document.querySelector(
             "#sanitize-dropzone .upload-content"
           ).hidden = true;
+          document.getElementById("sanitize-actions").hidden = false;
           document.getElementById("sanitize-action-btn").disabled = false;
         };
       });
@@ -2368,6 +2382,7 @@ class StegoraApp {
         document.querySelector(
           "#sanitize-dropzone .upload-content"
         ).hidden = false;
+        document.getElementById("sanitize-actions").hidden = true;
         document.getElementById("sanitize-action-btn").disabled = true;
       });
 
@@ -2455,6 +2470,9 @@ class StegoraApp {
 
   updateStegCompareBtn() {
     const btn = document.getElementById("steg-compare-btn");
+    const actions = document.getElementById("steg-actions");
+    const hasAny = this.stegOrigImage || this.stegSuspImage;
+    if (actions) actions.hidden = !hasAny;
     if (btn) btn.disabled = !this.stegOrigImage || !this.stegSuspImage;
   }
 
@@ -2536,6 +2554,7 @@ class StegoraApp {
           document.getElementById("lsb-filename").textContent = file.name;
           document.getElementById("lsb-preview").hidden = false;
           document.querySelector("#lsb-dropzone .upload-content").hidden = true;
+          document.getElementById("lsb-actions").hidden = false;
           document.getElementById("lsb-analyze-btn").disabled = false;
           document.getElementById("lsb-results").hidden = true;
         };
@@ -2547,6 +2566,7 @@ class StegoraApp {
       this.lsbFile = null;
       document.getElementById("lsb-preview").hidden = true;
       document.querySelector("#lsb-dropzone .upload-content").hidden = false;
+      document.getElementById("lsb-actions").hidden = true;
       document.getElementById("lsb-analyze-btn").disabled = true;
       document.getElementById("lsb-results").hidden = true;
     });
@@ -3073,6 +3093,7 @@ class StegoraApp {
         document.getElementById("file-enc-name").textContent = file.name;
         document.getElementById("file-enc-preview").hidden = false;
         encDropzone.querySelector(".upload-content").hidden = true;
+        document.getElementById("file-enc-actions").hidden = false;
         this.updateFileEncBtn();
       });
 
@@ -3083,6 +3104,7 @@ class StegoraApp {
           this.fileToEncrypt = null;
           document.getElementById("file-enc-preview").hidden = true;
           encDropzone.querySelector(".upload-content").hidden = false;
+          document.getElementById("file-enc-actions").hidden = true;
           encInput.value = "";
           this.updateFileEncBtn();
         });
@@ -3164,6 +3186,7 @@ class StegoraApp {
         document.getElementById("file-dec-name").textContent = file.name;
         document.getElementById("file-dec-preview").hidden = false;
         decDropzone.querySelector(".upload-content").hidden = true;
+        document.getElementById("file-dec-actions").hidden = false;
         this.updateFileDecBtn();
       });
 
@@ -3174,6 +3197,7 @@ class StegoraApp {
           this.fileToDecrypt = null;
           document.getElementById("file-dec-preview").hidden = true;
           decDropzone.querySelector(".upload-content").hidden = false;
+          document.getElementById("file-dec-actions").hidden = true;
           decInput.value = "";
           this.updateFileDecBtn();
         });
@@ -3266,8 +3290,60 @@ class StegoraApp {
         reader.onload = (e) => {
           output.value = e.target.result; // Data URL contains Base64
           this.showToast("Converted to Base64!", "success");
+          document.getElementById("base64-enc-actions").hidden = false;
         };
         reader.readAsDataURL(file);
+      });
+    }
+
+    // Clear Buttons
+    document
+      .getElementById("base64-output-clear")
+      ?.addEventListener("click", () => {
+        output.value = "";
+        document.getElementById("base64-enc-actions").hidden = true;
+      });
+
+    document
+      .getElementById("base64-decode-clear")
+      ?.addEventListener("click", () => {
+        document.getElementById("base64-decode-input").value = "";
+      });
+
+    // Upload .txt to Decode
+    // Upload .txt to Decode (Dropzone)
+    const decDropzone = document.getElementById("base64-dec-dropzone");
+    const decInput = document.getElementById("base64-dec-upload-txt");
+    const decPreview = document.getElementById("base64-dec-preview");
+    const decFilename = document.getElementById("base64-dec-filename");
+    const decRemove = document.getElementById("base64-dec-remove");
+
+    if (decDropzone && decInput) {
+      this.setupDropzone(decDropzone, decInput, (file) => {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          document.getElementById("base64-decode-input").value =
+            evt.target.result;
+          this.showToast("File text loaded!", "success");
+
+          // Show preview
+          decFilename.textContent = file.name;
+          decPreview.hidden = false;
+          decDropzone.querySelector(".upload-content").hidden = true;
+          document.getElementById("base64-dec-actions").hidden = false;
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    if (decRemove) {
+      decRemove.addEventListener("click", (e) => {
+        e.stopPropagation();
+        decPreview.hidden = true;
+        decDropzone.querySelector(".upload-content").hidden = false;
+        document.getElementById("base64-dec-actions").hidden = true;
+        decInput.value = "";
+        document.getElementById("base64-decode-input").value = ""; // Clear textarea? Yes, probably expected.
       });
     }
 
@@ -3373,6 +3449,7 @@ class StegoraApp {
         document.getElementById("splitter-name").textContent = file.name;
         document.getElementById("splitter-preview").hidden = false;
         dropzone.querySelector(".upload-content").hidden = true;
+        document.getElementById("splitter-actions").hidden = false;
         if (actionBtn) actionBtn.disabled = false;
       });
 
@@ -3381,6 +3458,7 @@ class StegoraApp {
         this.fileToSplit = null;
         document.getElementById("splitter-preview").hidden = true;
         dropzone.querySelector(".upload-content").hidden = false;
+        document.getElementById("splitter-actions").hidden = true;
         input.value = "";
         if (actionBtn) actionBtn.disabled = true;
       });

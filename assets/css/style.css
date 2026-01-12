@@ -616,6 +616,7 @@ body {
   font-size: 14px;
   transition: all var(--transition);
   -moz-appearance: textfield; /* Remove spinner firefox */
+  appearance: textfield;
 }
 
 /* Remove spinner chrome/safari */
@@ -670,6 +671,47 @@ body {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+}
+
+/* Textarea Wrapper & Clear Button */
+.textarea-wrap {
+  position: relative;
+}
+
+.textarea-clear {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.textarea-wrap:hover .textarea-clear,
+.textarea-wrap:focus-within .textarea-clear {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.textarea-clear:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+
+.textarea-clear svg {
+  width: 14px;
+  height: 14px;
 }
 
 .eye-icon {
