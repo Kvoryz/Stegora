@@ -863,6 +863,8 @@ class StegoraApp {
     this.safeInit("initSteganalysis");
     this.safeInit("initLSBAnalysis");
     this.safeInit("initRedact");
+    this.safeInit("initColorPicker");
+    this.safeInit("initFileUtilities");
   }
 
   safeInit(methodName) {
@@ -2905,6 +2907,565 @@ class StegoraApp {
   updateUndoBtn() {
     const btn = document.getElementById("redact-undo");
     if (btn) btn.disabled = this.redactUndoStack.length <= 1;
+  }
+
+  // --- Color Picker Feature ---
+
+  initColorPicker() {
+    const dropzone = document.getElementById("color-dropzone");
+    const input = document.getElementById("color-input");
+
+    if (!dropzone || !input) return;
+
+    this.setupDropzone(dropzone, input, (file) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        // UI Updates
+        document.getElementById("color-preview-img").src = img.src;
+        document.getElementById("color-preview").hidden = false;
+        dropzone.querySelector(".upload-content").hidden = true;
+
+        // Extract Colors
+        this.extractColors(img);
+      };
+    });
+
+    document.getElementById("color-remove")?.addEventListener("click", () => {
+      document.getElementById("color-preview").hidden = true;
+      dropzone.querySelector(".upload-content").hidden = false;
+      input.value = "";
+      document.getElementById("color-results").hidden = true;
+    });
+  }
+
+  extractColors(img) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Resize for performance (max 100x100)
+    const MAX_SIZE = 100;
+    let w = img.naturalWidth;
+    let h = img.naturalHeight;
+
+    if (w > MAX_SIZE || h > MAX_SIZE) {
+      if (w > h) {
+        h = Math.round((h * MAX_SIZE) / w);
+        w = MAX_SIZE;
+      } else {
+        w = Math.round((w * MAX_SIZE) / h);
+        h = MAX_SIZE;
+      }
+    }
+
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const imageData = ctx.getImageData(0, 0, w, h).data;
+    const colorCounts = {};
+    const quantization = 5; // Group similar colors (reduce 255 -> 51 steps)
+
+    for (let i = 0; i < imageData.length; i += 4) {
+      const r = Math.floor(imageData[i] / quantization) * quantization;
+      const g = Math.floor(imageData[i + 1] / quantization) * quantization;
+      const b = Math.floor(imageData[i + 2] / quantization) * quantization;
+      const a = imageData[i + 3];
+
+      if (a < 128) continue; // Skip transparent
+
+      const key = `${r},${g},${b}`;
+      colorCounts[key] = (colorCounts[key] || 0) + 1;
+    }
+
+    // Sort by frequency
+    const sortedColors = Object.entries(colorCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8) // Top 8 colors
+      .map(([key]) => {
+        const [r, g, b] = key.split(",").map(Number);
+        return this.rgbToHex(r, g, b);
+      });
+
+    this.renderPalette(sortedColors);
+  }
+
+  rgbToHex(r, g, b) {
+    return (
+      "#" +
+      [r, g, b]
+        .map((x) => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        })
+        .join("")
+    );
+  }
+
+  renderPalette(colors) {
+    const paletteContainer = document.getElementById("color-palette");
+    const listContainer = document.getElementById("color-list");
+
+    if (!paletteContainer || !listContainer) return;
+
+    paletteContainer.innerHTML = "";
+    listContainer.innerHTML = "";
+
+    colors.forEach((color) => {
+      // Swatch
+      const swatch = document.createElement("div");
+      swatch.style.width = "40px";
+      swatch.style.height = "40px";
+      swatch.style.borderRadius = "8px";
+      swatch.style.backgroundColor = color;
+      swatch.style.cursor = "pointer";
+      swatch.style.border = "1px solid var(--border-color)";
+      swatch.title = `Copy ${color}`;
+      swatch.onclick = () => {
+        navigator.clipboard.writeText(color);
+        this.showToast(`Copied ${color}`, "success");
+      };
+      paletteContainer.appendChild(swatch);
+
+      // List Item
+      const item = document.createElement("div");
+      item.className = "color-item";
+      item.style.display = "flex";
+      item.style.alignItems = "center";
+      item.style.gap = "8px";
+      item.style.padding = "8px";
+      item.style.background = "var(--bg-tertiary)";
+      item.style.borderRadius = "8px";
+      item.style.cursor = "pointer";
+      item.onclick = () => {
+        navigator.clipboard.writeText(color);
+        this.showToast(`Copied ${color}`, "success");
+      };
+
+      item.innerHTML = `
+        <div style="width: 20px; height: 20px; border-radius: 4px; background: ${color}; border: 1px solid var(--border-color);"></div>
+        <span style="font-family: monospace; font-size: 13px; color: var(--text-primary);">${color}</span>
+      `;
+      listContainer.appendChild(item);
+    });
+
+    document.getElementById("color-results").hidden = false;
+  }
+
+  initFileUtilities() {
+    this.initFileEncrypt();
+    this.initFileBase64();
+    this.initFileSplitter();
+    this.initMagicBytes();
+  }
+
+  // 1. File Encryption (AES-GCM)
+  initFileEncrypt() {
+    const encDropzone = document.getElementById("file-enc-dropzone");
+    const encInput = document.getElementById("file-enc-input");
+    const encPass = document.getElementById("file-enc-password");
+    const encBtn = document.getElementById("btn-file-encrypt");
+
+    // Encrypt Setup
+    if (encDropzone && encInput) {
+      this.setupDropzone(encDropzone, encInput, (file) => {
+        this.fileToEncrypt = file;
+        document.getElementById("file-enc-name").textContent = file.name;
+        document.getElementById("file-enc-preview").hidden = false;
+        encDropzone.querySelector(".upload-content").hidden = true;
+        this.updateFileEncBtn();
+      });
+
+      document
+        .getElementById("file-enc-remove")
+        ?.addEventListener("click", (e) => {
+          e.stopPropagation(); // Stop bubbling to dropzone
+          this.fileToEncrypt = null;
+          document.getElementById("file-enc-preview").hidden = true;
+          encDropzone.querySelector(".upload-content").hidden = false;
+          encInput.value = "";
+          this.updateFileEncBtn();
+        });
+
+      encPass?.addEventListener("input", () => this.updateFileEncBtn());
+
+      encBtn?.addEventListener("click", async () => {
+        try {
+          if (!this.fileToEncrypt || !encPass.value) return;
+
+          encBtn.textContent = "Encrypting...";
+          encBtn.disabled = true;
+
+          // 1. Generate Key from Password using PBKDF2
+          const password = encPass.value;
+          const salt = window.crypto.getRandomValues(new Uint8Array(16));
+          const keyMaterial = await window.crypto.subtle.importKey(
+            "raw",
+            new TextEncoder().encode(password),
+            { name: "PBKDF2" },
+            false,
+            ["deriveKey"]
+          );
+
+          const key = await window.crypto.subtle.deriveKey(
+            {
+              name: "PBKDF2",
+              salt: salt,
+              iterations: 100000,
+              hash: "SHA-256",
+            },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt"]
+          );
+
+          // 2. Encrypt Content
+          const iv = window.crypto.getRandomValues(new Uint8Array(12));
+          const fileData = await this.fileToEncrypt.arrayBuffer();
+          const encryptedContent = await window.crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            fileData
+          );
+
+          // 3. Combine: Salt (16) + IV (12) + Content
+          const blob = new Blob([salt, iv, encryptedContent], {
+            type: "application/octet-stream",
+          });
+
+          // 4. Download
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = this.fileToEncrypt.name + ".enc";
+          a.click();
+
+          this.showToast("File encrypted successfully!", "success");
+          encBtn.textContent = "Encrypt File";
+          encBtn.disabled = false;
+        } catch (err) {
+          console.error(err);
+          this.showToast("Encryption failed: " + err.message, "error");
+          encBtn.textContent = "Encrypt File";
+          encBtn.disabled = false;
+        }
+      });
+    }
+
+    // Decrypt Setup
+    const decDropzone = document.getElementById("file-dec-dropzone");
+    const decInput = document.getElementById("file-dec-input");
+    const decPass = document.getElementById("file-dec-password");
+    const decBtn = document.getElementById("btn-file-decrypt");
+
+    if (decDropzone && decInput) {
+      this.setupDropzone(decDropzone, decInput, (file) => {
+        this.fileToDecrypt = file;
+        document.getElementById("file-dec-name").textContent = file.name;
+        document.getElementById("file-dec-preview").hidden = false;
+        decDropzone.querySelector(".upload-content").hidden = true;
+        this.updateFileDecBtn();
+      });
+
+      document
+        .getElementById("file-dec-remove")
+        ?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.fileToDecrypt = null;
+          document.getElementById("file-dec-preview").hidden = true;
+          decDropzone.querySelector(".upload-content").hidden = false;
+          decInput.value = "";
+          this.updateFileDecBtn();
+        });
+
+      decPass?.addEventListener("input", () => this.updateFileDecBtn());
+
+      decBtn?.addEventListener("click", async () => {
+        try {
+          if (!this.fileToDecrypt || !decPass.value) return;
+
+          decBtn.textContent = "Decrypting...";
+          decBtn.disabled = true;
+
+          const data = await this.fileToDecrypt.arrayBuffer();
+          const salt = data.slice(0, 16);
+          const iv = data.slice(16, 28);
+          const encryptedContent = data.slice(28);
+          const password = decPass.value;
+
+          // Derive Key
+          const keyMaterial = await window.crypto.subtle.importKey(
+            "raw",
+            new TextEncoder().encode(password),
+            { name: "PBKDF2" },
+            false,
+            ["deriveKey"]
+          );
+
+          const key = await window.crypto.subtle.deriveKey(
+            {
+              name: "PBKDF2",
+              salt: salt,
+              iterations: 100000,
+              hash: "SHA-256",
+            },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["decrypt"]
+          );
+
+          // Decrypt
+          const decryptedContent = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            encryptedContent
+          );
+
+          const originalName = this.fileToDecrypt.name.replace(".enc", "");
+          const blob = new Blob([decryptedContent]);
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = originalName; // Try to guess original name
+          a.click();
+
+          this.showToast("File decrypted successfully!", "success");
+          decBtn.textContent = "Decrypt File";
+          decBtn.disabled = false;
+        } catch (err) {
+          console.error(err);
+          this.showToast("Decryption failed. Wrong password?", "error");
+          decBtn.textContent = "Decrypt File";
+          decBtn.disabled = false;
+        }
+      });
+    }
+  }
+
+  updateFileEncBtn() {
+    const btn = document.getElementById("btn-file-encrypt");
+    const pass = document.getElementById("file-enc-password");
+    if (btn) btn.disabled = !this.fileToEncrypt || !pass.value;
+  }
+
+  updateFileDecBtn() {
+    const btn = document.getElementById("btn-file-decrypt");
+    const pass = document.getElementById("file-dec-password");
+    if (btn) btn.disabled = !this.fileToDecrypt || !pass.value;
+  }
+
+  // 2. Base64 Converter
+  initFileBase64() {
+    const dropzone = document.getElementById("base64-dropzone");
+    const input = document.getElementById("base64-input");
+    const output = document.getElementById("base64-output");
+
+    if (dropzone && input) {
+      this.setupDropzone(dropzone, input, (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          output.value = e.target.result; // Data URL contains Base64
+          this.showToast("Converted to Base64!", "success");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById("base64-copy")?.addEventListener("click", () => {
+      if (!output.value) return;
+      navigator.clipboard.writeText(output.value);
+      this.showToast("Copied to clipboard", "success");
+    });
+
+    document
+      .getElementById("base64-download")
+      ?.addEventListener("click", () => {
+        if (!output.value) return;
+        const blob = new Blob([output.value], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "base64_content.txt";
+        a.click();
+      });
+
+    // Base64 Decode Logic
+    document
+      .getElementById("btn-base64-decode")
+      ?.addEventListener("click", () => {
+        const inputVal = document
+          .getElementById("base64-decode-input")
+          .value.trim();
+        if (!inputVal) return;
+
+        try {
+          // Handle Data URI format (data:image/png;base64,...)
+          let base64Content = inputVal;
+          let mimeType = "application/octet-stream";
+          let extension = "bin";
+
+          if (inputVal.includes(",")) {
+            const parts = inputVal.split(",");
+            base64Content = parts[1]; // Get content after comma
+
+            // Try to guess mime/ext from header
+            const matches = parts[0].match(/:(.*?);/);
+            if (matches && matches[1]) {
+              mimeType = matches[1];
+              extension = mimeType.split("/")[1] || "bin";
+            }
+          }
+
+          // Decode Base64
+          const binaryString = atob(base64Content);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          const blob = new Blob([bytes], { type: mimeType });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `decoded_file.${extension}`;
+          a.click();
+
+          this.showToast("File decoded successfully!", "success");
+        } catch (e) {
+          console.error(e);
+          this.showToast("Invalid Base64 string", "error");
+        }
+      });
+  }
+
+  // 3. File Splitter
+  initFileSplitter() {
+    const dropzone = document.getElementById("splitter-dropzone");
+    const input = document.getElementById("splitter-input");
+    const removeBtn = document.getElementById("splitter-remove");
+    const actionBtn = document.getElementById("btn-split-file");
+    const sizeInput = document.getElementById("splitter-size");
+    const chips = document.querySelectorAll(".size-chip");
+
+    // Preset Chips Logic
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        // Update input
+        sizeInput.value = chip.dataset.size;
+
+        // Update active state
+        chips.forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+      });
+    });
+
+    // Update active chip on manual input
+    sizeInput?.addEventListener("input", () => {
+      chips.forEach((c) => c.classList.remove("active"));
+      const matchingChip = Array.from(chips).find(
+        (c) => c.dataset.size === sizeInput.value
+      );
+      if (matchingChip) matchingChip.classList.add("active");
+    });
+
+    if (dropzone && input) {
+      this.setupDropzone(dropzone, input, (file) => {
+        this.fileToSplit = file;
+        document.getElementById("splitter-name").textContent = file.name;
+        document.getElementById("splitter-preview").hidden = false;
+        dropzone.querySelector(".upload-content").hidden = true;
+        if (actionBtn) actionBtn.disabled = false;
+      });
+
+      removeBtn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.fileToSplit = null;
+        document.getElementById("splitter-preview").hidden = true;
+        dropzone.querySelector(".upload-content").hidden = false;
+        input.value = "";
+        if (actionBtn) actionBtn.disabled = true;
+      });
+
+      actionBtn?.addEventListener("click", () => {
+        if (!this.fileToSplit) return;
+        const chunkSize = (parseInt(sizeInput.value) || 10) * 1024 * 1024; // MB to Bytes
+        const fileSize = this.fileToSplit.size;
+        const chunks = Math.ceil(fileSize / chunkSize);
+
+        if (chunkSize <= 0) {
+          this.showToast("Invalid chunk size", "error");
+          return;
+        }
+
+        let offset = 0;
+        for (let i = 0; i < chunks; i++) {
+          const chunk = this.fileToSplit.slice(offset, offset + chunkSize);
+          offset += chunkSize;
+
+          // Download logic
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(chunk);
+          // Pad index e.g. .001, .002
+          const ext = "." + (i + 1).toString().padStart(3, "0");
+          a.download = this.fileToSplit.name + ext;
+          a.click();
+        }
+        this.showToast(`Split into ${chunks} files!`, "success");
+      });
+    }
+  }
+
+  // 4. Magic Bytes
+  initMagicBytes() {
+    const dropzone = document.getElementById("magic-dropzone");
+    const input = document.getElementById("magic-input");
+    const resultBox = document.getElementById("magic-result");
+
+    if (dropzone && input) {
+      this.setupDropzone(dropzone, input, (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const arr = new Uint8Array(e.target.result).subarray(0, 16); // Read first 16 bytes
+          let hex = "";
+          for (let i = 0; i < arr.length; i++) {
+            hex += arr[i].toString(16).padStart(2, "0").toUpperCase() + " ";
+          }
+
+          // Initial simple detection
+          let type = "Unknown Binary";
+          let mime = "application/octet-stream";
+
+          const h = hex.trim();
+          if (h.startsWith("89 50 4E 47")) {
+            type = "PNG Image";
+            mime = "image/png";
+          } else if (h.startsWith("FF D8 FF")) {
+            type = "JPEG Image";
+            mime = "image/jpeg";
+          } else if (h.startsWith("25 50 44 46")) {
+            type = "PDF Document";
+            mime = "application/pdf";
+          } else if (h.startsWith("50 4B 03 04")) {
+            type = "ZIP Archive / DOCX / APK";
+            mime = "application/zip";
+          } else if (h.startsWith("52 61 72 21")) {
+            type = "RAR Archive";
+            mime = "application/x-rar";
+          } else if (h.startsWith("4D 5A")) {
+            type = "Windows Executable (EXE)";
+            mime = "application/x-msdownload";
+          } else if (h.startsWith("1F 8B 08")) {
+            type = "GZIP Archive";
+            mime = "application/gzip";
+          }
+
+          document.getElementById("magic-type").textContent = type;
+          document.getElementById("magic-mime").textContent = mime;
+          document.getElementById("magic-hex").textContent = hex;
+          resultBox.hidden = false;
+        };
+        reader.readAsArrayBuffer(file.slice(0, 32)); // Only read start
+      });
+    }
   }
 }
 
