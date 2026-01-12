@@ -850,19 +850,34 @@ class StegoraApp {
     this.audioEncodeBuffer = null;
     this.audioDecodeBuffer = null;
 
-    this.initTabs();
-    this.initEncode();
-    this.initDecode();
-    this.initPasswordToggles();
-    this.initModal();
-    this.initHashCopy();
-    this.initAudio();
-    this.initAnalyze();
-    this.initScramblePanel();
-    this.initSanitizePanel();
-    this.initSteganalysis();
-    this.initLSBAnalysis();
-    this.initRedact();
+    this.safeInit("initTabs");
+    this.safeInit("initEncode");
+    this.safeInit("initDecode");
+    this.safeInit("initPasswordToggles");
+    this.safeInit("initModal");
+    this.safeInit("initHashCopy");
+    this.safeInit("initAudio");
+    this.safeInit("initAnalyze");
+    this.safeInit("initScramblePanel");
+    this.safeInit("initSanitizePanel");
+    this.safeInit("initSteganalysis");
+    this.safeInit("initLSBAnalysis");
+    this.safeInit("initRedact");
+  }
+
+  safeInit(methodName) {
+    if (typeof this[methodName] === "function") {
+      try {
+        console.log(`[Stegora] Initializing ${methodName}...`);
+        this[methodName]();
+        console.log(`[Stegora] ${methodName} success.`);
+      } catch (err) {
+        console.error(`[Stegora] Failed to initialize ${methodName}:`, err);
+        // We do NOT re-throw, so subsequent inits can proceed
+      }
+    } else {
+      console.warn(`[Stegora] Method ${methodName} does not exist.`);
+    }
   }
 
   initTabs() {
@@ -1078,24 +1093,8 @@ class StegoraApp {
     const previewImg = document.getElementById("decode-preview-img");
     const removeBtn = document.getElementById("decode-remove");
     const decodeBtn = document.getElementById("decode-btn");
-    const unscrambleBtn = document.getElementById("unscramble-btn");
     const copyBtn = document.getElementById("copy-btn");
     const passwordInput = document.getElementById("decode-password");
-
-    const updateUnscrambleBtn = () => {
-      const hasImage = !!this.decodeImage;
-      const hasPassword = !!passwordInput.value.trim();
-      const isScrambledFile =
-        this.decodeFile && this.decodeFile.name.startsWith("scramble_");
-      unscrambleBtn.disabled = !hasImage || !hasPassword || !isScrambledFile;
-      if (hasImage && !isScrambledFile) {
-        unscrambleBtn.title = "Only scrambled images can be unscrambled";
-      } else if (!hasPassword) {
-        unscrambleBtn.title = "Password required";
-      } else {
-        unscrambleBtn.title = "";
-      }
-    };
 
     this.setupDropzone(dropzone, input, (file) => {
       this.loadImage(file)
@@ -1110,12 +1109,11 @@ class StegoraApp {
           decodeBtn.disabled = isScrambledFile;
           if (isScrambledFile) {
             decodeBtn.title =
-              "Scrambled images cannot be decoded. Use Unscramble instead.";
+              "Scrambled images cannot be decoded. Use Unscramble tab instead.";
           } else {
             decodeBtn.title = "";
           }
 
-          updateUnscrambleBtn();
           document.getElementById("result-box").hidden = true;
         })
         .catch((err) => {
@@ -1132,14 +1130,10 @@ class StegoraApp {
       input.value = "";
       passwordInput.value = "";
       decodeBtn.disabled = true;
-      unscrambleBtn.disabled = true;
       document.getElementById("result-box").hidden = true;
     });
 
-    passwordInput.addEventListener("input", updateUnscrambleBtn);
-
     decodeBtn.addEventListener("click", () => this.decode());
-    unscrambleBtn.addEventListener("click", () => this.unscramble());
 
     copyBtn.addEventListener("click", () => {
       const message = document.getElementById("result-message").textContent;
@@ -1150,7 +1144,15 @@ class StegoraApp {
   }
 
   setupDropzone(dropzone, input, onFile) {
-    dropzone.addEventListener("click", () => input.click());
+    console.log("setupDropzone called:", { dropzone, input });
+    if (!dropzone || !input) {
+      console.error("Dropzone or input not found:", { dropzone, input });
+      return;
+    }
+    dropzone.addEventListener("click", () => {
+      console.log("Dropzone clicked, triggering input.click()");
+      input.click();
+    });
 
     dropzone.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -1892,7 +1894,6 @@ class StegoraApp {
           this.canvas.height
         );
 
-
         if (this.analyzeFile) {
           const elType = document.getElementById("meta-type");
           if (elType) elType.textContent = this.analyzeFile.type || "Unknown";
@@ -1984,7 +1985,6 @@ class StegoraApp {
             }
           }
         }
-
 
         results.hidden = false;
         this.showToast("Analysis complete!", "success");
@@ -2126,8 +2126,6 @@ class StegoraApp {
         .join("");
     const seed = await this.hashToSeed(seedInput);
     const prng = this.mulberry32(seed);
-
-
 
     const headerBytes = new Uint8Array(4 + 16 + 32);
     headerBytes.set([0x53, 0x54, 0x45, 0x47], 0); // STEG
@@ -2277,7 +2275,6 @@ class StegoraApp {
       contentStartOffset = width * 4;
       outputHeight = height - 1;
     } else {
-
       seed = await this.hashToSeed(password);
       contentStartOffset = 0;
       outputHeight = height;
@@ -2296,8 +2293,6 @@ class StegoraApp {
     }
 
     if (isNewFormat) {
-
-
       const outputCanvas = document.createElement("canvas");
       outputCanvas.width = width;
       outputCanvas.height = outputHeight;
@@ -2721,8 +2716,7 @@ class StegoraApp {
 
     const intensityInput = document.getElementById("redact-strength");
     if (intensityInput) {
-      intensityInput.addEventListener("input", (e) => {
-      });
+      intensityInput.addEventListener("input", (e) => {});
     }
   }
 

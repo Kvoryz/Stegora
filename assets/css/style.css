@@ -1120,7 +1120,7 @@ body {
   }
 
   /* Scrollable tabs - only category and sub-tabs scroll */
-  .category-tabs,
+  /* Scrollable tabs - ONLY sub-tabs scroll */
   .sub-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -1136,7 +1136,20 @@ body {
     display: none;
   }
 
-  .category-tab,
+  /* Category tabs stay full width like desktop */
+  .category-tabs {
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .category-tab {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 13px;
+    justify-content: center;
+  }
+
   .sub-tab {
     flex: 0 0 auto;
     white-space: nowrap;

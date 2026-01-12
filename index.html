@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=2.93" />
+    <link rel="stylesheet" href="assets/css/style.css?v=2.98" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
@@ -1348,159 +1348,6 @@
             </button>
           </div>
         </section>
-
-        <!-- Analysis Panel (Exif, Steganalysis, Sanitize) -->
-      <section class="panel" id="analysis-panel" hidden>
-        <nav class="inner-tabs">
-          <button class="inner-tab active" data-inner="exif">
-            Exif Data
-          </button>
-          <button class="inner-tab" data-inner="steganalysis">
-            Steganalysis
-          </button>
-          <button class="inner-tab" data-inner="sanitize">
-            Sanitize
-          </button>
-        </nav>
-
-        <!-- Inner: Exif Data (formerly Analyze) -->
-        <div class="inner-panel active" id="inner-exif">
-          <div class="upload-zone" id="analyze-dropzone">
-            <input
-              type="file"
-              id="analyze-input"
-              accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
-              hidden
-            />
-            <div class="upload-content">
-              <svg
-                class="upload-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-              <div class="upload-info">
-                <p class="upload-text">Drop image to inspect Exif</p>
-                <span class="upload-hint"
-                  >Select Original File (not Gallery)</span
-                >
-              </div>
-            </div>
-            <div class="preview-thumb" id="analyze-preview" hidden>
-              <img id="analyze-preview-img" alt="Preview" />
-              <div class="preview-actions">
-                <button
-                  type="button"
-                  class="preview-view"
-                  data-target="analyze-preview-img"
-                  title="View"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="preview-remove"
-                  id="analyze-remove"
-                  title="Remove"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <span class="preview-label">Image loaded</span>
-            </div>
-          </div>
-
-          <button class="btn primary" id="analyze-btn" disabled>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            Inspect Exif Data
-          </button>
-
-          <div class="analysis-results" id="analysis-results" hidden>
-            <div class="result-header">
-              <h3>Exif Data Found</h3>
-            </div>
-            <div class="analysis-content">
-                hidden
-              />
-              <div class="upload-content">
-                <svg
-                  class="upload-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <div class="upload-info">
-                  <p class="upload-text">Drop image to sanitize</p>
-                  <span class="upload-hint">Remove all metadata</span>
-                </div>
-              </div>
-              <div class="preview-thumb" id="sanitize-preview" hidden>
-                <img id="sanitize-preview-img" alt="Preview" />
-                <div class="preview-actions">
-                  <button
-                    type="button"
-                    class="preview-view"
-                    data-target="sanitize-preview-img"
-                    title="View"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    class="preview-remove"
-                    id="sanitize-remove"
-                    title="Remove"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <span class="preview-label">Image loaded</span>
-              </div>
-            </div>
-
-            <button class="btn primary" id="sanitize-action-btn" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              Sanitize & Download
-            </button>
-          </div>
-        </section>
       </main>
     </div>
 
@@ -1526,7 +1373,7 @@
 
 
 
-    <script src="assets/js/app.js?v=2.93"></script>
+    <script src="assets/js/app.js?v=2.98"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
