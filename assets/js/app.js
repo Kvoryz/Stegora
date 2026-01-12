@@ -738,7 +738,19 @@ class MetadataScanner {
   }
 
   static parseGPS(view, offset, littleEndian, tiffStart) {
-    const entries = view.getUint16(offset, littleEndian);
+    let entries = view.getUint16(offset, littleEndian);
+
+    // Fix for mobile: if entries looks invalid, try opposite endianness
+    if (entries === 0 || entries > 50) {
+      const altEntries = view.getUint16(offset, !littleEndian);
+      if (altEntries > 0 && altEntries < 50) {
+        entries = altEntries;
+        littleEndian = !littleEndian;
+      }
+    }
+
+    if (entries === 0 || entries > 50) return {};
+
     let lat = [],
       lon = [],
       latRef = "",
@@ -755,39 +767,54 @@ class MetadataScanner {
         const valueOffset = view.getUint32(entryOffset + 8, littleEndian);
 
         const typeSize = type === 5 || type === 10 ? 8 : 1;
+        const totalSize = count * typeSize;
         const dataOffset =
-          count * typeSize > 4 ? tiffStart + valueOffset : entryOffset + 8;
+          totalSize > 4 ? tiffStart + valueOffset : entryOffset + 8;
 
-        if (dataOffset + count * typeSize > view.byteLength) continue;
+        if (dataOffset < 0 || dataOffset + totalSize > view.byteLength)
+          continue;
 
-        if (tag === 1) latRef = this.readString(view, dataOffset, count);
-        if (tag === 2)
+        if (tag === 1 && type === 2)
+          latRef = this.readString(view, dataOffset, count);
+        if (tag === 2 && type === 5 && count === 3) {
           lat = [
             this.readRational(view, dataOffset, littleEndian),
             this.readRational(view, dataOffset + 8, littleEndian),
             this.readRational(view, dataOffset + 16, littleEndian),
           ];
-        if (tag === 3) lonRef = this.readString(view, dataOffset, count);
-        if (tag === 4)
+        }
+        if (tag === 3 && type === 2)
+          lonRef = this.readString(view, dataOffset, count);
+        if (tag === 4 && type === 5 && count === 3) {
           lon = [
             this.readRational(view, dataOffset, littleEndian),
             this.readRational(view, dataOffset + 8, littleEndian),
             this.readRational(view, dataOffset + 16, littleEndian),
           ];
+        }
       } catch (e) {
         continue;
       }
     }
 
-    if (lat.length && lon.length) {
-      const latMult = latRef && latRef.toUpperCase().startsWith("S") ? -1 : 1;
-      const lonMult = lonRef && lonRef.toUpperCase().startsWith("W") ? -1 : 1;
+    if (lat.length === 3 && lon.length === 3) {
+      if (
+        lat.every((v) => !isNaN(v) && isFinite(v)) &&
+        lon.every((v) => !isNaN(v) && isFinite(v))
+      ) {
+        const latMult = latRef && latRef.toUpperCase().startsWith("S") ? -1 : 1;
+        const lonMult = lonRef && lonRef.toUpperCase().startsWith("W") ? -1 : 1;
 
-      const latDec = (lat[0] + lat[1] / 60 + lat[2] / 3600) * latMult;
-      const lonDec = (lon[0] + lon[1] / 60 + lon[2] / 3600) * lonMult;
+        const latDec = (lat[0] + lat[1] / 60 + lat[2] / 3600) * latMult;
+        const lonDec = (lon[0] + lon[1] / 60 + lon[2] / 3600) * lonMult;
 
-      if (latDec !== 0 || lonDec !== 0) {
-        return { gps: `${latDec.toFixed(6)}, ${lonDec.toFixed(6)}` };
+        if (
+          (latDec !== 0 || lonDec !== 0) &&
+          Math.abs(latDec) <= 90 &&
+          Math.abs(lonDec) <= 180
+        ) {
+          return { gps: `${latDec.toFixed(6)}, ${lonDec.toFixed(6)}` };
+        }
       }
     }
     return {};
@@ -833,21 +860,90 @@ class StegoraApp {
     this.initHashCopy();
     this.initAudio();
     this.initAnalyze();
+    this.initScramblePanel();
+    this.initSanitizePanel();
+    this.initSteganalysis();
+    this.initRedact();
   }
 
   initTabs() {
-    const tabs = document.querySelectorAll(".tab");
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        tabs.forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
+    // Category tabs
+    const categoryTabs = document.querySelectorAll(".category-tab");
+    const subTabGroups = document.querySelectorAll(".sub-tabs");
 
+    categoryTabs.forEach((catTab) => {
+      catTab.addEventListener("click", () => {
+        // Update category tab active state
+        categoryTabs.forEach((t) => t.classList.remove("active"));
+        catTab.classList.add("active");
+
+        // Show corresponding sub-tabs, hide others
+        const category = catTab.dataset.category;
+        subTabGroups.forEach((group) => {
+          if (group.id === `sub-tabs-${category}`) {
+            group.hidden = false;
+            // Activate first enabled sub-tab in this category
+            const firstSubTab = group.querySelector(".sub-tab:not(:disabled)");
+            if (firstSubTab) {
+              firstSubTab.click();
+            }
+          } else {
+            group.hidden = true;
+          }
+        });
+      });
+    });
+
+    // Sub-tabs
+    const allSubTabs = document.querySelectorAll(".sub-tab");
+    allSubTabs.forEach((subTab) => {
+      subTab.addEventListener("click", () => {
+        if (subTab.disabled) return;
+
+        // Find parent sub-tabs group and update active state within it
+        const parentGroup = subTab.closest(".sub-tabs");
+        parentGroup
+          .querySelectorAll(".sub-tab")
+          .forEach((t) => t.classList.remove("active"));
+        subTab.classList.add("active");
+
+        // Show corresponding panel
         document
           .querySelectorAll(".panel")
           .forEach((p) => p.classList.remove("active"));
-        document
-          .getElementById(`${tab.dataset.tab}-panel`)
-          .classList.add("active");
+        const panel = document.getElementById(`${subTab.dataset.tab}-panel`);
+        if (panel) {
+          panel.classList.add("active");
+        }
+      });
+    });
+
+    // Inner tabs (3rd level - e.g., Encode/Decode within Steganography)
+    const innerTabs = document.querySelectorAll(".inner-tab");
+    innerTabs.forEach((innerTab) => {
+      innerTab.addEventListener("click", () => {
+        // Find parent inner-tabs group
+        const parentGroup = innerTab.closest(".inner-tabs");
+        parentGroup
+          .querySelectorAll(".inner-tab")
+          .forEach((t) => t.classList.remove("active"));
+        innerTab.classList.add("active");
+
+        // Find parent panel and show corresponding inner-panel
+        const parentPanel = innerTab.closest(".panel");
+        parentPanel
+          .querySelectorAll(".inner-panel")
+          .forEach((p) => p.classList.remove("active"));
+
+        let targetId = innerTab.dataset.target;
+        if (!targetId && innerTab.dataset.inner) {
+          targetId = `inner-${innerTab.dataset.inner}`;
+        }
+
+        const innerPanel = parentPanel.querySelector(`#${targetId}`);
+        if (innerPanel) {
+          innerPanel.classList.add("active");
+        }
       });
     });
   }
@@ -856,6 +952,8 @@ class StegoraApp {
     const toggles = [
       { btn: "toggle-encode-password", input: "encode-password" },
       { btn: "toggle-decode-password", input: "decode-password" },
+      { btn: "toggle-scramble-password", input: "scramble-password" },
+      { btn: "toggle-unscramble-password", input: "unscramble-password" },
     ];
 
     toggles.forEach(({ btn, input }) => {
@@ -916,10 +1014,6 @@ class StegoraApp {
     const charCount = document.getElementById("char-count");
     const maxCharsDisplay = document.getElementById("max-chars");
     const submitBtn = document.getElementById("submit-btn");
-    const modal = document.getElementById("submit-modal");
-    const modalClose = document.getElementById("submit-modal-close");
-    const sanitizeBtn = document.getElementById("sanitize-btn");
-    const confirmEncodeBtn = document.getElementById("confirm-encode-btn");
 
     let maxAllowedChars = 0;
 
@@ -979,33 +1073,7 @@ class StegoraApp {
     });
 
     submitBtn.addEventListener("click", () => {
-      const password = document.getElementById("encode-password").value.trim();
-      const scrambleBtn = document.getElementById("scramble-btn");
-      if (scrambleBtn) {
-        scrambleBtn.disabled = !password;
-      }
-      this.updateEncodeButton(maxAllowedChars);
-      modal.hidden = false;
-    });
-
-    modalClose.addEventListener("click", () => {
-      modal.hidden = true;
-    });
-
-    sanitizeBtn.addEventListener("click", () => {
-      modal.hidden = true;
-      this.sanitize();
-    });
-
-    confirmEncodeBtn.addEventListener("click", () => {
-      modal.hidden = true;
       this.encode();
-    });
-
-    const scrambleBtn = document.getElementById("scramble-btn");
-    scrambleBtn.addEventListener("click", () => {
-      modal.hidden = true;
-      this.scramble();
     });
 
     const passwordInput = document.getElementById("encode-password");
@@ -1834,13 +1902,13 @@ class StegoraApp {
           this.canvas.width,
           this.canvas.height
         );
-        const analysis = Steganalysis.analyze(imageData);
+        // const analysis = Steganalysis.analyze(imageData); // Legacy analysis removed
 
-        document.getElementById("verdict-value").textContent = analysis.verdict;
-        document.getElementById("lsb-score").textContent = analysis.lsbScore;
-        document.getElementById("chi-value").textContent = analysis.chiSquare;
-        document.getElementById("noise-value").textContent =
-          analysis.bitPlaneNoise;
+        // document.getElementById("verdict-value").textContent = analysis.verdict; // Legacy
+        // document.getElementById("lsb-score").textContent = analysis.lsbScore; // Legacy
+        // document.getElementById("chi-value").textContent = analysis.chiSquare; // Legacy
+        // document.getElementById("noise-value").textContent =
+        //   analysis.bitPlaneNoise; // Legacy
 
         if (this.analyzeFile) {
           const elType = document.getElementById("meta-type");
@@ -1934,13 +2002,16 @@ class StegoraApp {
           }
         }
 
-        const verdictItem = document.getElementById("analysis-verdict");
-        verdictItem.className = "analysis-item";
-        if (analysis.verdict === "Clean")
-          verdictItem.classList.add("verdict-clean");
-        else if (analysis.verdict === "Suspicious")
-          verdictItem.classList.add("verdict-suspicious");
-        else verdictItem.classList.add("verdict-detected");
+        // Legacy verdict logic removed
+        // const verdictItem = document.getElementById("analysis-verdict");
+        // if (verdictItem) {
+        //   verdictItem.className = "analysis-item";
+        //   if (analysis.verdict === "Clean")
+        //     verdictItem.classList.add("verdict-clean");
+        //   else if (analysis.verdict === "Suspicious")
+        //     verdictItem.classList.add("verdict-suspicious");
+        //   else verdictItem.classList.add("verdict-detected");
+        // }
 
         results.hidden = false;
         this.showToast("Analysis complete!", "success");
@@ -1959,6 +2030,884 @@ class StegoraApp {
     setTimeout(() => {
       toast.classList.remove("show");
     }, 3000);
+  }
+
+  initScramblePanel() {
+    // Scramble dropzone
+    const scrambleDropzone = document.getElementById("scramble-dropzone");
+    const scrambleInput = document.getElementById("scramble-input");
+    if (scrambleDropzone && scrambleInput) {
+      this.setupDropzone(scrambleDropzone, scrambleInput, (file) => {
+        this.scrambleFile = file;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.scrambleImage = img;
+          document.getElementById("scramble-preview-img").src = img.src;
+          document.getElementById("scramble-preview").hidden = false;
+          document.querySelector(
+            "#scramble-dropzone .upload-content"
+          ).hidden = true;
+          this.updateScrambleBtn();
+        };
+      });
+    }
+
+    document
+      .getElementById("scramble-remove")
+      ?.addEventListener("click", () => {
+        this.scrambleImage = null;
+        this.scrambleFile = null;
+        document.getElementById("scramble-preview").hidden = true;
+        document.querySelector(
+          "#scramble-dropzone .upload-content"
+        ).hidden = false;
+        this.updateScrambleBtn();
+      });
+
+    document
+      .getElementById("scramble-password")
+      ?.addEventListener("input", () => this.updateScrambleBtn());
+    document
+      .getElementById("scramble-action-btn")
+      ?.addEventListener("click", () => this.doScramble());
+
+    // Unscramble dropzone
+    const unscrambleDropzone = document.getElementById("unscramble-dropzone");
+    const unscrambleInput = document.getElementById("unscramble-input");
+    if (unscrambleDropzone && unscrambleInput) {
+      this.setupDropzone(unscrambleDropzone, unscrambleInput, (file) => {
+        this.unscrambleFile = file;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.unscrambleImage = img;
+          document.getElementById("unscramble-preview-img").src = img.src;
+          document.getElementById("unscramble-preview").hidden = false;
+          document.querySelector(
+            "#unscramble-dropzone .upload-content"
+          ).hidden = true;
+          this.updateUnscrambleBtn();
+        };
+      });
+    }
+
+    document
+      .getElementById("unscramble-remove")
+      ?.addEventListener("click", () => {
+        this.unscrambleImage = null;
+        this.unscrambleFile = null;
+        document.getElementById("unscramble-preview").hidden = true;
+        document.querySelector(
+          "#unscramble-dropzone .upload-content"
+        ).hidden = false;
+        this.updateUnscrambleBtn();
+      });
+
+    document
+      .getElementById("unscramble-password")
+      ?.addEventListener("input", () => this.updateUnscrambleBtn());
+    document
+      .getElementById("unscramble-action-btn")
+      ?.addEventListener("click", () => this.doUnscramble());
+  }
+
+  updateScrambleBtn() {
+    const btn = document.getElementById("scramble-action-btn");
+    const password = document.getElementById("scramble-password")?.value.trim();
+    btn.disabled = !this.scrambleImage || !password;
+  }
+
+  updateUnscrambleBtn() {
+    const btn = document.getElementById("unscramble-action-btn");
+    const password = document
+      .getElementById("unscramble-password")
+      ?.value.trim();
+    btn.disabled = !this.unscrambleImage || !password;
+  }
+
+  async doScramble() {
+    const password = document.getElementById("scramble-password").value.trim();
+    if (!this.scrambleImage || !password) return;
+
+    this.showToast("Scrambling image...", "");
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Disable smoothing
+    this.ctx.imageSmoothingEnabled = false;
+
+    // Use natural dimensions + 1px height for header
+    const width = this.scrambleImage.naturalWidth;
+    const height = this.scrambleImage.naturalHeight;
+    this.canvas.width = width;
+    this.canvas.height = height + 1; // Add 1px for header
+
+    // Draw image at (0,1) leaving row 0 for header
+    this.ctx.drawImage(this.scrambleImage, 0, 1);
+
+    const imageData = this.ctx.getImageData(0, 0, width, height + 1);
+    const data = imageData.data;
+
+    // Generate Salt (16 bytes) and Hash
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const passHash = await this.generatePasswordHash(password, salt);
+
+    // Derive Seed from Password+Salt for scrambling
+    const seedInput =
+      password +
+      Array.from(salt)
+        .map((b) => String.fromCharCode(b))
+        .join("");
+    const seed = await this.hashToSeed(seedInput);
+    const prng = this.mulberry32(seed);
+
+    // --- Write Header (Row 0) ---
+    // Format: MAGIC (4) + SALT (16) + HASH (32) = 52 bytes
+    // Encoded in first N pixels (RGB channels)
+    // 52 bytes needs ceil(52/3) = 18 pixels.
+
+    // 1. Magic "STEG" (0x53, 0x54, 0x45, 0x47)
+    // 2. Salt (16 bytes)
+    // 3. Hash (32 bytes)
+
+    const headerBytes = new Uint8Array(4 + 16 + 32);
+    headerBytes.set([0x53, 0x54, 0x45, 0x47], 0); // STEG
+    headerBytes.set(salt, 4);
+    headerBytes.set(passHash, 20);
+
+    // Write header bytes to pixels
+    let pixelIdx = 0;
+    for (let i = 0; i < headerBytes.length; i++) {
+      // data is RGBA, so 4 bytes per pixel. We use R, G, B channels.
+      const offset = pixelIdx * 4 + (i % 3);
+      data[offset] = headerBytes[i];
+
+      if (i % 3 === 2) pixelIdx++; // Move to next pixel after filling RGB
+    }
+
+    // Set Alpha=255 for header pixels
+    for (let i = 0; i <= pixelIdx; i++) {
+      data[i * 4 + 3] = 255;
+    }
+
+    // Fill the rest of Row 0 with random noise to mask the header pattern
+    const row0Bytes = width * 4;
+    const headerEndIndex = (pixelIdx + 1) * 4;
+    for (let i = headerEndIndex; i < row0Bytes; i += 4) {
+      data[i] = Math.floor(Math.random() * 256);
+      data[i + 1] = Math.floor(Math.random() * 256);
+      data[i + 2] = Math.floor(Math.random() * 256);
+      data[i + 3] = 255;
+    }
+
+    // --- Scramble Content (Rows 1..End) ---
+    const startOffset = width * 4; // Start at Row 1
+    for (let i = startOffset; i < data.length; i += 4) {
+      data[i] ^= (prng() * 256) | 0;
+      data[i + 1] ^= (prng() * 256) | 0;
+      data[i + 2] ^= (prng() * 256) | 0;
+      data[i + 3] = 255; // Force opacity
+    }
+
+    this.ctx.putImageData(imageData, 0, 0);
+
+    this.canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = this.scrambleFile
+        ? this.scrambleFile.name.replace(/\.[^/.]+$/, "")
+        : "image";
+      a.download = `scramble_${baseName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.showToast(
+        "Image scrambled! Header added for validation.",
+        "success"
+      );
+    }, "image/png");
+  }
+
+  async generatePasswordHash(password, salt) {
+    const enc = new TextEncoder();
+    const passKey = await window.crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      { name: "PBKDF2" },
+      false,
+      ["deriveBits"]
+    );
+    // Use PBKDF2 for better security than simple SHA256 of concat
+    const derivedBits = await window.crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 1000,
+        hash: "SHA-256",
+      },
+      passKey,
+      256 // 32 bytes
+    );
+    return new Uint8Array(derivedBits);
+  }
+
+  buffersEqual(a, b) {
+    if (a.byteLength !== b.byteLength) return false;
+    for (let i = 0; i < a.byteLength; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  async doUnscramble() {
+    const password = document
+      .getElementById("unscramble-password")
+      .value.trim();
+    if (!this.unscrambleImage || !password) return;
+
+    this.showToast("Unscrambling image...", "");
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Disable smoothing and use natural dimensions
+    this.ctx.imageSmoothingEnabled = false;
+    const width = this.unscrambleImage.naturalWidth;
+    const height = this.unscrambleImage.naturalHeight;
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.ctx.drawImage(this.unscrambleImage, 0, 0);
+
+    const imageData = this.ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    // --- Header Check (Row 0) ---
+    // Read first 52 bytes from Row 0 pixels (R,G,B channels)
+    const headerBytes = new Uint8Array(52);
+    let pixelIdx = 0;
+    let byteIdx = 0;
+
+    // We only need to check enough pixels to get 52 bytes.
+    // 52 bytes / 3 bytes/pixel = 17.33 -> 18 pixels.
+    // Ensure we don't go out of bounds if width is super small (unlikely for images, but safe to check)
+    const maxHeaderPixels = Math.ceil(52 / 3);
+
+    if (width >= maxHeaderPixels) {
+      for (let i = 0; i < 52; i++) {
+        const offset = pixelIdx * 4 + (i % 3);
+        headerBytes[i] = data[offset];
+        if (i % 3 === 2) pixelIdx++;
+      }
+    }
+
+    // Check Magic "STEG" (0x53, 0x54, 0x45, 0x47)
+    const isNewFormat =
+      headerBytes[0] === 0x53 &&
+      headerBytes[1] === 0x54 &&
+      headerBytes[2] === 0x45 &&
+      headerBytes[3] === 0x47;
+
+    let seed;
+    let contentStartOffset = 0;
+    let outputHeight = height;
+
+    if (isNewFormat) {
+      // --- New Format: Validation ---
+      const salt = headerBytes.slice(4, 20); // 16 bytes
+      const storedHash = headerBytes.slice(20, 52); // 32 bytes
+
+      // Check Password
+      const checkHash = await this.generatePasswordHash(password, salt);
+      if (!this.buffersEqual(storedHash, checkHash)) {
+        this.showToast("Incorrect Password! Access Denied.", "error");
+        return;
+      }
+
+      // Match! Derive Seed
+      const seedInput =
+        password +
+        Array.from(salt)
+          .map((b) => String.fromCharCode(b))
+          .join("");
+      seed = await this.hashToSeed(seedInput);
+
+      // Content starts at Row 1
+      contentStartOffset = width * 4;
+      outputHeight = height - 1;
+    } else {
+      // --- Legacy Format (No Header) ---
+      // Treat checking as success, just use simple password seed
+      // Warn user? Or just proceed silently as requested "biar salah passnya tetap bisa jalan" (only for legacy)
+      // User said "biar salah passnya tetap bisa jalan" referring to the old behavior.
+      // But for NEW format user said "harus match password".
+      // So Legacy we keep old behavior (garbage out if wrong pass).
+
+      seed = await this.hashToSeed(password);
+      contentStartOffset = 0;
+      outputHeight = height;
+      this.showToast(
+        "Legacy format detected (no validation). Unscrambling...",
+        "info"
+      );
+    }
+
+    // --- Unscramble Content ---
+    const prng = this.mulberry32(seed);
+
+    for (let i = contentStartOffset; i < data.length; i += 4) {
+      data[i] ^= (prng() * 256) | 0;
+      data[i + 1] ^= (prng() * 256) | 0;
+      data[i + 2] ^= (prng() * 256) | 0;
+      // No need to force alpha here, we keep what's there (should be 255 from scramble)
+    }
+
+    // --- Output Result ---
+    if (isNewFormat) {
+      // Crop the header (Row 0)
+      // Put the unscrambled content (from Row 1) into a new ImageData (or just draw to canvas offset)
+
+      // Easiest is to put the whole data back, then extract the part we want, or draw negative offset
+      // But we modified `data` in place. `data` contains Row 0 (header) + Unscrambled Content.
+      // We want to save ONLY Unscrambled Content.
+
+      // Create a new canvas for the output size
+      const outputCanvas = document.createElement("canvas");
+      outputCanvas.width = width;
+      outputCanvas.height = outputHeight;
+      const outputCtx = outputCanvas.getContext("2d");
+
+      // Put the Modified Data back to the main canvas first
+      this.ctx.putImageData(imageData, 0, 0);
+
+      // Draw Main Canvas to Output Canvas, shifting up by 1 pixel (skipping header)
+      // Source (0, 1, w, h-1) -> Dest (0, 0, w, h-1)
+      outputCtx.drawImage(
+        this.canvas,
+        0,
+        1,
+        width,
+        outputHeight,
+        0,
+        0,
+        width,
+        outputHeight
+      );
+
+      outputCanvas.toBlob(saveBlob, "image/png");
+    } else {
+      // Legacy: Just save the whole thing
+      this.ctx.putImageData(imageData, 0, 0);
+      this.canvas.toBlob(saveBlob, "image/png");
+    }
+
+    const _this = this; // Capture 'this' for saveBlob closure if needed, or use arrow
+    function saveBlob(blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = _this.unscrambleFile
+        ? _this.unscrambleFile.name
+            .replace(/\.[^/.]+$/, "")
+            .replace(/^scramble_/, "")
+        : "image";
+      a.download = `unscramble_${baseName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      _this.showToast("Image restored!", "success");
+    }
+  }
+
+  initSanitizePanel() {
+    const sanitizeDropzone = document.getElementById("sanitize-dropzone");
+    const sanitizeInput = document.getElementById("sanitize-input");
+    if (sanitizeDropzone && sanitizeInput) {
+      this.setupDropzone(sanitizeDropzone, sanitizeInput, (file) => {
+        this.sanitizeFile = file;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.sanitizeImage = img;
+          document.getElementById("sanitize-preview-img").src = img.src;
+          document.getElementById("sanitize-preview").hidden = false;
+          document.querySelector(
+            "#sanitize-dropzone .upload-content"
+          ).hidden = true;
+          document.getElementById("sanitize-action-btn").disabled = false;
+        };
+      });
+    }
+
+    document
+      .getElementById("sanitize-remove")
+      ?.addEventListener("click", () => {
+        this.sanitizeImage = null;
+        this.sanitizeFile = null;
+        document.getElementById("sanitize-preview").hidden = true;
+        document.querySelector(
+          "#sanitize-dropzone .upload-content"
+        ).hidden = false;
+        document.getElementById("sanitize-action-btn").disabled = true;
+      });
+
+    document
+      .getElementById("sanitize-action-btn")
+      ?.addEventListener("click", () => this.doSanitize());
+  }
+
+  initSteganalysis() {
+    // Original Image Dropzone
+    this.setupDropzone(
+      document.getElementById("steg-orig-dropzone"),
+      document.getElementById("steg-orig-input"),
+      (file) => {
+        this.stegOrigFile = file;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.stegOrigImage = img;
+          document.getElementById("steg-orig-img").src = img.src;
+          document.getElementById("steg-orig-preview").hidden = false;
+          document.querySelector(
+            "#steg-orig-dropzone .upload-content"
+          ).hidden = true;
+          this.updateStegCompareBtn();
+        };
+      }
+    );
+
+    document
+      .getElementById("steg-orig-remove")
+      ?.addEventListener("click", () => {
+        this.stegOrigImage = null;
+        this.stegOrigFile = null;
+        document.getElementById("steg-orig-preview").hidden = true;
+        document.querySelector(
+          "#steg-orig-dropzone .upload-content"
+        ).hidden = false;
+        this.updateStegCompareBtn();
+      });
+
+    // Suspect Image Dropzone
+    this.setupDropzone(
+      document.getElementById("steg-susp-dropzone"),
+      document.getElementById("steg-susp-input"),
+      (file) => {
+        this.stegSuspFile = file;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.stegSuspImage = img;
+          document.getElementById("steg-susp-img").src = img.src;
+          document.getElementById("steg-susp-preview").hidden = false;
+          document.querySelector(
+            "#steg-susp-dropzone .upload-content"
+          ).hidden = true;
+          this.updateStegCompareBtn();
+        };
+      }
+    );
+
+    document
+      .getElementById("steg-susp-remove")
+      ?.addEventListener("click", () => {
+        this.stegSuspImage = null;
+        this.stegSuspFile = null;
+        document.getElementById("steg-susp-preview").hidden = true;
+        document.querySelector(
+          "#steg-susp-dropzone .upload-content"
+        ).hidden = false;
+        this.updateStegCompareBtn();
+      });
+
+    // Amplification Slider
+    const slider = document.getElementById("diff-amp");
+    const ampValue = document.getElementById("amp-value");
+    slider?.addEventListener("input", (e) => {
+      ampValue.textContent = `${e.target.value}x`;
+      // If results are already shown, re-run comparison live
+      if (!document.getElementById("steg-results").hidden) {
+        this.doSteganalysis();
+      }
+    });
+
+    // Compare Button
+    document
+      .getElementById("steg-compare-btn")
+      ?.addEventListener("click", () => this.doSteganalysis());
+  }
+
+  updateStegCompareBtn() {
+    const btn = document.getElementById("steg-compare-btn");
+    if (btn) btn.disabled = !this.stegOrigImage || !this.stegSuspImage;
+  }
+
+  doSteganalysis() {
+    if (!this.stegOrigImage || !this.stegSuspImage) return;
+
+    const w1 = this.stegOrigImage.naturalWidth;
+    const h1 = this.stegOrigImage.naturalHeight;
+    const w2 = this.stegSuspImage.naturalWidth;
+    const h2 = this.stegSuspImage.naturalHeight;
+
+    if (w1 !== w2 || h1 !== h2) {
+      this.showToast(
+        `Dimensions mismatch! ${w1}x${h1} vs ${w2}x${h2}`,
+        "error"
+      );
+      return;
+    }
+
+    const canvas = document.getElementById("diff-canvas");
+    canvas.width = w1;
+    canvas.height = h1;
+    const ctx = canvas.getContext("2d");
+
+    // Draw Original to get data
+    ctx.drawImage(this.stegOrigImage, 0, 0);
+    const img1Data = ctx.getImageData(0, 0, w1, h1).data;
+
+    // Draw Suspect to get data
+    ctx.drawImage(this.stegSuspImage, 0, 0);
+    const img2Data = ctx.getImageData(0, 0, w1, h1).data;
+
+    // Output Data
+    const output = ctx.createImageData(w1, h1);
+    const outData = output.data;
+
+    const amp = parseInt(document.getElementById("diff-amp").value, 10) || 10;
+    let diffCount = 0;
+
+    for (let i = 0; i < img1Data.length; i += 4) {
+      const rDiff = Math.abs(img1Data[i] - img2Data[i]);
+      const gDiff = Math.abs(img1Data[i + 1] - img2Data[i + 1]);
+      const bDiff = Math.abs(img1Data[i + 2] - img2Data[i + 2]);
+      const aDiff = Math.abs(img1Data[i + 3] - img2Data[i + 3]);
+
+      if (rDiff > 0 || gDiff > 0 || bDiff > 0 || aDiff > 0) {
+        diffCount++;
+        // amplify difference
+        outData[i] = Math.min(255, rDiff * amp);
+        outData[i + 1] = Math.min(255, gDiff * amp);
+        outData[i + 2] = Math.min(255, bDiff * amp);
+        outData[i + 3] = 255; // Opaque
+      } else {
+        // Match = Black
+        outData[i] = 0;
+        outData[i + 1] = 0;
+        outData[i + 2] = 0;
+        outData[i + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(output, 0, 0);
+
+    document.getElementById("steg-results").hidden = false;
+    const diffPercent = ((diffCount / (w1 * h1)) * 100).toFixed(4);
+    document.getElementById(
+      "diff-stats"
+    ).textContent = `${diffCount.toLocaleString()} pixels differ (${diffPercent}%)`;
+
+    this.showToast("Comparison complete.", "success");
+  }
+
+  async doSanitize() {
+    if (!this.sanitizeImage) return;
+
+    this.showToast("Sanitizing image...", "");
+    await new Promise((r) => setTimeout(r, 50));
+
+    this.canvas.width =
+      this.sanitizeImage.width || this.sanitizeImage.naturalWidth;
+    this.canvas.height =
+      this.sanitizeImage.height || this.sanitizeImage.naturalHeight;
+    this.ctx.drawImage(this.sanitizeImage, 0, 0);
+
+    this.canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = this.sanitizeFile
+        ? this.sanitizeFile.name.replace(/\.[^/.]+$/, "")
+        : "image";
+      a.download = `sanitized_${baseName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.showToast("Image sanitized! All metadata removed.", "success");
+    }, "image/png");
+  }
+
+  initRedact() {
+    this.redactMode = "pixelate";
+    this.redactUndoStack = [];
+    this.isDragging = false;
+    this.startX = 0;
+    this.startY = 0;
+
+    // Dropzone
+    this.setupDropzone(
+      document.getElementById("redact-dropzone"),
+      document.getElementById("redact-input"),
+      (file) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          this.redactImage = img;
+          this.startRedactSession(img);
+        };
+      }
+    );
+
+    // Toolbar
+    document.getElementById("tool-pixelate")?.addEventListener("click", (e) => {
+      this.redactMode = "pixelate";
+      this.updateRedactToolbar(e.target);
+    });
+    document.getElementById("tool-blur")?.addEventListener("click", (e) => {
+      this.redactMode = "blur";
+      this.updateRedactToolbar(e.target);
+    });
+
+    document
+      .getElementById("redact-undo")
+      ?.addEventListener("click", () => this.undoRedact());
+    document.getElementById("redact-reset")?.addEventListener("click", () => {
+      if (this.redactImage) this.startRedactSession(this.redactImage);
+    });
+    document.getElementById("redact-delete")?.addEventListener("click", () => {
+      this.redactImage = null;
+      this.redactUndoStack = [];
+      document.getElementById("redact-editor").hidden = true;
+      document.getElementById("redact-dropzone").hidden = false;
+      document.getElementById("redact-input").value = "";
+    });
+    document
+      .getElementById("redact-download")
+      ?.addEventListener("click", () => {
+        const canvas = document.getElementById("redact-canvas");
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "redacted_image.png";
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+      });
+
+    const intensityInput = document.getElementById("redact-strength");
+    if (intensityInput) {
+      intensityInput.addEventListener("input", (e) => {
+        // Optional: visualized feedback or just update value
+      });
+    }
+  }
+
+  updateRedactToolbar(activeBtn) {
+    document
+      .querySelectorAll("#redact-editor .tool-group .btn")
+      .forEach((b) => b.classList.remove("active"));
+    activeBtn.classList.add("active");
+  }
+
+  startRedactSession(img) {
+    document.getElementById("redact-dropzone").hidden = true;
+    document.getElementById("redact-editor").hidden = false;
+
+    const canvas = document.getElementById("redact-canvas");
+    // Fit canvas to container but keep aspect ratio
+    // We set canvas resolution to image resolution
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    this.redactUndoStack = [
+      ctx.getImageData(0, 0, canvas.width, canvas.height),
+    ];
+    this.updateUndoBtn();
+
+    // Mouse Events
+    this.setupRedactEvents(canvas);
+  }
+
+  setupRedactEvents(canvas) {
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    };
+
+    canvas.onmousedown = (e) => {
+      this.isDragging = true;
+      const pos = getPos(e);
+      this.startX = pos.x;
+      this.startY = pos.y;
+      this.tempSnapshot = canvas
+        .getContext("2d")
+        .getImageData(0, 0, canvas.width, canvas.height);
+    };
+
+    canvas.onmousemove = (e) => {
+      if (!this.isDragging) return;
+      const pos = getPos(e);
+      const ctx = canvas.getContext("2d");
+
+      // Restore temp snapshot to erase previous rect
+      ctx.putImageData(this.tempSnapshot, 0, 0);
+
+      // Draw selection rect
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.lineWidth = 2 * (canvas.width / canvas.getBoundingClientRect().width); // Scale line width
+      ctx.setLineDash([5, 5]);
+      const w = pos.x - this.startX;
+      const h = pos.y - this.startY;
+      ctx.strokeRect(this.startX, this.startY, w, h);
+
+      // Also black outline for contrast
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.setLineDash([0, 0]);
+      ctx.strokeRect(this.startX - 1, this.startY - 1, w + 2, h + 2);
+    };
+
+    canvas.onmouseup = (e) => {
+      if (!this.isDragging) return;
+      this.isDragging = false;
+      const pos = getPos(e);
+      const w = pos.x - this.startX;
+      const h = pos.y - this.startY;
+
+      // Clear selection rect by restoring
+      const ctx = canvas.getContext("2d");
+      ctx.putImageData(this.tempSnapshot, 0, 0);
+
+      if (Math.abs(w) > 5 && Math.abs(h) > 5) {
+        this.applyRedact(this.startX, this.startY, w, h);
+      }
+    };
+
+    canvas.onmouseout = () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        const ctx = canvas.getContext("2d");
+        ctx.putImageData(this.tempSnapshot, 0, 0);
+      }
+    };
+  }
+
+  applyRedact(x, y, w, h) {
+    const canvas = document.getElementById("redact-canvas");
+    const ctx = canvas.getContext("2d");
+    const strength =
+      parseInt(document.getElementById("redact-strength").value) || 8;
+
+    // Normalize rect
+    if (w < 0) {
+      x += w;
+      w = -w;
+    }
+    if (h < 0) {
+      y += h;
+      h = -h;
+    }
+
+    // Clamp to canvas
+    x = Math.max(0, x);
+    y = Math.max(0, y);
+    w = Math.min(w, canvas.width - x);
+    h = Math.min(h, canvas.height - y);
+
+    if (w <= 0 || h <= 0) return;
+
+    const imgData = ctx.getImageData(x, y, w, h);
+    const data = imgData.data;
+
+    if (this.redactMode === "pixelate") {
+      const pixelSize = Math.max(2, strength * 2);
+      for (let py = 0; py < h; py += pixelSize) {
+        for (let px = 0; px < w; px += pixelSize) {
+          // Get top-left pixel color
+          const i = (py * w + px) * 4;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          // Fill block
+          for (let by = 0; by < pixelSize && py + by < h; by++) {
+            for (let bx = 0; bx < pixelSize && px + bx < w; bx++) {
+              const ni = ((py + by) * w + (px + bx)) * 4;
+              data[ni] = r;
+              data[ni + 1] = g;
+              data[ni + 2] = b;
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, x, y);
+    } else if (this.redactMode === "blur") {
+      // Simple multi-pass box blur for performance
+      const radius = Math.max(1, strength);
+      const passes = 3; // Approximation of Gaussian
+
+      // Use an offscreen canvas for resizing-based blur (fastest)
+      const offCanvas = document.createElement("canvas");
+      offCanvas.width = w;
+      offCanvas.height = h;
+      const offCtx = offCanvas.getContext("2d");
+      offCtx.putImageData(imgData, 0, 0);
+
+      // Downscale
+      const sW = Math.max(1, Math.floor(w / radius));
+      const sH = Math.max(1, Math.floor(h / radius));
+
+      const smallCanvas = document.createElement("canvas");
+      smallCanvas.width = sW;
+      smallCanvas.height = sH;
+      const smallCtx = smallCanvas.getContext("2d");
+      smallCtx.imageSmoothingEnabled = true;
+      smallCtx.imageSmoothingQuality = "medium";
+      smallCtx.drawImage(offCanvas, 0, 0, sW, sH);
+
+      // Upscale back
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = w;
+      finalCanvas.height = h;
+      const finalCtx = finalCanvas.getContext("2d");
+      finalCtx.imageSmoothingEnabled = true;
+      finalCtx.imageSmoothingQuality = "medium"; // Smooth blur
+      finalCtx.drawImage(smallCanvas, 0, 0, w, h);
+
+      // Apply back to main context
+      ctx.drawImage(finalCanvas, x, y);
+    }
+
+    // Push to undo stack
+    const newSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    this.redactUndoStack.push(newSnapshot);
+    if (this.redactUndoStack.length > 10) this.redactUndoStack.shift(); // Limit
+    this.updateUndoBtn();
+  }
+
+  undoRedact() {
+    if (this.redactUndoStack.length <= 1) return;
+    this.redactUndoStack.pop(); // Remove current state
+    const prev = this.redactUndoStack[this.redactUndoStack.length - 1];
+    const canvas = document.getElementById("redact-canvas");
+    canvas.getContext("2d").putImageData(prev, 0, 0);
+    this.updateUndoBtn();
+  }
+
+  updateUndoBtn() {
+    const btn = document.getElementById("redact-undo");
+    if (btn) btn.disabled = this.redactUndoStack.length <= 1;
   }
 }
 

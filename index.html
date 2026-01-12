@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=2.61" />
+    <link rel="stylesheet" href="assets/css/style.css?v=2.84" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
@@ -29,8 +29,9 @@
         <p class="tagline">Hide secrets in plain sight</p>
       </header>
 
-      <nav class="tabs">
-        <button class="tab active" data-tab="encode">
+      <!-- Category Tabs -->
+      <nav class="category-tabs">
+        <button class="category-tab active" data-category="image">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -38,59 +39,442 @@
             stroke-width="2"
           >
             <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M12 8v8M8 12h8" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
           </svg>
-          Encode
+          Image
         </button>
-        <button class="tab" data-tab="decode">
+        <button class="category-tab" data-category="file">
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
           >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M9 12l2 2 4-4" />
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            />
+            <polyline points="14 2 14 8 20 8" />
           </svg>
-          Decode
+          File
         </button>
-        <button class="tab" data-tab="audio">
+        <button class="category-tab" data-category="crypto">
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
           >
-            <path d="M9 18V5l12-2v13" />
-            <circle cx="6" cy="18" r="3" />
-            <circle cx="18" cy="16" r="3" />
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          Audio
+          Crypto
         </button>
-        <button class="tab" data-tab="analyze">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
-          Analyze
+      </nav>
+
+      <!-- Sub-tabs for each category -->
+      <nav class="sub-tabs" id="sub-tabs-image">
+        <button class="sub-tab active" data-tab="stego">Steganography</button>
+        <button class="sub-tab" data-tab="scramble">Scramble</button>
+        <button class="sub-tab" data-tab="metadata">Metadata</button>
+        <button class="sub-tab" data-tab="analysis">Analysis</button>
+        <button class="sub-tab" data-tab="redact">Redact</button>
+      </nav>
+      <nav class="sub-tabs" id="sub-tabs-file" hidden>
+        <button class="sub-tab active" data-tab="audio">Audio Stego</button>
+      </nav>
+      <nav class="sub-tabs" id="sub-tabs-crypto" hidden>
+        <button class="sub-tab" data-tab="text-encrypt" disabled>
+          Text Encrypt <span class="badge">Soon</span>
+        </button>
+        <button class="sub-tab" data-tab="hash-gen" disabled>
+          Hash Generator <span class="badge">Soon</span>
         </button>
       </nav>
 
       <main class="main-content">
-        <!-- Encode Section -->
-        <section class="panel active" id="encode-panel">
-          <div class="upload-zone" id="encode-dropzone">
+        <!-- Metadata Panel (Exif, Sanitize) -->
+      <section class="panel" id="metadata-panel">
+        <nav class="inner-tabs">
+          <button class="inner-tab active" data-target="inner-exif">
+            Exif Data
+          </button>
+          <button class="inner-tab" data-target="inner-sanitize">
+            Sanitize
+          </button>
+        </nav>
+
+        <!-- Inner: Exif Data (formerly Analyze) -->
+        <div class="inner-panel active" id="inner-exif">
+          <div class="upload-zone" id="analyze-dropzone">
             <input
               type="file"
-              id="encode-image-input"
-              accept="image/png,image/jpeg,image/webp"
+              id="analyze-input"
+              accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
               hidden
             />
+            <div class="upload-content">
+              <svg
+                class="upload-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <div class="upload-info">
+                <p class="upload-text">Drop image to inspect Exif</p>
+                <span class="upload-hint"
+                  >Select Original File (not Gallery)</span
+                >
+              </div>
+            </div>
+            <div class="preview-thumb" id="analyze-preview" hidden>
+              <img id="analyze-preview-img" alt="Preview" />
+              <div class="preview-actions">
+                <button
+                  type="button"
+                  class="preview-view"
+                  data-target="analyze-preview-img"
+                  title="View"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="analyze-remove"
+                  title="Remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <span class="preview-label">Image loaded</span>
+            </div>
+          </div>
+
+          <button class="btn primary" id="analyze-btn" disabled>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            Inspect Exif Data
+          </button>
+
+          <div class="analysis-results" id="analysis-results" hidden>
+            <div class="result-header">
+              <h3>Exif Data Found</h3>
+            </div>
+            <div class="analysis-content">
+              <!-- File Info -->
+              <div class="meta-section">
+                <h4>File Info</h4>
+                <div class="meta-grid">
+                  <div class="meta-row">
+                    <span class="meta-label">Type:</span>
+                    <span id="meta-type"></span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Size:</span>
+                    <span id="meta-size"></span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Dimensions:</span>
+                    <span id="meta-dims"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Privacy Scan -->
+              <div class="meta-section">
+                <h4>Privacy Scan</h4>
+                <div class="meta-warning">
+                  <span id="meta-hidden">Checking...</span>
+                </div>
+              </div>
+
+              <!-- Exif Data -->
+              <div class="meta-section">
+                <h4>Exif Details</h4>
+                <div class="meta-grid">
+                  <div class="meta-row" id="row-camera" hidden>
+                    <span class="meta-label">Camera:</span>
+                    <span id="meta-camera"></span>
+                  </div>
+                  <div class="meta-row" id="row-date" hidden>
+                    <span class="meta-label">Date Taken:</span>
+                    <span id="meta-date"></span>
+                  </div>
+                  <div class="meta-row" id="row-gps" hidden>
+                    <span class="meta-label">GPS:</span>
+                    <span id="meta-gps"></span>
+                  </div>
+                  <div class="meta-row" id="row-software" hidden>
+                    <span class="meta-label">Software:</span>
+                    <span id="meta-software"></span>
+                  </div>
+                  <div class="meta-row" id="row-other" hidden>
+                    <span class="meta-label">Other:</span>
+                    <span id="meta-other"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inner: Sanitize -->
+        <div class="inner-panel" id="inner-sanitize">
+          <div class="upload-zone" id="sanitize-dropzone">
+            <input
+              type="file"
+              id="sanitize-input"
+              accept=".jpg,.jpeg,.png,.webp,.bmp,.heic,.tiff"
+              hidden
+            />
+            <div class="upload-content">
+              <svg
+                class="upload-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <div class="upload-info">
+                <p class="upload-text">Drop image to sanitize</p>
+                <span class="upload-hint">Removes Exif & Metadata</span>
+              </div>
+            </div>
+            <div class="preview-thumb" id="sanitize-preview" hidden>
+              <img id="sanitize-preview-img" alt="Preview" />
+              <div class="preview-actions">
+                <button
+                  type="button"
+                  class="preview-view"
+                  data-target="sanitize-preview-img"
+                  title="View"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="sanitize-remove"
+                  title="Remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <span class="preview-label">Image loaded</span>
+            </div>
+          </div>
+
+          <button class="btn secondary" id="sanitize-action-btn" disabled>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Sanitize & Download
+          </button>
+        </div>
+      </section>
+
+      <!-- Analysis Panel (Steganalysis) -->
+      <section class="panel" id="analysis-panel">
+        <nav class="inner-tabs">
+          <button class="inner-tab active" data-target="inner-steganalysis">
+            Steganalysis
+          </button>
+        </nav>
+
+        <!-- Inner: Steganalysis (Image Diff) -->
+        <div class="inner-panel active" id="inner-steganalysis">
+           <div class="compare-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+               <!-- Original Image -->
+               <div class="compare-box" style="flex:1;">
+                   <h4 style="margin-bottom:0.5rem; text-align:center;">Original</h4>
+                   <div class="upload-zone" id="steg-orig-dropzone" style="height: 150px;">
+                        <input type="file" id="steg-orig-input" accept="image/*" hidden />
+                        <div class="upload-content">
+                            <p class="upload-text" style="font-size: 0.9rem;">Drop Original</p>
+                        </div>
+                        <div class="preview-thumb" id="steg-orig-preview" hidden>
+                            <img id="steg-orig-img" />
+                            <div class="preview-actions">
+                                <button type="button" class="preview-remove" id="steg-orig-remove">
+                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                   </div>
+               </div>
+               
+               <!-- Suspect Image -->
+               <div class="compare-box" style="flex:1;">
+                   <h4 style="margin-bottom:0.5rem; text-align:center;">Suspect</h4>
+                   <div class="upload-zone" id="steg-susp-dropzone" style="height: 150px;">
+                        <input type="file" id="steg-susp-input" accept="image/*" hidden />
+                        <div class="upload-content">
+                            <p class="upload-text" style="font-size: 0.9rem;">Drop Suspect</p>
+                        </div>
+                        <div class="preview-thumb" id="steg-susp-preview" hidden>
+                            <img id="steg-susp-img" />
+                            <div class="preview-actions">
+                                <button type="button" class="preview-remove" id="steg-susp-remove">
+                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                   </div>
+               </div>
+           </div>
+
+           <div class="controls-group" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+               <label for="diff-amp" style="display:block; margin-bottom:0.5rem;">Amplification: <span id="amp-value">10x</span></label>
+               <input type="range" id="diff-amp" min="1" max="100" value="10" style="width:100%;">
+               <p style="font-size:0.8rem; color:rgba(255,255,255,0.5); margin-top:0.5rem;">Increase to visualize invisible differences.</p>
+           </div>
+
+           <button class="btn primary" id="steg-compare-btn" disabled>
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/>
+             </svg>
+             Compare Images
+           </button>
+           
+           <div class="analysis-results" id="steg-results" hidden>
+                <h3>Difference Map</h3>
+                <canvas id="diff-canvas" style="width:100%; border-radius:8px; margin-top:1rem;"></canvas>
+                <p id="diff-stats" style="margin-top:0.5rem; text-align:center;"></p>
+           </div>
+        </div>
+      </section>
+
+      <!-- Redact Panel (Obfuscator) -->
+      <section class="panel" id="redact-panel">
+        <div class="upload-zone" id="redact-dropzone">
+          <input type="file" id="redact-input" accept="image/*" hidden />
+          <div class="upload-content">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+               <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            <div class="upload-info">
+              <p class="upload-text">Drop image to Redact</p>
+              <span class="upload-hint">Blur or Pixelate sensitive info</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="redact-editor" id="redact-editor" hidden>
+            <div class="redact-toolbar">
+                <div class="tool-group">
+                    <button class="btn sm active" id="tool-pixelate" title="Pixelate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+                        </svg>
+                        <span>Pixelate</span>
+                    </button>
+                    <button class="btn sm" id="tool-blur" title="Blur">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                           <path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6z" opacity="0.5"/>
+                        </svg>
+                        <span>Blur</span>
+                    </button>
+                </div>
+                
+                <div class="tool-group flex-grow">
+                     <label class="compact-label">Strength</label>
+                     <input type="range" id="redact-strength" min="1" max="20" value="8">
+                </div>
+
+                <div class="tool-group">
+                    <button class="btn sm secondary icon-only" id="redact-undo" title="Undo Last">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+                    </button>
+                    <button class="btn sm secondary icon-only" id="redact-reset" title="Reset Changes">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    </button>
+                    <button class="btn sm danger icon-only" id="redact-delete" title="Remove Image">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                    <button class="btn sm primary icon-only" id="redact-download" title="Download">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="canvas-container" id="redact-container" style="position:relative; overflow:hidden; border-radius:8px; display:inline-block; max-width:100%; border:1px solid var(--border-color);">
+                <canvas id="redact-canvas" style="display:block; max-width:100%; cursor:crosshair;"></canvas>
+            </div>
+            
+            <p class="help-text" style="text-align:center; font-size:0.85rem; color:var(--text-secondary); margin-top:8px;">Drag over area to apply effect.</p>
+        </div>
+      </section>
+
+        <!-- Steganography Section with Inner Tabs -->
+        <section class="panel active" id="stego-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="encode">Encode</button>
+            <button class="inner-tab" data-inner="decode">Decode</button>
+          </nav>
+
+          <!-- Inner: Encode -->
+          <div class="inner-panel active" id="inner-encode">
+            <div class="upload-zone" id="encode-dropzone">
+              <input
+                type="file"
+                id="encode-image-input"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+              />
             <div class="upload-content">
               <svg
                 class="upload-icon"
@@ -172,7 +556,7 @@
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
-              Password <span class="optional">(for Encode & Scramble)</span>
+              Password <span class="optional">(optional)</span>
             </label>
             <div class="password-input">
               <input
@@ -239,17 +623,17 @@
               </button>
             </div>
           </div>
-        </section>
+          </div>
 
-        <!-- Decode Section -->
-        <section class="panel" id="decode-panel">
-          <div class="upload-zone" id="decode-dropzone">
-            <input
-              type="file"
-              id="decode-image-input"
-              accept="image/*"
-              hidden
-            />
+          <!-- Inner: Decode -->
+          <div class="inner-panel" id="inner-decode">
+            <div class="upload-zone" id="decode-dropzone">
+              <input
+                type="file"
+                id="decode-image-input"
+                accept="image/*"
+                hidden
+              />
             <div class="upload-content">
               <svg
                 class="upload-icon"
@@ -432,17 +816,13 @@
 
         <!-- Audio Section -->
         <section class="panel" id="audio-panel">
-          <div class="audio-mode-toggle">
-            <button class="audio-mode active" data-mode="encode">
-              Hide in Audio
-            </button>
-            <button class="audio-mode" data-mode="decode">
-              Extract from Audio
-            </button>
-          </div>
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="audio-encode">Hide in Audio</button>
+            <button class="inner-tab" data-inner="audio-decode">Extract from Audio</button>
+          </nav>
 
           <!-- Audio Encode -->
-          <div class="audio-section" id="audio-encode-section">
+          <div class="inner-panel active" id="inner-audio-encode">
             <div class="upload-zone" id="audio-encode-dropzone">
               <input
                 type="file"
@@ -567,7 +947,7 @@
           </div>
 
           <!-- Audio Decode -->
-          <div class="audio-section" id="audio-decode-section" hidden>
+          <div class="inner-panel" id="inner-audio-decode">
             <div class="upload-zone" id="audio-decode-dropzone">
               <input
                 type="file"
@@ -702,8 +1082,188 @@
           </div>
         </section>
 
-        <!-- Analyze Section -->
-        <section class="panel" id="analyze-panel">
+        <!-- Scramble Section -->
+        <section class="panel" id="scramble-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="scramble">Scramble</button>
+            <button class="inner-tab" data-inner="unscramble">Unscramble</button>
+          </nav>
+
+          <!-- Inner: Scramble -->
+          <div class="inner-panel active" id="inner-scramble">
+            <div class="upload-zone" id="scramble-dropzone">
+              <input
+                type="file"
+                id="scramble-input"
+                accept="image/*"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to scramble</p>
+                  <span class="upload-hint">Password-based pixel scrambling</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="scramble-preview" hidden>
+                <img id="scramble-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button type="button" class="preview-view" data-target="scramble-preview-img" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                  <button type="button" class="preview-remove" id="scramble-remove" title="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="preview-label">Image loaded</span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="scramble-password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="label-icon">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                Password <span class="optional">(required)</span>
+              </label>
+              <div class="password-input">
+                <input
+                  type="password"
+                  id="scramble-password"
+                  placeholder="Enter password to scramble..."
+                  autocomplete="off"
+                />
+                <button type="button" class="toggle-password" id="toggle-scramble-password">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-icon">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn primary" id="scramble-action-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+              Scramble Image
+            </button>
+          </div>
+
+          <!-- Inner: Unscramble -->
+          <div class="inner-panel" id="inner-unscramble">
+            <div class="upload-zone" id="unscramble-dropzone">
+              <input
+                type="file"
+                id="unscramble-input"
+                accept="image/*"
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop scrambled image</p>
+                  <span class="upload-hint">Must start with scramble_</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="unscramble-preview" hidden>
+                <img id="unscramble-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button type="button" class="preview-view" data-target="unscramble-preview-img" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                  <button type="button" class="preview-remove" id="unscramble-remove" title="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="preview-label">Image loaded</span>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="unscramble-password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="label-icon">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                Password <span class="optional">(required)</span>
+              </label>
+              <div class="password-input">
+                <input
+                  type="password"
+                  id="unscramble-password"
+                  placeholder="Enter password to unscramble..."
+                  autocomplete="off"
+                />
+                <button type="button" class="toggle-password" id="toggle-unscramble-password">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="eye-icon">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn primary" id="unscramble-action-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+              Unscramble Image
+            </button>
+          </div>
+        </section>
+
+        <!-- Analysis Panel (Exif, Steganalysis, Sanitize) -->
+      <section class="panel" id="analysis-panel" hidden>
+        <nav class="inner-tabs">
+          <button class="inner-tab active" data-target="inner-exif">
+            Exif Data
+          </button>
+          <button class="inner-tab" data-target="inner-steganalysis">
+            Steganalysis
+          </button>
+          <button class="inner-tab" data-target="inner-sanitize">
+            Sanitize
+          </button>
+        </nav>
+
+        <!-- Inner: Exif Data (formerly Analyze) -->
+        <div class="inner-panel active" id="inner-exif">
           <div class="upload-zone" id="analyze-dropzone">
             <input
               type="file"
@@ -723,7 +1283,7 @@
                 <path d="M21 21l-4.35-4.35" />
               </svg>
               <div class="upload-info">
-                <p class="upload-text">Drop image to analyze</p>
+                <p class="upload-text">Drop image to inspect Exif</p>
                 <span class="upload-hint"
                   >Select Original File (not Gallery)</span
                 >
@@ -778,78 +1338,66 @@
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-            Analyze Image
+            Inspect Exif Data
           </button>
 
           <div class="analysis-results" id="analysis-results" hidden>
             <div class="result-header">
-              <h3>Analysis Results</h3>
+              <h3>Exif Data Found</h3>
             </div>
             <div class="analysis-content">
-              <div class="analysis-item" id="analysis-verdict">
-                <span class="analysis-label">Verdict</span>
-                <span class="analysis-value" id="verdict-value">-</span>
+                hidden
+              />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop image to sanitize</p>
+                  <span class="upload-hint">Remove all metadata</span>
+                </div>
               </div>
-              <div class="analysis-item">
-                <span class="analysis-label">LSB Pattern Score</span>
-                <span class="analysis-value" id="lsb-score">-</span>
-              </div>
-              <div class="analysis-item">
-                <span class="analysis-label">Chi-Square Value</span>
-                <span class="analysis-value" id="chi-value">-</span>
-              </div>
-              <div class="analysis-item">
-                <span class="analysis-label">Bit Plane Noise</span>
-                <span class="analysis-value" id="noise-value">-</span>
-              </div>
-
-              <div
-                class="result-header"
-                style="
-                  margin-top: 24px;
-                  border-top: 1px solid rgba(255, 255, 255, 0.1);
-                  padding-top: 16px;
-                "
-              >
-                <h3>Metadata Scan</h3>
-              </div>
-              <div class="analysis-item">
-                <span class="analysis-label">File Type</span>
-                <span class="analysis-value" id="meta-type">-</span>
-              </div>
-              <div class="analysis-item">
-                <span class="analysis-label">File Size</span>
-                <span class="analysis-value" id="meta-size">-</span>
-              </div>
-              <div class="analysis-item">
-                <span class="analysis-label">Dimensions</span>
-                <span class="analysis-value" id="meta-dims">-</span>
-              </div>
-              <div class="analysis-item">
-                <span class="analysis-label">Hidden Metadata</span>
-                <span class="analysis-value" id="meta-hidden">-</span>
-              </div>
-              <div class="analysis-item" id="row-camera" hidden>
-                <span class="analysis-label">Camera Model</span>
-                <span class="analysis-value" id="meta-camera">-</span>
-              </div>
-              <div class="analysis-item" id="row-date" hidden>
-                <span class="analysis-label">Date Taken</span>
-                <span class="analysis-value" id="meta-date">-</span>
-              </div>
-              <div class="analysis-item" id="row-gps" hidden>
-                <span class="analysis-label">GPS Location</span>
-                <span class="analysis-value" id="meta-gps">-</span>
-              </div>
-              <div class="analysis-item" id="row-software" hidden>
-                <span class="analysis-label">Software</span>
-                <span class="analysis-value" id="meta-software">-</span>
-              </div>
-              <div class="analysis-item" id="row-other" hidden>
-                <span class="analysis-label">Other Info</span>
-                <span class="analysis-value" id="meta-other">-</span>
+              <div class="preview-thumb" id="sanitize-preview" hidden>
+                <img id="sanitize-preview-img" alt="Preview" />
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-view"
+                    data-target="sanitize-preview-img"
+                    title="View"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="sanitize-remove"
+                    title="Remove"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="preview-label">Image loaded</span>
               </div>
             </div>
+
+            <button class="btn primary" id="sanitize-action-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              Sanitize & Download
+            </button>
           </div>
         </section>
       </main>
@@ -875,52 +1423,9 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-    <!-- Submit Modal -->
-    <div class="modal-overlay" id="submit-modal" hidden>
-      <div class="modal-content">
-        <h3>Choose Action</h3>
-        <p>Select how you want to process this image:</p>
-        <div class="modal-actions">
-          <button class="btn secondary" id="sanitize-btn">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Sanitize Only
-          </button>
-          <button class="btn primary" id="confirm-encode-btn">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            Encode Message
-          </button>
-          <button class="btn secondary" id="scramble-btn" disabled>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-            </svg>
-            Scramble Image
-          </button>
-        </div>
-        <button class="modal-close" id="submit-modal-close">Cancel</button>
-      </div>
-    </div>
 
-    <script src="assets/js/app.js?v=2.61"></script>
+
+    <script src="assets/js/app.js?v=2.84"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
