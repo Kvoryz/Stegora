@@ -31,6 +31,15 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 | **Image Diff**     | Compare two images to detect pixel-level changes           |
 | **LSB Analysis**   | Detect hidden data using Chi-Square and entropy statistics |
 
+### � File Tools
+
+| Feature              | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| **File Vault**       | Encrypt/Decrypt any file type using AES-GCM 256-bit          |
+| **Base64 Converter** | Convert files to Base64 (and back). Supports Direct Paste!   |
+| **File Splitter**    | Split large files into smaller chunks & merge them back      |
+| **Magic Bytes**      | Detect actual file type by inspecting file signature headers |
+
 ### 🔐 Security Features
 
 - **AES-256 Encryption**: Messages are encrypted before hiding

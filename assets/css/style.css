@@ -744,6 +744,7 @@ body {
   color: white;
   margin-bottom: 16px;
   margin-top: 15px;
+  width: 100%;
 }
 
 .btn.primary:hover:not(:disabled) {
