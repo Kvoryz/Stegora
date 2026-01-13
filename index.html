@@ -2044,9 +2044,21 @@
               </div>
             </div>
 
-            <div id="base64-dec-actions" hidden>
+            <div
+              class="separator-text"
+              style="
+                text-align: center;
+                margin: 1rem 0;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+              "
+            >
+              - OR -
+            </div>
+
+            <div id="base64-dec-actions">
               <div class="input-group">
-                <label>Base64 Input</label>
+                <label>Direct Input (Paste Base64 String)</label>
                 <div class="textarea-wrap">
                   <textarea
                     id="base64-decode-input"
@@ -2756,7 +2768,7 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-    <script type="module" src="assets/js/app.js?v=3.08"></script>
+    <script src="assets/js/app.js?v=3.15"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

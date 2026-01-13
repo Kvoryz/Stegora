@@ -3330,7 +3330,6 @@ class StegoraApp {
           decFilename.textContent = file.name;
           decPreview.hidden = false;
           decDropzone.querySelector(".upload-content").hidden = true;
-          document.getElementById("base64-dec-actions").hidden = false;
         };
         reader.readAsText(file);
       });
@@ -3341,7 +3340,6 @@ class StegoraApp {
         e.stopPropagation();
         decPreview.hidden = true;
         decDropzone.querySelector(".upload-content").hidden = false;
-        document.getElementById("base64-dec-actions").hidden = true;
         decInput.value = "";
         document.getElementById("base64-decode-input").value = ""; // Clear textarea? Yes, probably expected.
       });
