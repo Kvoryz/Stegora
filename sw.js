@@ -1,4 +1,11 @@
-const CACHE_NAME = "stegora-v4.0";
+const CACHE_NAME = "stegora-v4.1";
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
