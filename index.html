@@ -4703,10 +4703,39 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (!refreshing) {
+              window.location.reload();
+              refreshing = true;
+            }
+          });
+
           navigator.serviceWorker
             .register("/sw.js")
             .then((registration) => {
               console.log("SW registered: ", registration);
+
+              setInterval(() => {
+                registration.update();
+              }, 60 * 60 * 1000);
+
+              if (registration.waiting) {
+                registration.waiting.postMessage({ type: "SKIP_WAITING" });
+              }
+
+              registration.onupdatefound = () => {
+                const newWorker = registration.installing;
+                newWorker.onstatechange = () => {
+                  if (newWorker.state === "installed") {
+                    if (navigator.serviceWorker.controller) {
+                      console.log("New content is available; please refresh.");
+                    } else {
+                      console.log("Content is cached for offline use.");
+                    }
+                  }
+                };
+              };
             })
             .catch((registrationError) => {
               console.log("SW registration failed: ", registrationError);
