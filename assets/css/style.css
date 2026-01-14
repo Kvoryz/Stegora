@@ -188,7 +188,7 @@ body {
   padding: 4px;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
-  margin-bottom: 20px;
+  margin-bottom: 0; /* Removed to rely on parent gap */
   border: 1px solid var(--border-color);
 }
 
@@ -237,7 +237,7 @@ body {
 .panel.active {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -1468,4 +1468,45 @@ input[type="range"]::-moz-range-track {
 .btn-row .btn {
   margin: 0;
   flex: 0 0 auto;
+}
+/* Custom Checkbox Styles */
+.crypto-card input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-tertiary);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.crypto-card input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.crypto-card input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  display: block;
+}
+
+.crypto-card input[type="checkbox"]:hover {
+  border-color: var(--text-secondary);
+}
+
+.crypto-card label {
+  cursor: pointer;
 }

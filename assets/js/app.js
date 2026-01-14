@@ -1038,7 +1038,6 @@ class TextCipher {
   }
 }
 
-
 class NumberSystem {
   static convert(value, fromBase) {
     const decimal = parseInt(value, fromBase);
@@ -3862,8 +3861,9 @@ class StegoraApp {
       });
   }
 
-  // 3. File Splitter
+  // 3. File Splitter & Joiner
   initFileSplitter() {
+    // --- Definitions ---
     const dropzone = document.getElementById("splitter-dropzone");
     const input = document.getElementById("splitter-input");
     const removeBtn = document.getElementById("splitter-remove");
@@ -3871,19 +3871,84 @@ class StegoraApp {
     const sizeInput = document.getElementById("splitter-size");
     const chips = document.querySelectorAll(".size-chip");
 
-    // Preset Chips Logic
+    const joinDropzone = document.getElementById("join-dropzone");
+    const joinInput = document.getElementById("join-input");
+    const joinListContent = document.getElementById("join-list-content");
+    const joinList = document.getElementById("join-file-list");
+    const joinBtn = document.getElementById("btn-join-file");
+    const joinClear = document.getElementById("join-clear");
+    const joinCount = document.getElementById("join-count");
+
+    let joinFiles = [];
+
+    // --- Helpers ---
+    const handleSplitFile = (file) => {
+      this.fileToSplit = file;
+      if (document.getElementById("splitter-name")) {
+        document.getElementById("splitter-name").textContent = file.name;
+      }
+      if (document.getElementById("splitter-preview")) {
+        document.getElementById("splitter-preview").hidden = false;
+      }
+      if (dropzone && dropzone.querySelector(".upload-content")) {
+        dropzone.querySelector(".upload-content").hidden = true;
+      }
+      if (document.getElementById("splitter-actions")) {
+        document.getElementById("splitter-actions").hidden = false;
+      }
+      if (actionBtn) actionBtn.disabled = false;
+    };
+
+    const renderJoinList = () => {
+      if (joinListContent) joinListContent.innerHTML = "";
+      // Natural sort
+      joinFiles.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      );
+
+      joinFiles.forEach((file) => {
+        const row = document.createElement("div");
+        row.style.cssText =
+          "display:flex; justify-content:space-between; align-items:center; padding:6px; background:var(--bg-tertiary); border-radius:4px; font-size:12px; font-family:monospace;";
+        row.innerHTML = `
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${
+            file.name
+          }</span>
+          <span style="color:var(--text-muted);">${this.formatBytes(
+            file.size
+          )}</span>
+        `;
+        if (joinListContent) joinListContent.appendChild(row);
+      });
+
+      if (joinCount) joinCount.textContent = joinFiles.length;
+      if (joinList) joinList.hidden = joinFiles.length === 0;
+      if (joinBtn) joinBtn.hidden = joinFiles.length === 0;
+    };
+
+    const handleJoinFiles = (files) => {
+      Array.from(files).forEach((f) => {
+        if (!joinFiles.some((existing) => existing.name === f.name)) {
+          joinFiles.push(f);
+        }
+      });
+      renderJoinList();
+    };
+
+    // --- Logic / Listeners ---
+
+    // Preset Chips
     chips.forEach((chip) => {
       chip.addEventListener("click", () => {
-        // Update input
-        sizeInput.value = chip.dataset.size;
-
-        // Update active state
+        if (sizeInput) sizeInput.value = chip.dataset.size;
         chips.forEach((c) => c.classList.remove("active"));
         chip.classList.add("active");
       });
     });
 
-    // Update active chip on manual input
     sizeInput?.addEventListener("input", () => {
       chips.forEach((c) => c.classList.remove("active"));
       const matchingChip = Array.from(chips).find(
@@ -3892,107 +3957,287 @@ class StegoraApp {
       if (matchingChip) matchingChip.classList.add("active");
     });
 
+    // Splitter Upload
     if (dropzone && input) {
-      this.setupDropzone(dropzone, input, (file) => {
-        this.fileToSplit = file;
-        document.getElementById("splitter-name").textContent = file.name;
-        document.getElementById("splitter-preview").hidden = false;
-        dropzone.querySelector(".upload-content").hidden = true;
-        document.getElementById("splitter-actions").hidden = false;
-        if (actionBtn) actionBtn.disabled = false;
-      });
-
-      removeBtn?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.fileToSplit = null;
-        document.getElementById("splitter-preview").hidden = true;
-        dropzone.querySelector(".upload-content").hidden = false;
-        document.getElementById("splitter-actions").hidden = true;
-        input.value = "";
-        if (actionBtn) actionBtn.disabled = true;
-      });
-
-      actionBtn?.addEventListener("click", () => {
-        if (!this.fileToSplit) return;
-        const chunkSize = (parseInt(sizeInput.value) || 10) * 1024 * 1024; // MB to Bytes
-        const fileSize = this.fileToSplit.size;
-        const chunks = Math.ceil(fileSize / chunkSize);
-
-        if (chunkSize <= 0) {
-          this.showToast("Invalid chunk size", "error");
-          return;
-        }
-
-        let offset = 0;
-        for (let i = 0; i < chunks; i++) {
-          const chunk = this.fileToSplit.slice(offset, offset + chunkSize);
-          offset += chunkSize;
-
-          // Download logic
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(chunk);
-          // Pad index e.g. .001, .002
-          const ext = "." + (i + 1).toString().padStart(3, "0");
-          a.download = this.fileToSplit.name + ext;
-          a.click();
-        }
-        this.showToast(`Split into ${chunks} files!`, "success");
-      });
+      dropzone.onclick = () => input.click();
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      };
+      dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) handleSplitFile(file);
+      };
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) handleSplitFile(file);
+      };
     }
+
+    removeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.fileToSplit = null;
+      if (document.getElementById("splitter-preview"))
+        document.getElementById("splitter-preview").hidden = true;
+      if (dropzone && dropzone.querySelector(".upload-content"))
+        dropzone.querySelector(".upload-content").hidden = false;
+      if (document.getElementById("splitter-actions"))
+        document.getElementById("splitter-actions").hidden = true;
+      if (input) input.value = "";
+      if (actionBtn) actionBtn.disabled = true;
+    });
+
+    actionBtn?.addEventListener("click", () => {
+      if (!this.fileToSplit) return;
+      const chunkSize = (parseInt(sizeInput.value) || 10) * 1024 * 1024;
+      if (chunkSize <= 0) {
+        this.showToast("Invalid chunk size", "error");
+        return;
+      }
+      const fileSize = this.fileToSplit.size;
+      const chunks = Math.ceil(fileSize / chunkSize);
+
+      let offset = 0;
+      for (let i = 0; i < chunks; i++) {
+        const chunk = this.fileToSplit.slice(offset, offset + chunkSize);
+        offset += chunkSize;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(chunk);
+        const ext = "." + (i + 1).toString().padStart(3, "0");
+        a.download = this.fileToSplit.name + ext;
+        a.click();
+      }
+      this.showToast(`Split into ${chunks} files!`, "success");
+    });
+
+    // Joiner Upload
+    if (joinDropzone && joinInput) {
+      joinDropzone.onclick = () => joinInput.click();
+      joinDropzone.ondragover = (e) => {
+        e.preventDefault();
+        joinDropzone.classList.add("dragover");
+      };
+      joinDropzone.ondragleave = () =>
+        joinDropzone.classList.remove("dragover");
+      joinDropzone.ondrop = (e) => {
+        e.preventDefault();
+        joinDropzone.classList.remove("dragover");
+        if (e.dataTransfer.files.length) handleJoinFiles(e.dataTransfer.files);
+      };
+      joinInput.onchange = (e) => {
+        if (e.target.files.length) handleJoinFiles(e.target.files);
+        joinInput.value = "";
+      };
+    }
+
+    joinClear?.addEventListener("click", () => {
+      joinFiles = [];
+      renderJoinList();
+    });
+
+    joinBtn?.addEventListener("click", () => {
+      if (joinFiles.length === 0) return;
+
+      joinBtn.textContent = "Merging...";
+      joinBtn.disabled = true;
+
+      try {
+        const blob = new Blob(joinFiles);
+        const firstFile = joinFiles[0].name;
+        const downloadName = firstFile.replace(/\.\d{3}$/, "");
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = downloadName;
+        a.click();
+
+        this.showToast("Files merged successfully!", "success");
+      } catch (e) {
+        console.error(e);
+        this.showToast("Merge failed", "error");
+      } finally {
+        joinBtn.textContent = "Merge & Download";
+        joinBtn.disabled = false;
+      }
+    });
   }
 
+  // 4. Magic Bytes
   // 4. Magic Bytes
   initMagicBytes() {
     const dropzone = document.getElementById("magic-dropzone");
     const input = document.getElementById("magic-input");
     const resultBox = document.getElementById("magic-result");
+    const fixArea = document.getElementById("magic-fix-area");
+    const fixBtn = document.getElementById("magic-fix-btn");
+    const realTypeSpan = document.getElementById("magic-real-type");
+    const typeDisplay = document.getElementById("magic-type");
+    const mimeDisplay = document.getElementById("magic-mime");
+    const hexDisplay = document.getElementById("magic-hex");
 
-    if (dropzone && input) {
-      this.setupDropzone(dropzone, input, (file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const arr = new Uint8Array(e.target.result).subarray(0, 16); // Read first 16 bytes
-          let hex = "";
-          for (let i = 0; i < arr.length; i++) {
-            hex += arr[i].toString(16).padStart(2, "0").toUpperCase() + " ";
+    let currentFile = null;
+    let detectedExt = null;
+    let detectedMime = null;
+
+    // --- Helpers ---
+    const analyzeFile = (file) => {
+      currentFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const arr = new Uint8Array(e.target.result);
+        let hex = "";
+        for (let i = 0; i < Math.min(arr.length, 16); i++) {
+          hex += arr[i].toString(16).padStart(2, "0").toUpperCase() + " ";
+        }
+
+        // Detection Logic
+        let type = "Unknown Binary";
+        let mime = "application/octet-stream";
+        let ext = "bin";
+
+        const h = hex.trim();
+        const header = Array.from(arr)
+          .map((b) => b.toString(16).padStart(2, "0").toUpperCase())
+          .join(" ");
+
+        // Helpers
+        const starts = (sig) =>
+          header.replace(/\s/g, "").startsWith(sig.replace(/\s/g, ""));
+        const containsAt = (sig, offset) => {
+          if (arr.length < offset + sig.length / 3) return false;
+          const sigBytes = sig.split(" ").map((b) => parseInt(b, 16));
+          for (let i = 0; i < sigBytes.length; i++) {
+            if (arr[offset + i] !== sigBytes[i]) return false;
           }
-
-          // Initial simple detection
-          let type = "Unknown Binary";
-          let mime = "application/octet-stream";
-
-          const h = hex.trim();
-          if (h.startsWith("89 50 4E 47")) {
-            type = "PNG Image";
-            mime = "image/png";
-          } else if (h.startsWith("FF D8 FF")) {
-            type = "JPEG Image";
-            mime = "image/jpeg";
-          } else if (h.startsWith("25 50 44 46")) {
-            type = "PDF Document";
-            mime = "application/pdf";
-          } else if (h.startsWith("50 4B 03 04")) {
-            type = "ZIP Archive / DOCX / APK";
-            mime = "application/zip";
-          } else if (h.startsWith("52 61 72 21")) {
-            type = "RAR Archive";
-            mime = "application/x-rar";
-          } else if (h.startsWith("4D 5A")) {
-            type = "Windows Executable (EXE)";
-            mime = "application/x-msdownload";
-          } else if (h.startsWith("1F 8B 08")) {
-            type = "GZIP Archive";
-            mime = "application/gzip";
-          }
-
-          document.getElementById("magic-type").textContent = type;
-          document.getElementById("magic-mime").textContent = mime;
-          document.getElementById("magic-hex").textContent = hex;
-          resultBox.hidden = false;
+          return true;
         };
-        reader.readAsArrayBuffer(file.slice(0, 32));
-      });
+
+        if (starts("89 50 4E 47")) {
+          type = "PNG Image";
+          mime = "image/png";
+          ext = "png";
+        } else if (starts("FF D8 FF")) {
+          type = "JPEG Image";
+          mime = "image/jpeg";
+          ext = "jpg";
+        } else if (starts("25 50 44 46")) {
+          type = "PDF Document";
+          mime = "application/pdf";
+          ext = "pdf";
+        } else if (starts("50 4B 03 04")) {
+          type = "ZIP / Office / APK";
+          mime = "application/zip";
+          ext = "zip"; // Generic
+        } else if (starts("52 61 72 21")) {
+          type = "RAR Archive";
+          mime = "application/x-rar";
+          ext = "rar";
+        } else if (starts("4D 5A")) {
+          type = "Windows Executable (EXE)";
+          mime = "application/x-msdownload";
+          ext = "exe";
+        } else if (starts("1F 8B 08")) {
+          type = "GZIP Archive";
+          mime = "application/gzip";
+          ext = "gz";
+        } else if (starts("47 49 46 38")) {
+          type = "GIF Image";
+          mime = "image/gif";
+          ext = "gif";
+        } else if (starts("49 44 33") || starts("FF FB") || starts("FF F3")) {
+          type = "MP3 Audio";
+          mime = "audio/mpeg";
+          ext = "mp3";
+        } else if (containsAt("66 74 79 70", 4)) {
+          // ftyp at offset 4
+          type = "MP4 Video";
+          mime = "video/mp4";
+          ext = "mp4";
+        } else if (starts("52 49 46 46") && containsAt("57 45 42 50", 8)) {
+          // RIFF ... WEBP
+          type = "WebP Image";
+          mime = "image/webp";
+          ext = "webp";
+        } else if (starts("52 49 46 46") && containsAt("57 41 56 45", 8)) {
+          // RIFF ... WAVE
+          type = "WAV Audio";
+          mime = "audio/wav";
+          ext = "wav";
+        }
+
+        detectedExt = ext;
+        detectedMime = mime;
+
+        typeDisplay.textContent = type;
+        mimeDisplay.textContent = mime;
+        hexDisplay.textContent = hex;
+        resultBox.hidden = false;
+
+        // Extension Fixer Logic
+        const currentExt = file.name.split(".").pop().toLowerCase();
+        let isMismatch =
+          type !== "Unknown Binary" &&
+          detectedExt !== "bin" &&
+          currentExt !== detectedExt;
+
+        // Exceptions
+        if (
+          detectedExt === "zip" &&
+          ["docx", "xlsx", "pptx", "apk"].includes(currentExt)
+        ) {
+          isMismatch = false; // ZIP structure is valid for these
+        }
+        if (detectedExt === "jpg" && currentExt === "jpeg") isMismatch = false;
+
+        if (isMismatch) {
+          fixArea.hidden = false;
+          realTypeSpan.textContent = detectedExt.toUpperCase();
+        } else {
+          fixArea.hidden = true;
+        }
+      };
+      reader.readAsArrayBuffer(file.slice(0, 32)); // Read enough for headers
+    };
+
+    // --- Listeners ---
+    if (dropzone && input) {
+      dropzone.onclick = () => input.click();
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      };
+      dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) analyzeFile(file);
+      };
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) analyzeFile(file);
+      };
     }
+
+    fixBtn?.addEventListener("click", () => {
+      if (!currentFile || !detectedExt) return;
+
+      // Construct new name
+      const nameParts = currentFile.name.split(".");
+      if (nameParts.length > 1) nameParts.pop(); // Remove old ext
+      const newName = nameParts.join(".") + "." + detectedExt;
+
+      // Download
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(currentFile); // Blob is same
+      a.download = newName;
+      a.click();
+
+      this.showToast(`Fixed extension to .${detectedExt}`, "success");
+    });
   }
 
   initMorseCode() {
@@ -4165,6 +4410,7 @@ class StegoraApp {
   }
 
   initNumberSystem() {
+    // --- Convert Tab ---
     const input = document.getElementById("number-input");
     const fromBase = document.getElementById("number-from-base");
     const convertBtn = document.getElementById("number-convert-btn");
@@ -4194,6 +4440,120 @@ class StegoraApp {
         }
       });
     }
+
+    // --- Roman Tab ---
+    const romanInput = document.getElementById("roman-input");
+    const romanBtn = document.getElementById("roman-convert-btn");
+    const romanResult = document.getElementById("roman-result");
+    const romanOutput = document.getElementById("roman-output");
+
+    if (romanBtn) {
+      romanBtn.addEventListener("click", () => {
+        const val = romanInput.value.trim().toUpperCase();
+        if (!val) {
+          this.showToast("Please enter a value", "error");
+          return;
+        }
+
+        // Check if number
+        if (/^\d+$/.test(val)) {
+          // Dec -> Roman
+          const num = parseInt(val);
+          if (num < 1 || num > 3999) {
+            this.showToast("Enter number between 1 and 3999", "error");
+            return;
+          }
+          romanOutput.textContent = this.toRoman(num);
+          romanResult.hidden = false;
+        } else if (/^[IVXLCDM]+$/.test(val)) {
+          // Roman -> Dec
+          const num = this.fromRoman(val);
+          romanOutput.textContent = num;
+          romanResult.hidden = false;
+        } else {
+          this.showToast("Invalid Input", "error");
+        }
+      });
+    }
+
+    const romanCopyBtn = document.getElementById("roman-copy-btn");
+    if (romanCopyBtn) {
+      romanCopyBtn.addEventListener("click", () => {
+        if (romanOutput.textContent) {
+          navigator.clipboard.writeText(romanOutput.textContent);
+          this.showToast("Copied!", "success");
+        }
+      });
+    }
+
+    // --- Text Tab ---
+    const textInput = document.getElementById("text-binary-input");
+    const textBtn = document.getElementById("text-binary-convert-btn");
+    const textResult = document.getElementById("text-binary-result");
+    const binOutput = document.getElementById("text-binary-output");
+    const hexOutput = document.getElementById("text-hex-output");
+
+    if (textBtn) {
+      textBtn.addEventListener("click", () => {
+        const text = textInput.value;
+        if (!text) return;
+
+        let binary = "";
+        let hex = "";
+
+        for (let i = 0; i < text.length; i++) {
+          const code = text.charCodeAt(i);
+          binary += code.toString(2).padStart(8, "0") + " ";
+          hex += code.toString(16).padStart(2, "0").toUpperCase() + " ";
+        }
+
+        binOutput.value = binary.trim();
+        hexOutput.value = hex.trim();
+        textResult.hidden = false;
+      });
+    }
+  }
+
+  // --- Helpers for Roman ---
+  toRoman(num) {
+    const lookup = {
+      M: 1000,
+      CM: 900,
+      D: 500,
+      CD: 400,
+      C: 100,
+      XC: 90,
+      L: 50,
+      XL: 40,
+      X: 10,
+      IX: 9,
+      V: 5,
+      IV: 4,
+      I: 1,
+    };
+    let roman = "";
+    for (let i in lookup) {
+      while (num >= lookup[i]) {
+        roman += i;
+        num -= lookup[i];
+      }
+    }
+    return roman;
+  }
+
+  fromRoman(roman) {
+    const lookup = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+    let num = 0;
+    for (let i = 0; i < roman.length; i++) {
+      let curr = lookup[roman[i]];
+      let next = lookup[roman[i + 1]];
+      if (next && curr < next) {
+        num -= curr;
+      } else {
+        num += curr;
+      }
+    }
+    return num;
   }
 
   initSecretLink() {

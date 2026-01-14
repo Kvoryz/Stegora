@@ -1,4 +1,4 @@
-const CACHE_NAME = "stegora-v3.46";
+const CACHE_NAME = "stegora-v3.48";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
