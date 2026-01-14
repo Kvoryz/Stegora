@@ -838,6 +838,450 @@ class MetadataScanner {
   }
 }
 
+class MorseCode {
+  static MORSE_MAP = {
+    A: ".-",
+    B: "-...",
+    C: "-.-.",
+    D: "-..",
+    E: ".",
+    F: "..-.",
+    G: "--.",
+    H: "....",
+    I: "..",
+    J: ".---",
+    K: "-.-",
+    L: ".-..",
+    M: "--",
+    N: "-.",
+    O: "---",
+    P: ".--.",
+    Q: "--.-",
+    R: ".-.",
+    S: "...",
+    T: "-",
+    U: "..-",
+    V: "...-",
+    W: ".--",
+    X: "-..-",
+    Y: "-.--",
+    Z: "--..",
+    0: "-----",
+    1: ".----",
+    2: "..---",
+    3: "...--",
+    4: "....-",
+    5: ".....",
+    6: "-....",
+    7: "--...",
+    8: "---..",
+    9: "----.",
+    ".": ".-.-.-",
+    ",": "--..--",
+    "?": "..--..",
+    "'": ".----.",
+    "!": "-.-.--",
+    "/": "-..-.",
+    "(": "-.--.",
+    ")": "-.--.-",
+    "&": ".-...",
+    ":": "---...",
+    ";": "-.-.-.",
+    "=": "-...-",
+    "+": ".-.-.",
+    "-": "-....-",
+    _: "..--.-",
+    '"': ".-..-.",
+    $: "...-..-",
+    "@": ".--.-.",
+    " ": "/",
+  };
+
+  static REVERSE_MAP = Object.fromEntries(
+    Object.entries(this.MORSE_MAP).map(([k, v]) => [v, k])
+  );
+
+  static encode(text) {
+    return text
+      .toUpperCase()
+      .split("")
+      .map((char) => this.MORSE_MAP[char] || char)
+      .join(" ");
+  }
+
+  static decode(morse) {
+    return morse
+      .split(" ")
+      .map((code) => (code === "/" ? " " : this.REVERSE_MAP[code] || code))
+      .join("");
+  }
+
+  static playAudio(morse, wpm = 20) {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const dotDuration = 1.2 / wpm;
+    let time = audioCtx.currentTime;
+
+    for (const char of morse) {
+      if (char === ".") {
+        this.playTone(audioCtx, time, dotDuration);
+        time += dotDuration * 2;
+      } else if (char === "-") {
+        this.playTone(audioCtx, time, dotDuration * 3);
+        time += dotDuration * 4;
+      } else if (char === " ") {
+        time += dotDuration * 3;
+      } else if (char === "/") {
+        time += dotDuration * 7;
+      }
+    }
+    return time - audioCtx.currentTime;
+  }
+
+  static playTone(audioCtx, startTime, duration) {
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    oscillator.frequency.value = 600;
+    oscillator.type = "sine";
+    gainNode.gain.setValueAtTime(0.5, startTime);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  }
+}
+
+class TextCipher {
+  static caesar(text, shift, decrypt = false) {
+    if (decrypt) shift = 26 - shift;
+    return text
+      .split("")
+      .map((char) => {
+        if (char.match(/[a-z]/i)) {
+          const base = char === char.toUpperCase() ? 65 : 97;
+          return String.fromCharCode(
+            ((char.charCodeAt(0) - base + shift) % 26) + base
+          );
+        }
+        return char;
+      })
+      .join("");
+  }
+
+  static rot13(text) {
+    return this.caesar(text, 13);
+  }
+
+  static atbash(text) {
+    return text
+      .split("")
+      .map((char) => {
+        if (char.match(/[a-z]/i)) {
+          const base = char === char.toUpperCase() ? 65 : 97;
+          return String.fromCharCode(base + 25 - (char.charCodeAt(0) - base));
+        }
+        return char;
+      })
+      .join("");
+  }
+
+  static vigenere(text, key, decrypt = false) {
+    if (!key) return text;
+    key = key.toUpperCase().replace(/[^A-Z]/g, "");
+    if (!key) return text;
+
+    let keyIndex = 0;
+    return text
+      .split("")
+      .map((char) => {
+        if (char.match(/[a-z]/i)) {
+          const base = char === char.toUpperCase() ? 65 : 97;
+          let shift = key.charCodeAt(keyIndex % key.length) - 65;
+          if (decrypt) shift = 26 - shift;
+          keyIndex++;
+          return String.fromCharCode(
+            ((char.charCodeAt(0) - base + shift) % 26) + base
+          );
+        }
+        return char;
+      })
+      .join("");
+  }
+
+  static encrypt(text, type, options = {}) {
+    switch (type) {
+      case "caesar":
+        return this.caesar(text, options.shift || 3);
+      case "rot13":
+        return this.rot13(text);
+      case "atbash":
+        return this.atbash(text);
+      case "vigenere":
+        return this.vigenere(text, options.key || "KEY");
+      default:
+        return text;
+    }
+  }
+
+  static decrypt(text, type, options = {}) {
+    switch (type) {
+      case "caesar":
+        return this.caesar(text, options.shift || 3, true);
+      case "rot13":
+        return this.rot13(text);
+      case "atbash":
+        return this.atbash(text);
+      case "vigenere":
+        return this.vigenere(text, options.key || "KEY", true);
+      default:
+        return text;
+    }
+  }
+}
+
+
+class NumberSystem {
+  static convert(value, fromBase) {
+    const decimal = parseInt(value, fromBase);
+    if (isNaN(decimal)) throw new Error("Invalid number for selected base");
+
+    return {
+      binary: decimal.toString(2),
+      octal: decimal.toString(8),
+      decimal: decimal.toString(10),
+      hex: decimal.toString(16).toUpperCase(),
+    };
+  }
+}
+
+class SecretLink {
+  static async encrypt(message, password) {
+    const encoder = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt"]
+    );
+
+    const encrypted = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      key,
+      encoder.encode(message)
+    );
+
+    const combined = new Uint8Array(
+      salt.length + iv.length + encrypted.byteLength
+    );
+    combined.set(salt, 0);
+    combined.set(iv, salt.length);
+    combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+    return btoa(String.fromCharCode(...combined))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  }
+
+  static async decrypt(data, password) {
+    const encoder = new TextEncoder();
+    const base64 = data.replace(/-/g, "+").replace(/_/g, "/");
+    const combined = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
+    const salt = combined.slice(0, 16);
+    const iv = combined.slice(16, 28);
+    const encrypted = combined.slice(28);
+
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"]
+    );
+
+    try {
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv },
+        key,
+        encrypted
+      );
+      return new TextDecoder().decode(decrypted);
+    } catch {
+      throw new Error("Invalid password or corrupted data");
+    }
+  }
+
+  static generateLink(
+    encryptedData,
+    baseUrl = window.location.origin + window.location.pathname
+  ) {
+    return `${baseUrl}#secret=${encryptedData}`;
+  }
+
+  static extractFromUrl(url) {
+    const match = url.match(/#secret=([A-Za-z0-9_-]+)/);
+    return match ? match[1] : null;
+  }
+}
+
+class HashGenerator {
+  static async md5(data) {
+    const msgBuffer =
+      typeof data === "string"
+        ? new TextEncoder().encode(data)
+        : new Uint8Array(data);
+
+    function rotateLeft(x, n) {
+      return (x << n) | (x >>> (32 - n));
+    }
+
+    const K = [];
+    for (let i = 0; i < 64; i++) {
+      K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000);
+    }
+
+    const S = [
+      7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20,
+      5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4,
+      11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6,
+      10, 15, 21,
+    ];
+
+    let a0 = 0x67452301,
+      b0 = 0xefcdab89,
+      c0 = 0x98badcfe,
+      d0 = 0x10325476;
+
+    const originalLength = msgBuffer.length;
+    const paddingLength = (56 - ((originalLength + 1) % 64) + 64) % 64;
+    const padded = new Uint8Array(originalLength + 1 + paddingLength + 8);
+    padded.set(msgBuffer);
+    padded[originalLength] = 0x80;
+
+    const bitLength = originalLength * 8;
+    const view = new DataView(padded.buffer);
+    view.setUint32(padded.length - 8, bitLength >>> 0, true);
+    view.setUint32(
+      padded.length - 4,
+      Math.floor(bitLength / 0x100000000),
+      true
+    );
+
+    for (let i = 0; i < padded.length; i += 64) {
+      const M = new Uint32Array(16);
+      for (let j = 0; j < 16; j++) {
+        M[j] = view.getUint32(i + j * 4, true);
+      }
+
+      let A = a0,
+        B = b0,
+        C = c0,
+        D = d0;
+
+      for (let j = 0; j < 64; j++) {
+        let F, g;
+        if (j < 16) {
+          F = (B & C) | (~B & D);
+          g = j;
+        } else if (j < 32) {
+          F = (D & B) | (~D & C);
+          g = (5 * j + 1) % 16;
+        } else if (j < 48) {
+          F = B ^ C ^ D;
+          g = (3 * j + 5) % 16;
+        } else {
+          F = C ^ (B | ~D);
+          g = (7 * j) % 16;
+        }
+
+        F = (F + A + K[j] + M[g]) >>> 0;
+        A = D;
+        D = C;
+        C = B;
+        B = (B + rotateLeft(F, S[j])) >>> 0;
+      }
+
+      a0 = (a0 + A) >>> 0;
+      b0 = (b0 + B) >>> 0;
+      c0 = (c0 + C) >>> 0;
+      d0 = (d0 + D) >>> 0;
+    }
+
+    const result = new Uint8Array(16);
+    new DataView(result.buffer).setUint32(0, a0, true);
+    new DataView(result.buffer).setUint32(4, b0, true);
+    new DataView(result.buffer).setUint32(8, c0, true);
+    new DataView(result.buffer).setUint32(12, d0, true);
+
+    return Array.from(result)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  static async sha1(data) {
+    const buffer =
+      typeof data === "string"
+        ? new TextEncoder().encode(data)
+        : new Uint8Array(data);
+    const hash = await crypto.subtle.digest("SHA-1", buffer);
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  static async sha256(data) {
+    const buffer =
+      typeof data === "string"
+        ? new TextEncoder().encode(data)
+        : new Uint8Array(data);
+    const hash = await crypto.subtle.digest("SHA-256", buffer);
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  static async sha512(data) {
+    const buffer =
+      typeof data === "string"
+        ? new TextEncoder().encode(data)
+        : new Uint8Array(data);
+    const hash = await crypto.subtle.digest("SHA-512", buffer);
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  static async generateAll(data) {
+    const [md5, sha1, sha256, sha512] = await Promise.all([
+      this.md5(data),
+      this.sha1(data),
+      this.sha256(data),
+      this.sha512(data),
+    ]);
+    return { md5, sha1, sha256, sha512 };
+  }
+}
+
 class StegoraApp {
   constructor() {
     this.canvas = document.getElementById("canvas");
@@ -862,6 +1306,13 @@ class StegoraApp {
     this.safeInit("initRedact");
     this.safeInit("initColorPicker");
     this.safeInit("initFileUtilities");
+    this.safeInit("initMorseCode");
+    this.safeInit("initCipher");
+    this.safeInit("initNumberSystem");
+    this.safeInit("initSecretLink");
+    this.safeInit("initHashGenerator");
+    this.safeInit("initTextRepeater");
+    this.safeInit("initPasswordGenerator");
   }
 
   safeInit(methodName) {
@@ -3539,7 +3990,573 @@ class StegoraApp {
           document.getElementById("magic-hex").textContent = hex;
           resultBox.hidden = false;
         };
-        reader.readAsArrayBuffer(file.slice(0, 32)); // Only read start
+        reader.readAsArrayBuffer(file.slice(0, 32));
+      });
+    }
+  }
+
+  initMorseCode() {
+    const encodeInput = document.getElementById("morse-encode-input");
+    const encodeBtn = document.getElementById("morse-encode-btn");
+    const encodeOutput = document.getElementById("morse-encode-output");
+    const encodeResult = document.getElementById("morse-encode-result");
+    const copyBtn = document.getElementById("morse-copy-btn");
+    const playBtn = document.getElementById("morse-play-btn");
+
+    const decodeInput = document.getElementById("morse-decode-input");
+    const decodeBtn = document.getElementById("morse-decode-btn");
+    const decodeOutput = document.getElementById("morse-decode-output");
+    const decodeResult = document.getElementById("morse-decode-result");
+
+    if (encodeBtn) {
+      encodeBtn.addEventListener("click", () => {
+        const text = encodeInput.value.trim();
+        if (!text) {
+          this.showToast("Please enter text to encode", "error");
+          return;
+        }
+        const morse = MorseCode.encode(text);
+        encodeOutput.value = morse;
+        encodeResult.hidden = false;
+        this.showToast("Encoded to Morse code!", "success");
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(encodeOutput.value);
+        this.showToast("Copied to clipboard!", "success");
+      });
+    }
+
+    if (playBtn) {
+      playBtn.addEventListener("click", () => {
+        const morse = encodeOutput.value;
+        if (!morse) return;
+        MorseCode.playAudio(morse);
+        this.showToast("Playing Morse audio...", "success");
+      });
+    }
+
+    if (decodeBtn) {
+      decodeBtn.addEventListener("click", () => {
+        const morse = decodeInput.value.trim();
+        if (!morse) {
+          this.showToast("Please enter Morse code to decode", "error");
+          return;
+        }
+        const text = MorseCode.decode(morse);
+        decodeOutput.value = text;
+        decodeResult.hidden = false;
+        this.showToast("Decoded from Morse code!", "success");
+      });
+    }
+  }
+
+  initCipher() {
+    const encodeInput = document.getElementById("cipher-encode-input");
+    const encodeBtn = document.getElementById("cipher-encode-btn");
+    const encodeOutput = document.getElementById("cipher-encode-output");
+    const encodeResult = document.getElementById("cipher-encode-result");
+    const cipherType = document.getElementById("cipher-type");
+    const shiftSlider = document.getElementById("cipher-shift");
+    const shiftValue = document.getElementById("cipher-shift-value");
+    const shiftGroup = document.getElementById("cipher-shift-group");
+    const keyGroup = document.getElementById("cipher-key-group");
+    const keyInput = document.getElementById("cipher-key");
+    const encodeCopyBtn = document.getElementById("cipher-encode-copy-btn");
+
+    const decodeInput = document.getElementById("cipher-decode-input");
+    const decodeBtn = document.getElementById("cipher-decode-btn");
+    const decodeOutput = document.getElementById("cipher-decode-output");
+    const decodeResult = document.getElementById("cipher-decode-result");
+    const decodeType = document.getElementById("cipher-decode-type");
+    const decodeShiftSlider = document.getElementById("cipher-decode-shift");
+    const decodeShiftValue = document.getElementById(
+      "cipher-decode-shift-value"
+    );
+    const decodeShiftGroup = document.getElementById(
+      "cipher-decode-shift-group"
+    );
+    const decodeKeyGroup = document.getElementById("cipher-decode-key-group");
+    const decodeKeyInput = document.getElementById("cipher-decode-key");
+
+    const updateVisibility = (type, shiftGrp, keyGrp) => {
+      if (type === "caesar") {
+        shiftGrp.hidden = false;
+        keyGrp.hidden = true;
+      } else if (type === "vigenere") {
+        shiftGrp.hidden = true;
+        keyGrp.hidden = false;
+      } else {
+        shiftGrp.hidden = true;
+        keyGrp.hidden = true;
+      }
+    };
+
+    if (cipherType) {
+      cipherType.addEventListener("change", () => {
+        updateVisibility(cipherType.value, shiftGroup, keyGroup);
+      });
+    }
+
+    if (decodeType) {
+      decodeType.addEventListener("change", () => {
+        updateVisibility(decodeType.value, decodeShiftGroup, decodeKeyGroup);
+      });
+    }
+
+    if (shiftSlider) {
+      shiftSlider.addEventListener("input", () => {
+        shiftValue.textContent = shiftSlider.value;
+      });
+    }
+
+    if (decodeShiftSlider) {
+      decodeShiftSlider.addEventListener("input", () => {
+        decodeShiftValue.textContent = decodeShiftSlider.value;
+      });
+    }
+
+    if (encodeBtn) {
+      encodeBtn.addEventListener("click", () => {
+        const text = encodeInput.value;
+        if (!text) {
+          this.showToast("Please enter text to encrypt", "error");
+          return;
+        }
+        const type = cipherType.value;
+        const options = {
+          shift: parseInt(shiftSlider.value),
+          key: keyInput.value,
+        };
+        const result = TextCipher.encrypt(text, type, options);
+        encodeOutput.value = result;
+        encodeResult.hidden = false;
+        this.showToast("Text encrypted!", "success");
+      });
+    }
+
+    if (encodeCopyBtn) {
+      encodeCopyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(encodeOutput.value);
+        this.showToast("Copied to clipboard!", "success");
+      });
+    }
+
+    if (decodeBtn) {
+      decodeBtn.addEventListener("click", () => {
+        const text = decodeInput.value;
+        if (!text) {
+          this.showToast("Please enter text to decrypt", "error");
+          return;
+        }
+        const type = decodeType.value;
+        const options = {
+          shift: parseInt(decodeShiftSlider.value),
+          key: decodeKeyInput.value,
+        };
+        const result = TextCipher.decrypt(text, type, options);
+        decodeOutput.value = result;
+        decodeResult.hidden = false;
+        this.showToast("Text decrypted!", "success");
+      });
+    }
+  }
+
+  initNumberSystem() {
+    const input = document.getElementById("number-input");
+    const fromBase = document.getElementById("number-from-base");
+    const convertBtn = document.getElementById("number-convert-btn");
+    const results = document.getElementById("number-results");
+
+    if (convertBtn) {
+      convertBtn.addEventListener("click", () => {
+        const value = input.value.trim();
+        const base = parseInt(fromBase.value);
+
+        if (!value) {
+          this.showToast("Please enter a number", "error");
+          return;
+        }
+
+        try {
+          const result = NumberSystem.convert(value, base);
+          document.getElementById("result-binary").textContent = result.binary;
+          document.getElementById("result-octal").textContent = result.octal;
+          document.getElementById("result-decimal").textContent =
+            result.decimal;
+          document.getElementById("result-hex").textContent = result.hex;
+          results.hidden = false;
+          this.showToast("Converted!", "success");
+        } catch (e) {
+          this.showToast(e.message, "error");
+        }
+      });
+    }
+  }
+
+  initSecretLink() {
+    const messageInput = document.getElementById("secret-message-input");
+    const passwordInput = document.getElementById("secret-password-input");
+    const createBtn = document.getElementById("secret-create-btn");
+    const linkOutput = document.getElementById("secret-link-output");
+    const linkResult = document.getElementById("secret-link-result");
+    const copyBtn = document.getElementById("secret-link-copy-btn");
+
+    const linkInput = document.getElementById("secret-link-input");
+    const decryptPassword = document.getElementById("secret-decrypt-password");
+    const decryptBtn = document.getElementById("secret-decrypt-btn");
+    const decryptOutput = document.getElementById("secret-decrypt-output");
+    const decryptResult = document.getElementById("secret-decrypt-result");
+
+    const updateCreateBtn = () => {
+      if (createBtn) {
+        createBtn.disabled = !messageInput.value.trim() || !passwordInput.value;
+      }
+    };
+
+    const updateDecryptBtn = () => {
+      if (decryptBtn) {
+        decryptBtn.disabled = !linkInput.value.trim() || !decryptPassword.value;
+      }
+    };
+
+    if (messageInput) messageInput.addEventListener("input", updateCreateBtn);
+    if (passwordInput) passwordInput.addEventListener("input", updateCreateBtn);
+    if (linkInput) linkInput.addEventListener("input", updateDecryptBtn);
+    if (decryptPassword)
+      decryptPassword.addEventListener("input", updateDecryptBtn);
+
+    if (createBtn) {
+      createBtn.addEventListener("click", async () => {
+        const message = messageInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!message || !password) {
+          this.showToast("Message and password required", "error");
+          return;
+        }
+
+        try {
+          const encrypted = await SecretLink.encrypt(message, password);
+          const link = SecretLink.generateLink(encrypted);
+          linkOutput.value = link;
+          linkResult.hidden = false;
+          this.showToast("Secret link generated!", "success");
+        } catch (e) {
+          this.showToast("Encryption failed: " + e.message, "error");
+        }
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(linkOutput.value);
+        this.showToast("Link copied!", "success");
+      });
+    }
+
+    if (decryptBtn) {
+      decryptBtn.addEventListener("click", async () => {
+        const url = linkInput.value.trim();
+        const password = decryptPassword.value;
+
+        if (!url || !password) {
+          this.showToast("Link and password required", "error");
+          return;
+        }
+
+        const data = SecretLink.extractFromUrl(url);
+        if (!data) {
+          this.showToast("Invalid secret link format", "error");
+          return;
+        }
+
+        try {
+          const decrypted = await SecretLink.decrypt(data, password);
+          decryptOutput.value = decrypted;
+          decryptResult.hidden = false;
+          this.showToast("Message decrypted!", "success");
+        } catch (e) {
+          this.showToast("Decryption failed: " + e.message, "error");
+        }
+      });
+    }
+  }
+
+  initHashGenerator() {
+    const textInput = document.getElementById("hash-text-input");
+    const textBtn = document.getElementById("hash-text-btn");
+    const textResults = document.getElementById("hash-text-results");
+
+    const fileDropzone = document.getElementById("hash-file-dropzone");
+    const fileInput = document.getElementById("hash-file-input");
+    const filePreview = document.getElementById("hash-file-preview");
+    const fileName = document.getElementById("hash-file-name");
+    const fileRemove = document.getElementById("hash-file-remove");
+    const fileBtn = document.getElementById("hash-file-btn");
+    const fileResults = document.getElementById("hash-file-results");
+
+    let hashFile = null;
+
+    if (textBtn) {
+      textBtn.addEventListener("click", async () => {
+        const text = textInput.value;
+        if (!text) {
+          this.showToast("Please enter text to hash", "error");
+          return;
+        }
+
+        try {
+          const hashes = await HashGenerator.generateAll(text);
+          document.getElementById("hash-md5").textContent = hashes.md5;
+          document.getElementById("hash-sha1").textContent = hashes.sha1;
+          document.getElementById("hash-sha256").textContent = hashes.sha256;
+          document.getElementById("hash-sha512").textContent = hashes.sha512;
+          textResults.hidden = false;
+          this.showToast("Hashes generated!", "success");
+        } catch (e) {
+          this.showToast("Hash generation failed: " + e.message, "error");
+        }
+      });
+    }
+
+    if (fileDropzone) {
+      fileDropzone.addEventListener("click", () => fileInput.click());
+      fileDropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        fileDropzone.classList.add("dragover");
+      });
+      fileDropzone.addEventListener("dragleave", () => {
+        fileDropzone.classList.remove("dragover");
+      });
+      fileDropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileDropzone.classList.remove("dragover");
+        if (e.dataTransfer.files.length) {
+          loadFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files.length) {
+          loadFile(fileInput.files[0]);
+        }
+      });
+    }
+
+    const loadFile = (file) => {
+      hashFile = file;
+      fileName.textContent = file.name;
+      fileDropzone.querySelector(".upload-content").hidden = true;
+      filePreview.hidden = false;
+      fileBtn.disabled = false;
+    };
+
+    if (fileRemove) {
+      fileRemove.addEventListener("click", (e) => {
+        e.stopPropagation();
+        hashFile = null;
+        fileInput.value = "";
+        fileDropzone.querySelector(".upload-content").hidden = false;
+        filePreview.hidden = true;
+        fileBtn.disabled = true;
+        fileResults.hidden = true;
+      });
+    }
+
+    if (fileBtn) {
+      fileBtn.addEventListener("click", async () => {
+        if (!hashFile) return;
+
+        try {
+          const buffer = await hashFile.arrayBuffer();
+          const hashes = await HashGenerator.generateAll(buffer);
+          document.getElementById("hash-file-md5").textContent = hashes.md5;
+          document.getElementById("hash-file-sha1").textContent = hashes.sha1;
+          document.getElementById("hash-file-sha256").textContent =
+            hashes.sha256;
+          document.getElementById("hash-file-sha512").textContent =
+            hashes.sha512;
+          fileResults.hidden = false;
+          this.showToast("File hashes generated!", "success");
+        } catch (e) {
+          this.showToast("Hash generation failed: " + e.message, "error");
+        }
+      });
+    }
+
+    document.querySelectorAll(".hash-copy").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.target;
+        const el = document.getElementById(target);
+        if (el && el.textContent) {
+          navigator.clipboard.writeText(el.textContent);
+          this.showToast("Hash copied!", "success");
+        }
+      });
+    });
+  }
+
+  initTextRepeater() {
+    const inputText = document.getElementById("repeat-text-input");
+    const countInput = document.getElementById("repeat-count");
+    const separatorSelect = document.getElementById("repeat-separator");
+    const repeatBtn = document.getElementById("repeat-btn");
+    const resultPanel = document.getElementById("repeat-result");
+    const output = document.getElementById("repeat-output");
+    const copyBtn = document.getElementById("repeat-copy-btn");
+
+    if (repeatBtn) {
+      repeatBtn.addEventListener("click", () => {
+        const text = inputText.value;
+        const count = parseInt(countInput.value);
+        let separator = separatorSelect.value;
+
+        // Handle special case for new line
+        if (separator === "\\n") separator = "\n";
+
+        if (!text) {
+          this.showToast("Please enter text to repeat", "error");
+          return;
+        }
+
+        if (isNaN(count) || count < 1) {
+          this.showToast("Please enter a valid number of repetitions", "error");
+          return;
+        }
+
+        if (count > 5000) {
+          this.showToast("Max repetitions is 5000", "error");
+          return;
+        }
+
+        let result = "";
+        for (let i = 0; i < count; i++) {
+          result += text + (i < count - 1 ? separator : "");
+        }
+
+        output.textContent = result;
+        resultPanel.hidden = false;
+        this.showToast("Text repeated " + count + " times!", "success");
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const text = output.textContent;
+        if (text) {
+          try {
+            await navigator.clipboard.writeText(text);
+            this.showToast("Repeated text copied to clipboard!", "success");
+          } catch (e) {
+            this.showToast("Failed to copy text", "error");
+          }
+        }
+      });
+    }
+  }
+
+  initPasswordGenerator() {
+    const lengthSlider = document.getElementById("pwd-length");
+    const lengthValue = document.getElementById("pwd-length-value");
+    const upperCheck = document.getElementById("pwd-upper");
+    const lowerCheck = document.getElementById("pwd-lower");
+    const numbersCheck = document.getElementById("pwd-numbers");
+    const symbolsCheck = document.getElementById("pwd-symbols");
+    const generateBtn = document.getElementById("pwd-generate-btn");
+    const result = document.getElementById("pwd-result");
+    const output = document.getElementById("pwd-output");
+    const copyBtn = document.getElementById("pwd-copy-btn");
+    const strengthText = document.getElementById("pwd-strength");
+    const strengthBar = document.getElementById("pwd-strength-bar");
+
+    const chars = {
+      upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      lower: "abcdefghijklmnopqrstuvwxyz",
+      numbers: "0123456789",
+      symbols: "!@#$%^&*()_+-=[]{}|;:,.<>?",
+    };
+
+    const generatePassword = () => {
+      let charset = "";
+      if (upperCheck?.checked) charset += chars.upper;
+      if (lowerCheck?.checked) charset += chars.lower;
+      if (numbersCheck?.checked) charset += chars.numbers;
+      if (symbolsCheck?.checked) charset += chars.symbols;
+
+      if (!charset) {
+        this.showToast("Please select at least one character type", "error");
+        return null;
+      }
+
+      const length = parseInt(lengthSlider?.value || 16);
+      let password = "";
+      const array = new Uint32Array(length);
+      crypto.getRandomValues(array);
+
+      for (let i = 0; i < length; i++) {
+        password += charset[array[i] % charset.length];
+      }
+
+      return password;
+    };
+
+    const calculateStrength = (password) => {
+      let score = 0;
+
+      // Length scoring
+      if (password.length >= 8) score += 1;
+      if (password.length >= 12) score += 1;
+      if (password.length >= 16) score += 1;
+      if (password.length >= 24) score += 1;
+
+      // Character variety
+      if (/[a-z]/.test(password)) score += 1;
+      if (/[A-Z]/.test(password)) score += 1;
+      if (/[0-9]/.test(password)) score += 1;
+      if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+
+      if (score <= 2) return { label: "Weak", color: "#ef4444", percent: 25 };
+      if (score <= 4) return { label: "Fair", color: "#f59e0b", percent: 50 };
+      if (score <= 6) return { label: "Good", color: "#10b981", percent: 75 };
+      return { label: "Strong", color: "#6366f1", percent: 100 };
+    };
+
+    if (lengthSlider) {
+      lengthSlider.addEventListener("input", () => {
+        lengthValue.textContent = lengthSlider.value;
+      });
+    }
+
+    if (generateBtn) {
+      generateBtn.addEventListener("click", () => {
+        const password = generatePassword();
+        if (password) {
+          output.textContent = password;
+          result.hidden = false;
+
+          const strength = calculateStrength(password);
+          strengthText.textContent = strength.label;
+          strengthText.style.color = strength.color;
+          strengthBar.style.width = strength.percent + "%";
+          strengthBar.style.background = strength.color;
+
+          this.showToast("Password generated!", "success");
+        }
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const password = output.textContent;
+        if (password) {
+          await navigator.clipboard.writeText(password);
+          this.showToast("Password copied to clipboard!", "success");
+        }
       });
     }
   }

@@ -31,7 +31,7 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 | **Image Diff**     | Compare two images to detect pixel-level changes           |
 | **LSB Analysis**   | Detect hidden data using Chi-Square and entropy statistics |
 
-### � File Tools
+### 📁 File Tools
 
 | Feature              | Description                                                  |
 | -------------------- | ------------------------------------------------------------ |
@@ -39,6 +39,18 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 | **Base64 Converter** | Convert files to Base64 (and back). Supports Direct Paste!   |
 | **File Splitter**    | Split large files into smaller chunks & merge them back      |
 | **Magic Bytes**      | Detect actual file type by inspecting file signature headers |
+
+### 🔑 Crypto Tools
+
+| Feature                | Description                                              |
+| ---------------------- | -------------------------------------------------------- |
+| **Morse Code**         | Encode/decode text to Morse code with audio playback     |
+| **Text Cipher**        | Caesar, ROT13, Atbash, and Vigenère cipher encryption    |
+| **Number Converter**   | Convert between Binary, Octal, Decimal, and Hexadecimal  |
+| **Secret Link**        | Create encrypted self-destructing secret links           |
+| **Hash Generator**     | Generate MD5, SHA-1, SHA-256, SHA-512 hashes             |
+| **Text Repeater**      | Repeat text N times with custom separator                |
+| **Password Generator** | Generate secure random passwords with strength indicator |
 
 ### 🔐 Security Features
 

@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=3.16" />
+    <link rel="stylesheet" href="assets/css/style.css?v=3.46" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
@@ -88,12 +88,12 @@
         <button class="sub-tab" data-tab="magic-bytes">Magic Bytes</button>
       </nav>
       <nav class="sub-tabs" id="sub-tabs-crypto" hidden>
-        <button class="sub-tab" data-tab="text-encrypt" disabled>
-          Text Encrypt <span class="badge">Soon</span>
-        </button>
-        <button class="sub-tab" data-tab="hash-gen" disabled>
-          Hash Generator <span class="badge">Soon</span>
-        </button>
+        <button class="sub-tab active" data-tab="morse">Morse</button>
+        <button class="sub-tab" data-tab="cipher">Cipher</button>
+        <button class="sub-tab" data-tab="number-system">Number</button>
+        <button class="sub-tab" data-tab="secret-link">Secret Link</button>
+        <button class="sub-tab" data-tab="hash-gen">Hash</button>
+        <button class="sub-tab" data-tab="tools">Tools</button>
       </nav>
 
       <main class="main-content">
@@ -2745,6 +2745,1616 @@
             </div>
           </div>
         </section>
+
+        <!-- Morse Code Panel -->
+        <section class="panel" id="morse-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="morse-encode">
+              Encode
+            </button>
+            <button class="inner-tab" data-inner="morse-decode">Decode</button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-morse-encode">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Text to Encode
+              </label>
+              <textarea
+                id="morse-encode-input"
+                placeholder="Enter text to convert to morse code..."
+                rows="4"
+              ></textarea>
+            </div>
+            <button class="btn primary" id="morse-encode-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8M12 8v8" />
+              </svg>
+              Encode to Morse
+            </button>
+            <div class="input-group" id="morse-encode-result" hidden>
+              <label>Morse Code Output</label>
+              <textarea
+                id="morse-encode-output"
+                readonly
+                rows="4"
+                style="font-family: monospace"
+              ></textarea>
+              <div class="btn-row" style="margin-top: 0.75rem; gap: 0.5rem">
+                <button class="btn secondary small" id="morse-copy-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    />
+                  </svg>
+                  Copy
+                </button>
+                <button class="btn secondary small" id="morse-play-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Play Audio
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="inner-panel" id="inner-morse-decode">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Morse Code Input
+              </label>
+              <textarea
+                id="morse-decode-input"
+                placeholder="Enter morse code (use . and - separated by spaces)..."
+                rows="4"
+                style="font-family: monospace"
+              ></textarea>
+              <span class="input-hint"
+                >Use dots (.) and dashes (-), separate letters with spaces,
+                words with /</span
+              >
+            </div>
+            <button class="btn primary" id="morse-decode-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8" />
+              </svg>
+              Decode to Text
+            </button>
+            <div class="input-group" id="morse-decode-result" hidden>
+              <label>Decoded Text</label>
+              <textarea id="morse-decode-output" readonly rows="3"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Text Cipher Panel -->
+        <section class="panel" id="cipher-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="cipher-encode">
+              Encrypt
+            </button>
+            <button class="inner-tab" data-inner="cipher-decode">
+              Decrypt
+            </button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-cipher-encode">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Text to Encrypt
+              </label>
+              <textarea
+                id="cipher-encode-input"
+                placeholder="Enter text to encrypt..."
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="input-group">
+              <label>Cipher Type</label>
+              <select id="cipher-type">
+                <option value="caesar">Caesar Cipher (Shift)</option>
+                <option value="rot13">ROT13</option>
+                <option value="atbash">Atbash (Reverse Alphabet)</option>
+                <option value="vigenere">Vigenère Cipher</option>
+              </select>
+            </div>
+            <div class="input-group" id="cipher-shift-group">
+              <label
+                >Shift Amount: <span id="cipher-shift-value">3</span></label
+              >
+              <input
+                type="range"
+                id="cipher-shift"
+                min="1"
+                max="25"
+                value="3"
+                style="width: 100%"
+              />
+            </div>
+            <div class="input-group" id="cipher-key-group" hidden>
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path
+                    d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                  />
+                </svg>
+                Key (letters only)
+              </label>
+              <input
+                type="text"
+                id="cipher-key"
+                placeholder="Enter key word..."
+              />
+            </div>
+            <button class="btn primary" id="cipher-encode-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              Encrypt
+            </button>
+            <div class="input-group" id="cipher-encode-result" hidden>
+              <label>Encrypted Text</label>
+              <textarea
+                id="cipher-encode-output"
+                readonly
+                rows="3"
+                style="font-family: monospace"
+              ></textarea>
+              <button
+                class="btn secondary small"
+                id="cipher-encode-copy-btn"
+                style="margin-top: 0.75rem"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path
+                    d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                  />
+                </svg>
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <div class="inner-panel" id="inner-cipher-decode">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Text to Decrypt
+              </label>
+              <textarea
+                id="cipher-decode-input"
+                placeholder="Enter encrypted text..."
+                rows="3"
+                style="font-family: monospace"
+              ></textarea>
+            </div>
+            <div class="input-group">
+              <label>Cipher Type</label>
+              <select id="cipher-decode-type">
+                <option value="caesar">Caesar Cipher (Shift)</option>
+                <option value="rot13">ROT13</option>
+                <option value="atbash">Atbash (Reverse Alphabet)</option>
+                <option value="vigenere">Vigenère Cipher</option>
+              </select>
+            </div>
+            <div class="input-group" id="cipher-decode-shift-group">
+              <label
+                >Shift Amount:
+                <span id="cipher-decode-shift-value">3</span></label
+              >
+              <input
+                type="range"
+                id="cipher-decode-shift"
+                min="1"
+                max="25"
+                value="3"
+                style="width: 100%"
+              />
+            </div>
+            <div class="input-group" id="cipher-decode-key-group" hidden>
+              <label>Key (letters only)</label>
+              <input
+                type="text"
+                id="cipher-decode-key"
+                placeholder="Enter key word..."
+              />
+            </div>
+            <button class="btn primary" id="cipher-decode-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 019.9-1" />
+              </svg>
+              Decrypt
+            </button>
+            <div class="input-group" id="cipher-decode-result" hidden>
+              <label>Decrypted Text</label>
+              <textarea id="cipher-decode-output" readonly rows="3"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Number System Panel -->
+        <section class="panel" id="number-system-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="number-convert">
+              Convert
+            </button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-number-convert">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <rect x="4" y="2" width="16" height="20" rx="2" />
+                  <line x1="8" y1="6" x2="16" y2="6" />
+                  <line x1="8" y1="10" x2="16" y2="10" />
+                  <line x1="8" y1="14" x2="12" y2="14" />
+                </svg>
+                Input Value
+              </label>
+              <input
+                type="text"
+                id="number-input"
+                placeholder="Enter a number..."
+              />
+            </div>
+
+            <div class="input-group">
+              <label>Input Base</label>
+              <select id="number-from-base">
+                <option value="2">Binary (Base 2)</option>
+                <option value="8">Octal (Base 8)</option>
+                <option value="10" selected>Decimal (Base 10)</option>
+                <option value="16">Hexadecimal (Base 16)</option>
+              </select>
+            </div>
+
+            <button class="btn primary" id="number-convert-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path
+                  d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                />
+              </svg>
+              Convert
+            </button>
+
+            <div
+              class="analysis-results"
+              id="number-results"
+              hidden
+              style="
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                overflow: hidden;
+                margin-top: 1rem;
+              "
+            >
+              <div
+                class="result-header"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 12px 16px;
+                  background: var(--bg-tertiary);
+                  border-bottom: 1px solid var(--border-color);
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="2"
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path
+                    d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                  />
+                </svg>
+                <h3 style="font-size: 0.95rem; font-weight: 600">
+                  Conversion Results
+                </h3>
+              </div>
+              <div
+                class="analysis-content"
+                style="
+                  padding: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 12px;
+                "
+              >
+                <div
+                  class="meta-row"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9rem;
+                    padding: 8px 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                  "
+                >
+                  <span style="color: var(--text-secondary)">Binary (2):</span>
+                  <span
+                    id="result-binary"
+                    style="font-weight: 500; font-family: monospace"
+                  ></span>
+                </div>
+                <div
+                  class="meta-row"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9rem;
+                    padding: 8px 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                  "
+                >
+                  <span style="color: var(--text-secondary)">Octal (8):</span>
+                  <span
+                    id="result-octal"
+                    style="font-weight: 500; font-family: monospace"
+                  ></span>
+                </div>
+                <div
+                  class="meta-row"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9rem;
+                    padding: 8px 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                  "
+                >
+                  <span style="color: var(--text-secondary)"
+                    >Decimal (10):</span
+                  >
+                  <span
+                    id="result-decimal"
+                    style="font-weight: 500; font-family: monospace"
+                  ></span>
+                </div>
+                <div
+                  class="meta-row"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9rem;
+                    padding: 8px 12px;
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                  "
+                >
+                  <span style="color: var(--text-secondary)"
+                    >Hexadecimal (16):</span
+                  >
+                  <span
+                    id="result-hex"
+                    style="font-weight: 500; font-family: monospace"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Secret Link Panel -->
+        <section class="panel" id="secret-link-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="secret-create">
+              Create Link
+            </button>
+            <button class="inner-tab" data-inner="secret-open">
+              Open Link
+            </button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-secret-create">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Secret Message
+              </label>
+              <textarea
+                id="secret-message-input"
+                placeholder="Enter your secret message..."
+                rows="4"
+              ></textarea>
+            </div>
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                Password <span class="optional">(required)</span>
+              </label>
+              <div class="password-input">
+                <input
+                  type="password"
+                  id="secret-password-input"
+                  placeholder="Enter password..."
+                  autocomplete="off"
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  id="toggle-secret-password"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="eye-icon"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <button class="btn primary" id="secret-create-btn" disabled>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
+                />
+                <path
+                  d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
+                />
+              </svg>
+              Generate Secret Link
+            </button>
+            <div class="input-group" id="secret-link-result" hidden>
+              <label>Your Secret Link</label>
+              <div style="display: flex; gap: 0.5rem">
+                <input
+                  type="text"
+                  id="secret-link-output"
+                  readonly
+                  style="flex: 1; font-family: monospace; font-size: 0.85rem"
+                />
+                <button class="btn secondary" id="secret-link-copy-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path
+                      d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <span class="input-hint" style="color: var(--warning)"
+                >⚠️ Share this link carefully. Anyone with the link AND password
+                can read the message.</span
+              >
+            </div>
+          </div>
+
+          <div class="inner-panel" id="inner-secret-open">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <path
+                    d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
+                  />
+                  <path
+                    d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
+                  />
+                </svg>
+                Secret Link
+              </label>
+              <input
+                type="text"
+                id="secret-link-input"
+                placeholder="Paste the secret link here..."
+                style="font-family: monospace"
+              />
+            </div>
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                Password
+              </label>
+              <div class="password-input">
+                <input
+                  type="password"
+                  id="secret-decrypt-password"
+                  placeholder="Enter password to decrypt..."
+                  autocomplete="off"
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  id="toggle-secret-decrypt-password"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="eye-icon"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <button class="btn primary" id="secret-decrypt-btn" disabled>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 019.9-1" />
+              </svg>
+              Decrypt Message
+            </button>
+            <div class="input-group" id="secret-decrypt-result" hidden>
+              <label>Decrypted Message</label>
+              <textarea id="secret-decrypt-output" readonly rows="4"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Hash Generator Panel -->
+        <section class="panel" id="hash-gen-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="hash-text">
+              Text
+            </button>
+            <button class="inner-tab" data-inner="hash-file">File</button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-hash-text">
+            <div class="input-group">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="label-icon"
+                >
+                  <line x1="4" y1="9" x2="20" y2="9" />
+                  <line x1="4" y1="15" x2="20" y2="15" />
+                  <line x1="10" y1="3" x2="8" y2="21" />
+                  <line x1="16" y1="3" x2="14" y2="21" />
+                </svg>
+                Text to Hash
+              </label>
+              <textarea
+                id="hash-text-input"
+                placeholder="Enter text to generate hash..."
+                rows="4"
+              ></textarea>
+            </div>
+            <button class="btn primary" id="hash-text-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="4" y1="9" x2="20" y2="9" />
+                <line x1="4" y1="15" x2="20" y2="15" />
+                <line x1="10" y1="3" x2="8" y2="21" />
+                <line x1="16" y1="3" x2="14" y2="21" />
+              </svg>
+              Generate Hashes
+            </button>
+            <div
+              class="analysis-results"
+              id="hash-text-results"
+              hidden
+              style="
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                overflow: hidden;
+                margin-top: 1rem;
+              "
+            >
+              <div
+                class="result-header"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 12px 16px;
+                  background: var(--bg-tertiary);
+                  border-bottom: 1px solid var(--border-color);
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="2"
+                >
+                  <line x1="4" y1="9" x2="20" y2="9" />
+                  <line x1="4" y1="15" x2="20" y2="15" />
+                  <line x1="10" y1="3" x2="8" y2="21" />
+                  <line x1="16" y1="3" x2="14" y2="21" />
+                </svg>
+                <h3 style="font-size: 0.95rem; font-weight: 600">
+                  Hash Results
+                </h3>
+              </div>
+              <div
+                class="analysis-content"
+                style="
+                  padding: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 12px;
+                "
+              >
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >MD5</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-md5"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-md5"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >SHA-1</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-sha1"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-sha1"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >SHA-256</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-sha256"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-sha256"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >SHA-512</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-sha512"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-sha512"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="inner-panel" id="inner-hash-file">
+            <div class="upload-zone" id="hash-file-dropzone">
+              <input type="file" id="hash-file-input" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Drop file to hash</p>
+                  <span class="upload-hint">Any file type supported</span>
+                </div>
+              </div>
+              <div class="preview-thumb" id="hash-file-preview" hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  width="40"
+                  height="40"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span class="preview-label" id="hash-file-name"
+                  >File loaded</span
+                >
+                <div class="preview-actions">
+                  <button
+                    type="button"
+                    class="preview-remove"
+                    id="hash-file-remove"
+                    title="Remove"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button class="btn primary" id="hash-file-btn" disabled>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="4" y1="9" x2="20" y2="9" />
+                <line x1="4" y1="15" x2="20" y2="15" />
+                <line x1="10" y1="3" x2="8" y2="21" />
+                <line x1="16" y1="3" x2="14" y2="21" />
+              </svg>
+              Generate File Hash
+            </button>
+            <div
+              class="analysis-results"
+              id="hash-file-results"
+              hidden
+              style="
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                overflow: hidden;
+                margin-top: 1rem;
+              "
+            >
+              <div
+                class="result-header"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 12px 16px;
+                  background: var(--bg-tertiary);
+                  border-bottom: 1px solid var(--border-color);
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="2"
+                >
+                  <line x1="4" y1="9" x2="20" y2="9" />
+                  <line x1="4" y1="15" x2="20" y2="15" />
+                  <line x1="10" y1="3" x2="8" y2="21" />
+                  <line x1="16" y1="3" x2="14" y2="21" />
+                </svg>
+                <h3 style="font-size: 0.95rem; font-weight: 600">
+                  File Hash Results
+                </h3>
+              </div>
+              <div
+                class="analysis-content"
+                style="
+                  padding: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 12px;
+                "
+              >
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >MD5</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-file-md5"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-file-md5"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >SHA-1</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-file-sha1"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-file-sha1"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >SHA-256</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-file-sha256"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-file-sha256"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+                <div
+                  class="hash-row"
+                  style="
+                    background: var(--bg-tertiary);
+                    border-radius: 8px;
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="color: var(--text-secondary); font-size: 0.85rem"
+                      >SHA-512</span
+                    >
+                    <button
+                      class="btn-icon hash-copy"
+                      data-target="hash-file-sha512"
+                      title="Copy"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="16"
+                        height="16"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <code
+                    id="hash-file-sha512"
+                    style="
+                      font-size: 0.8rem;
+                      word-break: break-all;
+                      color: var(--text-primary);
+                    "
+                  ></code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tools Panel -->
+        <section class="panel" id="tools-panel">
+          <nav class="inner-tabs">
+            <button class="inner-tab active" data-inner="text-repeater">
+              Text Repeater
+            </button>
+            <button class="inner-tab" data-inner="password-gen">
+              Password
+            </button>
+          </nav>
+
+          <div class="inner-panel active" id="inner-text-repeater">
+            <div class="input-group">
+              <label>Text to Repeat</label>
+              <textarea
+                id="repeat-text-input"
+                placeholder="Enter text to repeat..."
+                rows="2"
+              ></textarea>
+            </div>
+
+            <div
+              class="row"
+              style="display: flex; gap: 1rem; margin-bottom: 1rem"
+            >
+              <div class="input-group" style="flex: 1">
+                <label>Repetitions</label>
+                <input
+                  type="number"
+                  id="repeat-count"
+                  min="1"
+                  max="1000"
+                  value="10"
+                />
+              </div>
+              <div class="input-group" style="flex: 1">
+                <label>Separator</label>
+                <div class="custom-select">
+                  <select id="repeat-separator">
+                    <option value="\n">New Line</option>
+                    <option value=" ">Space</option>
+                    <option value=", ">Comma</option>
+                    <option value=". ">Period</option>
+                    <option value="">None</option>
+                  </select>
+                  <svg
+                    class="select-arrow"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn primary" id="repeat-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M17 1l4 4-4 4" />
+                <path d="M3 11V9a4 4 0 014-4h14" />
+                <path d="M7 23l-4-4 4-4" />
+                <path d="M21 13v2a4 4 0 01-4 4H3" />
+              </svg>
+              Repeat Text
+            </button>
+
+            <div id="repeat-result" hidden style="margin-top: 1.5rem">
+              <div class="result-box">
+                <div class="result-header">
+                  <h3>Result</h3>
+                  <button class="copy-btn" id="repeat-copy-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path
+                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                      />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <div
+                  class="result-message"
+                  id="repeat-output"
+                  style="
+                    white-space: pre-wrap;
+                    max-height: 200px;
+                    overflow-y: auto;
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="inner-panel" id="inner-password-gen">
+            <div class="input-group">
+              <label
+                >Password Length: <span id="pwd-length-value">16</span></label
+              >
+              <input
+                type="range"
+                id="pwd-length"
+                min="8"
+                max="64"
+                value="16"
+                style="width: 100%"
+              />
+            </div>
+
+            <div class="input-group">
+              <label style="margin-bottom: 12px">Include Characters</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 12px">
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="pwd-upper"
+                    checked
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      accent-color: var(--accent);
+                    "
+                  />
+                  <span style="font-size: 0.9rem">Uppercase (A-Z)</span>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="pwd-lower"
+                    checked
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      accent-color: var(--accent);
+                    "
+                  />
+                  <span style="font-size: 0.9rem">Lowercase (a-z)</span>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="pwd-numbers"
+                    checked
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      accent-color: var(--accent);
+                    "
+                  />
+                  <span style="font-size: 0.9rem">Numbers (0-9)</span>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="pwd-symbols"
+                    checked
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      accent-color: var(--accent);
+                    "
+                  />
+                  <span style="font-size: 0.9rem">Symbols (!@#$)</span>
+                </label>
+              </div>
+            </div>
+
+            <button class="btn primary" id="pwd-generate-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              Generate Password
+            </button>
+
+            <div id="pwd-result" hidden style="margin-top: 1rem">
+              <div class="result-box">
+                <div class="result-header">
+                  <h3>Generated Password</h3>
+                  <button class="copy-btn" id="pwd-copy-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path
+                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                      />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <div
+                  class="result-message"
+                  id="pwd-output"
+                  style="
+                    font-family: monospace;
+                    font-size: 1.1rem;
+                    letter-spacing: 1px;
+                  "
+                ></div>
+              </div>
+              <div
+                style="
+                  margin-top: 12px;
+                  padding: 12px;
+                  background: var(--bg-tertiary);
+                  border-radius: 8px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <span style="font-size: 0.85rem; color: var(--text-secondary)"
+                    >Strength:</span
+                  >
+                  <span
+                    id="pwd-strength"
+                    style="font-size: 0.85rem; font-weight: 600"
+                  ></span>
+                </div>
+                <div
+                  style="
+                    margin-top: 8px;
+                    height: 6px;
+                    background: var(--bg-secondary);
+                    border-radius: 3px;
+                    overflow: hidden;
+                  "
+                >
+                  <div
+                    id="pwd-strength-bar"
+                    style="height: 100%; width: 0%; transition: all 0.3s"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -2768,7 +4378,7 @@
     <div class="toast" id="toast"></div>
     <canvas id="canvas" hidden></canvas>
 
-    <script src="assets/js/app.js?v=3.15"></script>
+    <script src="assets/js/app.js?v=3.46"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
