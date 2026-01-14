@@ -15,11 +15,12 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=3.48" />
+    <link rel="stylesheet" href="assets/css/style.css?v=4.5" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
   </head>
   <body>
+    <canvas id="particle-canvas"></canvas>
     <div class="app-container">
       <header class="header">
         <div class="logo">
@@ -91,7 +92,7 @@
         <button class="sub-tab active" data-tab="morse">Morse</button>
         <button class="sub-tab" data-tab="cipher">Cipher</button>
         <button class="sub-tab" data-tab="number-system">Number</button>
-        <button class="sub-tab" data-tab="secret-link">Secret Link</button>
+        <button class="sub-tab" data-tab="invisible-ink">Invisible Ink</button>
         <button class="sub-tab" data-tab="hash-gen">Hash</button>
         <button class="sub-tab" data-tab="tools">Tools</button>
       </nav>
@@ -552,7 +553,7 @@
             </div>
 
             <div id="sanitize-actions" hidden>
-              <button class="btn secondary" id="sanitize-action-btn" disabled>
+              <button class="btn primary" id="sanitize-action-btn" disabled>
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -2226,6 +2227,12 @@
             <button class="inner-tab active" data-inner="magic-analyze">
               Analyze
             </button>
+            <button class="inner-tab" data-inner="magic-deepscan">
+              Deep Scan
+            </button>
+            <button class="inner-tab" data-inner="magic-hexedit">
+              Hex Editor
+            </button>
           </nav>
 
           <div class="inner-panel active" id="inner-magic-analyze">
@@ -2247,6 +2254,41 @@
                     >Analyze file signature (magic bytes)</span
                   >
                 </div>
+              </div>
+              <div class="preview-thumb" id="magic-preview" hidden>
+                <div
+                  style="display: flex; align-items: center; gap: 10px; flex: 1"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="width: 24px; height: 24px; flex-shrink: 0"
+                  >
+                    <path
+                      d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
+                    />
+                    <polyline points="13 2 13 9 20 9" />
+                  </svg>
+                  <span
+                    class="preview-label"
+                    id="magic-filename"
+                    style="word-break: break-all"
+                    >filename.ext</span
+                  >
+                </div>
+                <button type="button" class="preview-remove" id="magic-remove">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -2350,6 +2392,398 @@
                   "
                 >
                   Fix Extension & Download
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deep Scan Tab -->
+          <div class="inner-panel" id="inner-magic-deepscan">
+            <div class="upload-zone" id="deepscan-dropzone">
+              <input type="file" id="deepscan-input" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <path d="M11 8v6M8 11h6" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Deep Scan for Embedded Files</p>
+                  <span class="upload-hint"
+                    >Find hidden files inside another file</span
+                  >
+                </div>
+              </div>
+              <div class="preview-thumb" id="deepscan-preview" hidden>
+                <div
+                  style="display: flex; align-items: center; gap: 10px; flex: 1"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="width: 24px; height: 24px; flex-shrink: 0"
+                  >
+                    <path
+                      d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
+                    />
+                    <polyline points="13 2 13 9 20 9" />
+                  </svg>
+                  <span
+                    class="preview-label"
+                    id="deepscan-filename"
+                    style="word-break: break-all"
+                    >filename.ext</span
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="deepscan-remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="deepscan-progress" hidden style="margin-top: 15px">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  color: var(--text-secondary);
+                "
+              >
+                <div class="spinner"></div>
+                <span id="deepscan-status">Scanning...</span>
+              </div>
+              <div
+                style="
+                  margin-top: 10px;
+                  height: 4px;
+                  background: var(--bg-tertiary);
+                  border-radius: 2px;
+                  overflow: hidden;
+                "
+              >
+                <div
+                  id="deepscan-bar"
+                  style="
+                    height: 100%;
+                    width: 0%;
+                    background: var(--accent);
+                    transition: width 0.3s;
+                  "
+                ></div>
+              </div>
+            </div>
+
+            <div
+              class="result-box"
+              id="deepscan-result"
+              hidden
+              style="margin-top: 20px"
+            >
+              <div class="result-header">
+                <h3>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      vertical-align: middle;
+                      margin-right: 6px;
+                    "
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                  Embedded Files Found (<span id="deepscan-count">0</span>)
+                </h3>
+              </div>
+              <div
+                id="deepscan-list"
+                style="
+                  max-height: 300px;
+                  overflow-y: auto;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                  padding: 12px;
+                "
+              ></div>
+            </div>
+
+            <div
+              id="deepscan-empty"
+              hidden
+              style="
+                margin-top: 20px;
+                padding: 20px;
+                text-align: center;
+                color: var(--text-muted);
+                background: var(--bg-tertiary);
+                border-radius: 8px;
+              "
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  margin-bottom: 10px;
+                  opacity: 0.5;
+                "
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 15s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
+              </svg>
+              <p>No embedded files detected</p>
+              <span style="font-size: 12px"
+                >File appears clean or uses unknown format</span
+              >
+            </div>
+          </div>
+
+          <!-- Hex Editor Tab -->
+          <div class="inner-panel" id="inner-magic-hexedit">
+            <div class="upload-zone" id="hexedit-dropzone">
+              <input type="file" id="hexedit-input" hidden />
+              <div class="upload-content">
+                <svg
+                  class="upload-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
+                </svg>
+                <div class="upload-info">
+                  <p class="upload-text">Mini Hex Editor</p>
+                  <span class="upload-hint"
+                    >View and edit file bytes directly</span
+                  >
+                </div>
+              </div>
+              <div class="preview-thumb" id="hexedit-preview" hidden>
+                <div
+                  style="display: flex; align-items: center; gap: 10px; flex: 1"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="width: 24px; height: 24px; flex-shrink: 0"
+                  >
+                    <path
+                      d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
+                    />
+                    <polyline points="13 2 13 9 20 9" />
+                  </svg>
+                  <span
+                    class="preview-label"
+                    id="hexedit-fname"
+                    style="word-break: break-all"
+                    >filename.ext</span
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="preview-remove"
+                  id="hexedit-remove"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="hexedit-container" hidden style="margin-top: 15px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 10px;
+                "
+              >
+                <span
+                  id="hexedit-filename"
+                  style="
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    font-size: 14px;
+                  "
+                ></span>
+                <span
+                  id="hexedit-filesize"
+                  style="color: var(--text-muted); font-size: 12px"
+                ></span>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  margin-bottom: 10px;
+                  align-items: center;
+                "
+              >
+                <label style="font-size: 12px; color: var(--text-secondary)"
+                  >Offset:</label
+                >
+                <input
+                  type="number"
+                  id="hexedit-offset"
+                  value="0"
+                  min="0"
+                  style="
+                    width: 100px;
+                    padding: 6px 10px;
+                    background: var(--bg-tertiary);
+                    border: 1px solid var(--border-color);
+                    border-radius: 4px;
+                    color: var(--text-primary);
+                    font-family: monospace;
+                  "
+                />
+                <button class="btn secondary small" id="hexedit-goto">
+                  Go
+                </button>
+                <span
+                  style="
+                    margin-left: auto;
+                    font-size: 11px;
+                    color: var(--text-muted);
+                  "
+                  >Showing 256 bytes</span
+                >
+              </div>
+
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 80px 1fr 1fr;
+                  gap: 2px;
+                  font-family: monospace;
+                  font-size: 11px;
+                  background: var(--bg-tertiary);
+                  border-radius: 8px;
+                  overflow: hidden;
+                "
+              >
+                <div
+                  style="
+                    padding: 8px;
+                    background: var(--bg-secondary);
+                    color: var(--text-muted);
+                    text-align: center;
+                    font-weight: 600;
+                  "
+                >
+                  Offset
+                </div>
+                <div
+                  style="
+                    padding: 8px;
+                    background: var(--bg-secondary);
+                    color: var(--text-muted);
+                    text-align: center;
+                    font-weight: 600;
+                  "
+                >
+                  Hex
+                </div>
+                <div
+                  style="
+                    padding: 8px;
+                    background: var(--bg-secondary);
+                    color: var(--text-muted);
+                    text-align: center;
+                    font-weight: 600;
+                  "
+                >
+                  ASCII
+                </div>
+              </div>
+
+              <div
+                id="hexedit-content"
+                style="
+                  max-height: 320px;
+                  overflow-y: auto;
+                  background: var(--bg-primary);
+                  border: 1px solid var(--border-color);
+                  border-radius: 0 0 8px 8px;
+                "
+              ></div>
+
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  margin-top: 15px;
+                  flex-wrap: wrap;
+                "
+              >
+                <button class="btn secondary" id="hexedit-download">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="width: 16px; height: 16px"
+                  >
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download Modified
+                </button>
+                <button class="btn secondary" id="hexedit-reset">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    style="width: 16px; height: 16px"
+                  >
+                    <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                  Reset Changes
                 </button>
               </div>
             </div>
@@ -2910,11 +3344,28 @@
                 </svg>
                 Text to Encode
               </label>
-              <textarea
-                id="morse-encode-input"
-                placeholder="Enter text to convert to morse code..."
-                rows="4"
-              ></textarea>
+              <div class="textarea-wrap">
+                <textarea
+                  id="morse-encode-input"
+                  placeholder="Enter text to convert to morse code..."
+                  rows="4"
+                ></textarea>
+                <button
+                  type="button"
+                  class="textarea-clear"
+                  data-target="morse-encode-input"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <button class="btn primary" id="morse-encode-btn">
               <svg
@@ -2982,12 +3433,29 @@
                 </svg>
                 Morse Code Input
               </label>
-              <textarea
-                id="morse-decode-input"
-                placeholder="Enter morse code (use . and - separated by spaces)..."
-                rows="4"
-                style="font-family: monospace"
-              ></textarea>
+              <div class="textarea-wrap">
+                <textarea
+                  id="morse-decode-input"
+                  placeholder="Enter morse code (use . and - separated by spaces)..."
+                  rows="4"
+                  style="font-family: monospace"
+                ></textarea>
+                <button
+                  type="button"
+                  class="textarea-clear"
+                  data-target="morse-decode-input"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
               <span class="input-hint"
                 >Use dots (.) and dashes (-), separate letters with spaces,
                 words with /</span
@@ -3040,11 +3508,28 @@
                   </svg>
                   Text to Encrypt
                 </label>
-                <textarea
-                  id="cipher-encode-input"
-                  placeholder="Enter text to encrypt..."
-                  rows="3"
-                ></textarea>
+                <div class="textarea-wrap">
+                  <textarea
+                    id="cipher-encode-input"
+                    placeholder="Enter text to encrypt..."
+                    rows="3"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="textarea-clear"
+                    data-target="cipher-encode-input"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div class="input-group">
                 <label>Cipher Type</label>
@@ -3158,12 +3643,29 @@
                 </svg>
                 Text to Decrypt
               </label>
-              <textarea
-                id="cipher-decode-input"
-                placeholder="Enter encrypted text..."
-                rows="3"
-                style="font-family: monospace"
-              ></textarea>
+              <div class="textarea-wrap">
+                <textarea
+                  id="cipher-decode-input"
+                  placeholder="Enter encrypted text..."
+                  rows="3"
+                  style="font-family: monospace"
+                ></textarea>
+                <button
+                  type="button"
+                  class="textarea-clear"
+                  data-target="cipher-decode-input"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="input-group">
               <label>Cipher Type</label>
@@ -3464,112 +3966,98 @@
         </section>
 
         <!-- Secret Link Panel -->
-        <section class="panel" id="secret-link-panel">
+        <!-- Invisible Ink Panel -->
+        <section class="panel" id="invisible-ink-panel">
           <nav class="inner-tabs">
-            <button class="inner-tab active" data-inner="secret-create">
-              Create Link
+            <button class="inner-tab active" data-inner="ink-encode">
+              Encode
             </button>
-            <button class="inner-tab" data-inner="secret-open">
-              Open Link
-            </button>
+            <button class="inner-tab" data-inner="ink-decode">Decode</button>
           </nav>
 
-          <div class="inner-panel active" id="inner-secret-create">
+          <div class="inner-panel active" id="inner-ink-encode">
             <div class="crypto-card">
               <div class="input-group">
-                <label>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    class="label-icon"
-                  >
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  Secret Message
-                </label>
-                <textarea
-                  id="secret-message-input"
-                  placeholder="Enter your secret message..."
-                  rows="4"
-                ></textarea>
-              </div>
-              <div class="input-group">
-                <label>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    class="label-icon"
-                  >
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0110 0v4" />
-                  </svg>
-                  Password <span class="optional">(required)</span>
-                </label>
-                <div class="password-input">
-                  <input
-                    type="password"
-                    id="secret-password-input"
-                    placeholder="Enter password..."
-                    autocomplete="off"
-                  />
+                <label>Cover Text (Public)</label>
+                <div class="textarea-wrap">
+                  <textarea
+                    id="ink-cover-input"
+                    placeholder="Enter normal text (e.g. valid sentence)..."
+                    rows="3"
+                  ></textarea>
                   <button
                     type="button"
-                    class="toggle-password"
-                    id="toggle-secret-password"
+                    class="textarea-clear"
+                    data-target="ink-cover-input"
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
-                      class="eye-icon"
                     >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Secret Message (Hidden)</label>
+                <div class="textarea-wrap">
+                  <textarea
+                    id="ink-secret-input"
+                    placeholder="Enter message to hide..."
+                    rows="3"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="textarea-clear"
+                    data-target="ink-secret-input"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
               </div>
               <button
                 class="btn primary"
-                id="secret-create-btn"
-                disabled
+                id="ink-encode-btn"
                 style="width: 100%"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
-                  />
-                  <path
-                    d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
-                  />
-                </svg>
-                Generate Secret Link
+                Embed Message
               </button>
             </div>
 
-            <div class="crypto-card result-card" id="secret-link-result" hidden>
-              <div class="input-group">
-                <label>Your Secret Link</label>
-                <div style="display: flex; gap: 0.5rem">
-                  <input
-                    type="text"
-                    id="secret-link-output"
-                    readonly
-                    style="flex: 1; font-family: monospace; font-size: 0.85rem"
-                  />
-                  <button class="btn secondary" id="secret-link-copy-btn">
+            <div
+              class="crypto-card result-card"
+              id="ink-encode-result"
+              hidden
+              style="padding: 0; overflow: hidden"
+            >
+              <div class="result-box" style="box-shadow: none; margin: 0">
+                <div
+                  class="result-header"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px 16px;
+                    background: var(--bg-tertiary);
+                    border-bottom: 1px solid var(--border-color);
+                  "
+                >
+                  <h3 style="font-size: 0.95rem; margin: 0">
+                    Result with Invisible Ink
+                  </h3>
+                  <button class="copy-btn" id="ink-copy-btn">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -3581,113 +4069,117 @@
                         d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
                       />
                     </svg>
+                    Copy
                   </button>
                 </div>
-                <span class="input-hint" style="color: var(--warning)"
-                  >⚠️ Share this link carefully. Anyone with the link AND
-                  password can read the message.</span
+                <div
+                  class="result-message"
+                  id="ink-encode-output"
+                  style="
+                    padding: 16px;
+                    white-space: pre-wrap;
+                    font-family: inherit;
+                  "
+                ></div>
+              </div>
+              <div
+                style="
+                  padding: 12px 16px;
+                  background: var(--bg-secondary);
+                  border-top: 1px solid var(--border-color);
+                "
+              >
+                <span
+                  class="input-hint"
+                  style="color: var(--text-secondary); font-size: 0.85rem"
+                  >Looks identical, but contains hidden message. Copy and paste
+                  to test!</span
                 >
               </div>
             </div>
           </div>
 
-          <div class="inner-panel" id="inner-secret-open">
+          <div class="inner-panel" id="inner-ink-decode">
             <div class="crypto-card">
               <div class="input-group">
-                <label>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    class="label-icon"
-                  >
-                    <path
-                      d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
-                    />
-                    <path
-                      d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
-                    />
-                  </svg>
-                  Secret Link
-                </label>
-                <input
-                  type="text"
-                  id="secret-link-input"
-                  placeholder="Paste the secret link here..."
-                  style="font-family: monospace"
-                />
-              </div>
-              <div class="input-group">
-                <label>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    class="label-icon"
-                  >
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0110 0v4" />
-                  </svg>
-                  Password
-                </label>
-                <div class="password-input">
-                  <input
-                    type="password"
-                    id="secret-decrypt-password"
-                    placeholder="Enter password to decrypt..."
-                    autocomplete="off"
-                  />
+                <label>Text with Invisible Ink</label>
+                <div class="textarea-wrap">
+                  <textarea
+                    id="ink-decode-input"
+                    placeholder="Paste text here to extract message..."
+                    rows="4"
+                  ></textarea>
                   <button
                     type="button"
-                    class="toggle-password"
-                    id="toggle-secret-decrypt-password"
+                    class="textarea-clear"
+                    data-target="ink-decode-input"
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
-                      class="eye-icon"
                     >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
               </div>
               <button
                 class="btn primary"
-                id="secret-decrypt-btn"
-                disabled
+                id="ink-decode-btn"
                 style="width: 100%"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 019.9-1" />
-                </svg>
-                Decrypt Message
+                Extract Message
               </button>
             </div>
 
             <div
               class="crypto-card result-card"
-              id="secret-decrypt-result"
+              id="ink-decode-result"
               hidden
+              style="padding: 0; overflow: hidden"
             >
-              <div class="input-group">
-                <label>Decrypted Message</label>
-                <textarea
-                  id="secret-decrypt-output"
-                  readonly
-                  rows="4"
-                ></textarea>
+              <div class="result-box" style="box-shadow: none; margin: 0">
+                <div
+                  class="result-header"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px 16px;
+                    background: var(--bg-tertiary);
+                    border-bottom: 1px solid var(--border-color);
+                  "
+                >
+                  <h3 style="font-size: 0.95rem; margin: 0">
+                    Hidden Message Found
+                  </h3>
+                  <button class="copy-btn" id="ink-decode-copy-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path
+                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                      />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+                <div
+                  class="result-message"
+                  id="ink-decode-output"
+                  style="
+                    padding: 16px;
+                    white-space: pre-wrap;
+                    font-family: inherit;
+                  "
+                ></div>
               </div>
             </div>
           </div>
@@ -4712,7 +5204,7 @@
           });
 
           navigator.serviceWorker
-            .register("/sw.js")
+            .register("/sw.js?v=4.2")
             .then((registration) => {
               console.log("SW registered: ", registration);
 

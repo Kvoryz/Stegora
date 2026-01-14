@@ -69,7 +69,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+#particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .app-container {
+  position: relative;
+  z-index: 1;
   max-width: 560px;
   margin: 0 auto;
   padding: 40px 20px;
@@ -1238,6 +1250,23 @@ body {
   gap: 8px;
   border-radius: 8px;
   font-weight: 500;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tool-group .btn.sm:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.tool-group .btn.sm.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }
 
 .tool-group .btn.sm svg {

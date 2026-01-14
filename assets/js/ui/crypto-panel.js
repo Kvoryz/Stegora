@@ -1,5 +1,6 @@
 import { MorseCode } from "../features/morse-code.js";
-import { TextCipher, NumberSystem, SecretLink } from "../features/cipher.js";
+import { TextCipher, NumberSystem } from "../features/cipher.js";
+import { InvisibleInk } from "../features/invisible-ink.js";
 import { HashGenerator } from "../features/hash-generator.js";
 
 export const CryptoPanelMixin = {
@@ -312,90 +313,69 @@ export const CryptoPanelMixin = {
     return num;
   },
 
-  initSecretLink() {
-    const messageInput = document.getElementById("secret-message-input");
-    const passwordInput = document.getElementById("secret-password-input");
-    const createBtn = document.getElementById("secret-create-btn");
-    const linkOutput = document.getElementById("secret-link-output");
-    const linkResult = document.getElementById("secret-link-result");
-    const copyBtn = document.getElementById("secret-link-copy-btn");
+  initInvisibleInk() {
+    const coverInput = document.getElementById("ink-cover-input");
+    const secretInput = document.getElementById("ink-secret-input");
+    const encodeBtn = document.getElementById("ink-encode-btn");
+    const encodeOutput = document.getElementById("ink-encode-output");
+    const encodeResult = document.getElementById("ink-encode-result");
+    const copyBtn = document.getElementById("ink-copy-btn");
 
-    const linkInput = document.getElementById("secret-link-input");
-    const decryptPassword = document.getElementById("secret-decrypt-password");
-    const decryptBtn = document.getElementById("secret-decrypt-btn");
-    const decryptOutput = document.getElementById("secret-decrypt-output");
-    const decryptResult = document.getElementById("secret-decrypt-result");
+    const decodeInput = document.getElementById("ink-decode-input");
+    const decodeBtn = document.getElementById("ink-decode-btn");
+    const decodeOutput = document.getElementById("ink-decode-output");
+    const decodeResult = document.getElementById("ink-decode-result");
+    const decodeCopyBtn = document.getElementById("ink-decode-copy-btn");
 
-    const updateCreateBtn = () => {
-      if (createBtn) {
-        createBtn.disabled = !messageInput.value.trim() || !passwordInput.value;
-      }
-    };
+    if (encodeBtn) {
+      encodeBtn.addEventListener("click", () => {
+        const cover = coverInput.value || "This is a normal text.";
+        const secret = secretInput.value;
 
-    const updateDecryptBtn = () => {
-      if (decryptBtn) {
-        decryptBtn.disabled = !linkInput.value.trim() || !decryptPassword.value;
-      }
-    };
-
-    if (messageInput) messageInput.addEventListener("input", updateCreateBtn);
-    if (passwordInput) passwordInput.addEventListener("input", updateCreateBtn);
-    if (linkInput) linkInput.addEventListener("input", updateDecryptBtn);
-    if (decryptPassword)
-      decryptPassword.addEventListener("input", updateDecryptBtn);
-
-    if (createBtn) {
-      createBtn.addEventListener("click", async () => {
-        const message = messageInput.value.trim();
-        const password = passwordInput.value;
-
-        if (!message || !password) {
-          this.showToast("Message and password required", "error");
+        if (!secret) {
+          this.showToast("Please enter a secret message", "error");
           return;
         }
 
-        try {
-          const encrypted = await SecretLink.encrypt(message, password);
-          const link = SecretLink.generateLink(encrypted);
-          linkOutput.value = link;
-          linkResult.hidden = false;
-          this.showToast("Secret link generated!", "success");
-        } catch (e) {
-          this.showToast("Encryption failed: " + e.message, "error");
-        }
+        const result = InvisibleInk.encode(cover, secret);
+        encodeOutput.textContent = result;
+        encodeResult.hidden = false;
+        this.showToast("Message embedded with Invisible Ink!", "success");
       });
     }
 
     if (copyBtn) {
       copyBtn.addEventListener("click", () => {
-        navigator.clipboard.writeText(linkOutput.value);
-        this.showToast("Link copied!", "success");
+        navigator.clipboard.writeText(encodeOutput.textContent);
+        this.showToast("Copied! (Contains hidden message)", "success");
       });
     }
 
-    if (decryptBtn) {
-      decryptBtn.addEventListener("click", async () => {
-        const url = linkInput.value.trim();
-        const password = decryptPassword.value;
-
-        if (!url || !password) {
-          this.showToast("Link and password required", "error");
+    if (decodeBtn) {
+      decodeBtn.addEventListener("click", () => {
+        const text = decodeInput.value;
+        if (!text) {
+          this.showToast("Please enter text to decode", "error");
           return;
         }
 
-        const data = SecretLink.extractFromUrl(url);
-        if (!data) {
-          this.showToast("Invalid secret link format", "error");
-          return;
+        const message = InvisibleInk.decode(text);
+        if (message) {
+          decodeOutput.textContent = message;
+          decodeResult.hidden = false;
+          this.showToast("Hidden message found!", "success");
+        } else {
+          this.showToast("No hidden message found", "error");
+          decodeResult.hidden = true;
         }
+      });
+    }
 
-        try {
-          const decrypted = await SecretLink.decrypt(data, password);
-          decryptOutput.value = decrypted;
-          decryptResult.hidden = false;
-          this.showToast("Message decrypted!", "success");
-        } catch (e) {
-          this.showToast("Decryption failed: " + e.message, "error");
+    if (decodeCopyBtn) {
+      decodeCopyBtn.addEventListener("click", () => {
+        if (decodeOutput.textContent) {
+          navigator.clipboard.writeText(decodeOutput.textContent);
+          this.showToast("Decoded message copied!", "success");
         }
       });
     }

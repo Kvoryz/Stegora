@@ -1,4 +1,3 @@
-
 export class Steganalysis {
   static analyze(imageData) {
     const data = imageData.data;
@@ -53,21 +52,32 @@ export class Steganalysis {
 
     const bitPlaneRatio = lsbComplexity / (secondBitComplexity || 1);
 
+    // Calculate entropy of LSB plane
+    const p1 = onesRatio;
+    const p0 = 1 - onesRatio;
+    const entropy =
+      p1 > 0 && p0 > 0 ? -(p1 * Math.log2(p1) + p0 * Math.log2(p0)) : 0;
+
     let verdict = "Clean";
     let suspicionLevel = 0;
 
-    if (lsbScore > 0.88) suspicionLevel++;
-    if (chiSquare < 200) suspicionLevel++;
-    if (bitPlaneRatio > 1.15) suspicionLevel++;
+    // More sensitive thresholds
+    if (lsbScore > 0.82) suspicionLevel++; // Was 0.88 - LSB randomness indicator
+    if (chiSquare < 350) suspicionLevel++; // Was 200 - Lower chi = more uniform pairs
+    if (bitPlaneRatio > 1.05) suspicionLevel++; // Was 1.15 - LSB more random than 2nd bit
+    if (entropy > 0.95) suspicionLevel++; // New - High entropy in LSB plane
+    if (Math.abs(0.5 - onesRatio) < 0.02) suspicionLevel++; // New - Very balanced 0/1 ratio
 
-    if (suspicionLevel >= 2) verdict = "Detected";
-    else if (suspicionLevel === 1) verdict = "Suspicious";
+    if (suspicionLevel >= 3) verdict = "Detected";
+    else if (suspicionLevel >= 1) verdict = "Suspicious";
 
     return {
       verdict,
       lsbScore: (lsbScore * 100).toFixed(1) + "%",
       chiSquare: chiSquare.toFixed(2),
       bitPlaneNoise: bitPlaneRatio.toFixed(2),
+      entropy: entropy.toFixed(3),
+      suspicionLevel,
     };
   }
 }

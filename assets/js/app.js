@@ -1,9 +1,9 @@
-
 import { ImagePanelMixin } from "./ui/image-panel.js";
 import { AudioPanelMixin } from "./ui/audio-panel.js";
 import { ImageToolsMixin } from "./ui/image-tools.js";
 import { FilePanelMixin } from "./ui/file-panel.js";
 import { CryptoPanelMixin } from "./ui/crypto-panel.js";
+import { initParticles } from "./particles.js";
 
 class StegoraApp {
   constructor() {
@@ -32,7 +32,7 @@ class StegoraApp {
     this.safeInit("initMorseCode");
     this.safeInit("initCipher");
     this.safeInit("initNumberSystem");
-    this.safeInit("initSecretLink");
+    this.safeInit("initInvisibleInk");
     this.safeInit("initHashGenerator");
     this.safeInit("initTextRepeater");
     this.safeInit("initPasswordGenerator");
@@ -51,7 +51,6 @@ class StegoraApp {
       console.warn(`[Stegora] Method ${methodName} does not exist.`);
     }
   }
-
 
   initTabs() {
     const categoryTabs = document.querySelectorAll(".category-tab");
@@ -181,7 +180,6 @@ class StegoraApp {
     });
   }
 
-
   setupDropzone(dropzone, input, onFile) {
     dropzone.addEventListener("click", () => input.click());
 
@@ -289,7 +287,37 @@ Object.assign(StegoraApp.prototype, FilePanelMixin);
 Object.assign(StegoraApp.prototype, CryptoPanelMixin);
 
 document.addEventListener("DOMContentLoaded", () => {
+  initParticles();
   new StegoraApp();
+
+  // Global textarea clear buttons
+  document.querySelectorAll(".textarea-clear").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.target;
+      const textarea = document.getElementById(targetId);
+      if (textarea) {
+        textarea.value = "";
+        textarea.focus();
+
+        // Hide corresponding result panels
+        const resultMap = {
+          "morse-encode-input": "morse-encode-result",
+          "morse-decode-input": "morse-decode-result",
+          "cipher-encode-input": "cipher-encode-result",
+          "cipher-decode-input": "cipher-decode-result",
+          "ink-cover-input": "ink-encode-result",
+          "ink-secret-input": "ink-encode-result",
+          "ink-decode-input": "ink-decode-result",
+        };
+
+        const resultId = resultMap[targetId];
+        if (resultId) {
+          const resultEl = document.getElementById(resultId);
+          if (resultEl) resultEl.hidden = true;
+        }
+      }
+    });
+  });
 });
 
 export { StegoraApp };

@@ -1,10 +1,11 @@
-
 export const FilePanelMixin = {
   initFileUtilities() {
     this.initFileEncrypt();
     this.initFileBase64();
     this.initFileSplitter();
     this.initMagicBytes();
+    this.initDeepScan();
+    this.initHexEditor();
   },
 
   initFileEncrypt() {
@@ -526,6 +527,9 @@ export const FilePanelMixin = {
     const typeDisplay = document.getElementById("magic-type");
     const mimeDisplay = document.getElementById("magic-mime");
     const hexDisplay = document.getElementById("magic-hex");
+    const preview = document.getElementById("magic-preview");
+    const filenameEl = document.getElementById("magic-filename");
+    const removeBtn = document.getElementById("magic-remove");
 
     let currentFile = null;
     let detectedExt = null;
@@ -533,6 +537,11 @@ export const FilePanelMixin = {
 
     const analyzeFile = (file) => {
       currentFile = file;
+
+      // Show preview
+      if (filenameEl) filenameEl.textContent = file.name;
+      if (preview) preview.hidden = false;
+      if (dropzone) dropzone.querySelector(".upload-content").hidden = true;
       const reader = new FileReader();
       reader.onload = (e) => {
         const arr = new Uint8Array(e.target.result);
@@ -608,6 +617,30 @@ export const FilePanelMixin = {
           type = "WAV Audio";
           mime = "audio/wav";
           ext = "wav";
+        } else if (starts("42 4D")) {
+          type = "BMP Image";
+          mime = "image/bmp";
+          ext = "bmp";
+        } else if (starts("00 00 01 00")) {
+          type = "ICO Icon";
+          mime = "image/x-icon";
+          ext = "ico";
+        } else if (starts("1A 45 DF A3")) {
+          type = "MKV Video";
+          mime = "video/x-matroska";
+          ext = "mkv";
+        } else if (starts("37 7A BC AF 27 1C")) {
+          type = "7Z Archive";
+          mime = "application/x-7z-compressed";
+          ext = "7z";
+        } else if (starts("66 4C 61 43")) {
+          type = "FLAC Audio";
+          mime = "audio/flac";
+          ext = "flac";
+        } else if (starts("4F 67 67 53")) {
+          type = "OGG Audio/Video";
+          mime = "application/ogg";
+          ext = "ogg";
         }
 
         detectedExt = ext;
@@ -642,8 +675,24 @@ export const FilePanelMixin = {
       reader.readAsArrayBuffer(file.slice(0, 32));
     };
 
+    // Remove button handler
+    removeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      currentFile = null;
+      detectedExt = null;
+      detectedMime = null;
+      if (preview) preview.hidden = true;
+      if (dropzone) dropzone.querySelector(".upload-content").hidden = false;
+      if (resultBox) resultBox.hidden = true;
+      if (fixArea) fixArea.hidden = true;
+      if (input) input.value = "";
+    });
+
     if (dropzone && input) {
-      dropzone.onclick = () => input.click();
+      dropzone.onclick = (e) => {
+        if (e.target.closest(".preview-remove")) return;
+        input.click();
+      };
       dropzone.ondragover = (e) => {
         e.preventDefault();
         dropzone.classList.add("dragover");
@@ -674,6 +723,420 @@ export const FilePanelMixin = {
       a.click();
 
       this.showToast(`Fixed extension to .${detectedExt}`, "success");
+    });
+  },
+
+  initDeepScan() {
+    const dropzone = document.getElementById("deepscan-dropzone");
+    const input = document.getElementById("deepscan-input");
+    const progress = document.getElementById("deepscan-progress");
+    const status = document.getElementById("deepscan-status");
+    const bar = document.getElementById("deepscan-bar");
+    const result = document.getElementById("deepscan-result");
+    const list = document.getElementById("deepscan-list");
+    const count = document.getElementById("deepscan-count");
+    const empty = document.getElementById("deepscan-empty");
+    const preview = document.getElementById("deepscan-preview");
+    const filenameEl = document.getElementById("deepscan-filename");
+    const removeBtn = document.getElementById("deepscan-remove");
+
+    const signatures = [
+      { name: "PNG Image", sig: [0x89, 0x50, 0x4e, 0x47], ext: "png" },
+      { name: "JPEG Image", sig: [0xff, 0xd8, 0xff], ext: "jpg" },
+      { name: "GIF Image", sig: [0x47, 0x49, 0x46, 0x38], ext: "gif" },
+      { name: "PDF Document", sig: [0x25, 0x50, 0x44, 0x46], ext: "pdf" },
+      { name: "ZIP Archive", sig: [0x50, 0x4b, 0x03, 0x04], ext: "zip" },
+      { name: "RAR Archive", sig: [0x52, 0x61, 0x72, 0x21], ext: "rar" },
+      {
+        name: "7Z Archive",
+        sig: [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c],
+        ext: "7z",
+      },
+      { name: "MP3 Audio", sig: [0x49, 0x44, 0x33], ext: "mp3" },
+      { name: "BMP Image", sig: [0x42, 0x4d], ext: "bmp" },
+      {
+        name: "WebP Image",
+        sig: [0x52, 0x49, 0x46, 0x46],
+        ext: "webp",
+        extra: [0x57, 0x45, 0x42, 0x50],
+        extraOffset: 8,
+      },
+      { name: "MKV Video", sig: [0x1a, 0x45, 0xdf, 0xa3], ext: "mkv" },
+      { name: "FLAC Audio", sig: [0x66, 0x4c, 0x61, 0x43], ext: "flac" },
+      { name: "EXE", sig: [0x4d, 0x5a], ext: "exe" },
+    ];
+
+    let fileData = null;
+    let fileName = null;
+
+    const scanFile = async (file) => {
+      fileName = file.name;
+
+      // Show preview
+      if (filenameEl) filenameEl.textContent = file.name;
+      if (preview) preview.hidden = false;
+      if (dropzone) dropzone.querySelector(".upload-content").hidden = true;
+
+      progress.hidden = false;
+      result.hidden = true;
+      empty.hidden = true;
+      list.innerHTML = "";
+
+      const buffer = await file.arrayBuffer();
+      fileData = new Uint8Array(buffer);
+      const found = [];
+
+      const chunkSize = 1024 * 64;
+      const totalChunks = Math.ceil(fileData.length / chunkSize);
+
+      for (let chunk = 0; chunk < totalChunks; chunk++) {
+        const startOffset = chunk * chunkSize;
+        const endOffset = Math.min(
+          startOffset + chunkSize + 20,
+          fileData.length
+        );
+
+        for (let i = startOffset; i < endOffset; i++) {
+          for (const sig of signatures) {
+            if (i + sig.sig.length > fileData.length) continue;
+
+            let match = true;
+            for (let j = 0; j < sig.sig.length; j++) {
+              if (fileData[i + j] !== sig.sig[j]) {
+                match = false;
+                break;
+              }
+            }
+
+            if (match && sig.extra && sig.extraOffset) {
+              const extraPos = i + sig.extraOffset;
+              if (extraPos + sig.extra.length <= fileData.length) {
+                for (let k = 0; k < sig.extra.length; k++) {
+                  if (fileData[extraPos + k] !== sig.extra[k]) {
+                    match = false;
+                    break;
+                  }
+                }
+              } else {
+                match = false;
+              }
+            }
+
+            if (match && i > 0) {
+              found.push({
+                name: sig.name,
+                ext: sig.ext,
+                offset: i,
+              });
+            }
+          }
+        }
+
+        bar.style.width = `${((chunk + 1) / totalChunks) * 100}%`;
+        status.textContent = `Scanning... ${Math.round(
+          ((chunk + 1) / totalChunks) * 100
+        )}%`;
+
+        await new Promise((r) => setTimeout(r, 0));
+      }
+
+      progress.hidden = true;
+      bar.style.width = "0%";
+
+      if (found.length > 0) {
+        count.textContent = found.length;
+        result.hidden = false;
+
+        found.forEach((item, idx) => {
+          const row = document.createElement("div");
+          row.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 13px;
+          `;
+
+          row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="
+                background: var(--accent);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+              ">${item.ext.toUpperCase()}</span>
+              <span>${item.name}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--text-muted); font-family: monospace; font-size: 11px;">
+                @ 0x${item.offset.toString(16).toUpperCase()}
+              </span>
+              <button class="btn secondary small extract-btn" data-idx="${idx}" style="padding: 4px 10px; font-size: 11px;">
+                Extract
+              </button>
+            </div>
+          `;
+          list.appendChild(row);
+        });
+
+        list.querySelectorAll(".extract-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = parseInt(btn.dataset.idx);
+            const item = found[idx];
+            const extracted = fileData.slice(item.offset);
+            const blob = new Blob([extracted], {
+              type: "application/octet-stream",
+            });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `extracted_${idx + 1}.${item.ext}`;
+            a.click();
+            this.showToast(`Extracted ${item.name}`, "success");
+          });
+        });
+      } else {
+        empty.hidden = false;
+      }
+    };
+
+    // Remove button handler
+    removeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      fileData = null;
+      fileName = null;
+      if (preview) preview.hidden = true;
+      if (dropzone) dropzone.querySelector(".upload-content").hidden = false;
+      if (result) result.hidden = true;
+      if (empty) empty.hidden = true;
+      if (progress) progress.hidden = true;
+      if (input) input.value = "";
+    });
+
+    if (dropzone && input) {
+      dropzone.onclick = (e) => {
+        if (e.target.closest(".preview-remove")) return;
+        input.click();
+      };
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      };
+      dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) scanFile(file);
+      };
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) scanFile(file);
+      };
+    }
+  },
+
+  initHexEditor() {
+    const dropzone = document.getElementById("hexedit-dropzone");
+    const input = document.getElementById("hexedit-input");
+    const container = document.getElementById("hexedit-container");
+    const content = document.getElementById("hexedit-content");
+    const filenameEl = document.getElementById("hexedit-filename");
+    const filesizeEl = document.getElementById("hexedit-filesize");
+    const offsetInput = document.getElementById("hexedit-offset");
+    const gotoBtn = document.getElementById("hexedit-goto");
+    const downloadBtn = document.getElementById("hexedit-download");
+    const resetBtn = document.getElementById("hexedit-reset");
+    const preview = document.getElementById("hexedit-preview");
+    const fnameEl = document.getElementById("hexedit-fname");
+    const removeBtn = document.getElementById("hexedit-remove");
+
+    let originalData = null;
+    let modifiedData = null;
+    let currentFile = null;
+    let currentOffset = 0;
+    const BYTES_PER_VIEW = 256;
+    const BYTES_PER_ROW = 16;
+
+    const renderHex = (offset = 0) => {
+      content.innerHTML = "";
+      currentOffset = offset;
+      offsetInput.value = offset;
+
+      const endOffset = Math.min(offset + BYTES_PER_VIEW, modifiedData.length);
+
+      for (let i = offset; i < endOffset; i += BYTES_PER_ROW) {
+        const row = document.createElement("div");
+        row.style.cssText = `
+          display: grid;
+          grid-template-columns: 80px 1fr 1fr;
+          gap: 2px;
+          border-bottom: 1px solid var(--border-color);
+        `;
+
+        const offsetCell = document.createElement("div");
+        offsetCell.style.cssText = `
+          padding: 6px 8px;
+          background: var(--bg-secondary);
+          color: var(--accent);
+          text-align: center;
+          font-family: monospace;
+          font-size: 11px;
+        `;
+        offsetCell.textContent =
+          "0x" + i.toString(16).toUpperCase().padStart(6, "0");
+
+        const hexCell = document.createElement("div");
+        hexCell.style.cssText = `
+          padding: 6px 8px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          font-family: monospace;
+          font-size: 11px;
+        `;
+
+        const asciiCell = document.createElement("div");
+        asciiCell.style.cssText = `
+          padding: 6px 8px;
+          font-family: monospace;
+          font-size: 11px;
+          color: var(--text-secondary);
+          word-break: break-all;
+        `;
+
+        let asciiStr = "";
+        for (let j = 0; j < BYTES_PER_ROW && i + j < endOffset; j++) {
+          const byteIdx = i + j;
+          const byte = modifiedData[byteIdx];
+          const isModified = originalData[byteIdx] !== byte;
+
+          const hexSpan = document.createElement("span");
+          hexSpan.textContent = byte
+            .toString(16)
+            .toUpperCase()
+            .padStart(2, "0");
+          hexSpan.style.cssText = `
+            cursor: pointer;
+            padding: 1px 3px;
+            border-radius: 2px;
+            transition: background 0.2s;
+            ${isModified ? "background: var(--warning); color: black;" : ""}
+          `;
+          hexSpan.dataset.idx = byteIdx;
+
+          hexSpan.onclick = () => {
+            const newVal = prompt(
+              `Edit byte at 0x${byteIdx.toString(16).toUpperCase()}:`,
+              hexSpan.textContent
+            );
+            if (newVal !== null) {
+              const parsed = parseInt(newVal, 16);
+              if (!isNaN(parsed) && parsed >= 0 && parsed <= 255) {
+                modifiedData[byteIdx] = parsed;
+                renderHex(currentOffset);
+                this.showToast("Byte modified", "success");
+              } else {
+                this.showToast("Invalid hex value (00-FF)", "error");
+              }
+            }
+          };
+
+          hexCell.appendChild(hexSpan);
+
+          const char =
+            byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
+          asciiStr += char;
+        }
+
+        asciiCell.textContent = asciiStr;
+
+        row.appendChild(offsetCell);
+        row.appendChild(hexCell);
+        row.appendChild(asciiCell);
+        content.appendChild(row);
+      }
+    };
+
+    const loadFile = async (file) => {
+      currentFile = file;
+      const buffer = await file.arrayBuffer();
+      originalData = new Uint8Array(buffer);
+      modifiedData = new Uint8Array(buffer);
+
+      // Show preview
+      if (fnameEl) fnameEl.textContent = file.name;
+      if (preview) preview.hidden = false;
+      if (dropzone) dropzone.querySelector(".upload-content").hidden = true;
+
+      filenameEl.textContent = file.name;
+      filesizeEl.textContent = this.formatBytes(file.size);
+      container.hidden = false;
+      renderHex(0);
+    };
+
+    // Remove button handler
+    removeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      originalData = null;
+      modifiedData = null;
+      currentFile = null;
+      if (preview) preview.hidden = true;
+      if (dropzone) dropzone.querySelector(".upload-content").hidden = false;
+      if (container) container.hidden = true;
+      if (input) input.value = "";
+    });
+
+    if (dropzone && input) {
+      dropzone.onclick = (e) => {
+        if (e.target.closest(".preview-remove")) return;
+        input.click();
+      };
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      };
+      dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) loadFile(file);
+      };
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) loadFile(file);
+      };
+    }
+
+    gotoBtn?.addEventListener("click", () => {
+      let offset = parseInt(offsetInput.value);
+      if (isNaN(offset) || offset < 0) offset = 0;
+      if (offset >= modifiedData.length)
+        offset = Math.max(0, modifiedData.length - BYTES_PER_VIEW);
+      renderHex(offset);
+    });
+
+    downloadBtn?.addEventListener("click", () => {
+      if (!modifiedData || !currentFile) return;
+      const blob = new Blob([modifiedData], {
+        type: "application/octet-stream",
+      });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "modified_" + currentFile.name;
+      a.click();
+      this.showToast("Downloaded modified file", "success");
+    });
+
+    resetBtn?.addEventListener("click", () => {
+      if (!originalData) return;
+      modifiedData = new Uint8Array(originalData);
+      renderHex(currentOffset);
+      this.showToast("Changes reset", "success");
     });
   },
 

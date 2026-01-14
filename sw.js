@@ -1,4 +1,4 @@
-const CACHE_NAME = "stegora-v4.1";
+const CACHE_NAME = "stegora-v4.5";
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
@@ -20,11 +20,13 @@ const ASSETS_TO_CACHE = [
   "/assets/js/features/hash-generator.js",
   "/assets/js/features/morse-code.js",
   "/assets/js/features/cipher.js",
+  "/assets/js/features/invisible-ink.js",
   "/assets/js/ui/image-panel.js",
   "/assets/js/ui/audio-panel.js",
   "/assets/js/ui/image-tools.js",
   "/assets/js/ui/file-panel.js",
   "/assets/js/ui/crypto-panel.js",
+  "/assets/js/particles.js",
   "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap",
 ];
 

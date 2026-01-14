@@ -580,6 +580,7 @@ export const ImageToolsMixin = {
         document.querySelector(
           "#steg-orig-dropzone .upload-content"
         ).hidden = false;
+        document.getElementById("steg-results").hidden = true;
         this.updateStegCompareBtn();
       });
 
@@ -611,6 +612,7 @@ export const ImageToolsMixin = {
         document.querySelector(
           "#steg-susp-dropzone .upload-content"
         ).hidden = false;
+        document.getElementById("steg-results").hidden = true;
         this.updateStegCompareBtn();
       });
 
@@ -638,6 +640,18 @@ export const ImageToolsMixin = {
 
   doSteganalysis() {
     if (!this.stegOrigImage || !this.stegSuspImage) return;
+
+    // Check if same file
+    if (
+      this.stegOrigFile &&
+      this.stegSuspFile &&
+      this.stegOrigFile.name === this.stegSuspFile.name &&
+      this.stegOrigFile.size === this.stegSuspFile.size &&
+      this.stegOrigFile.lastModified === this.stegSuspFile.lastModified
+    ) {
+      this.showToast("Cannot compare identical files!", "error");
+      return;
+    }
 
     const w1 = this.stegOrigImage.naturalWidth;
     const h1 = this.stegOrigImage.naturalHeight;
@@ -752,19 +766,8 @@ export const ImageToolsMixin = {
 
     const result = Steganalysis.analyze(imageData);
 
-    let lsbBits = [];
-    for (let i = 0; i < data.length; i += 4) {
-      lsbBits.push(data[i + 2] & 1);
-    }
-    const ones = lsbBits.filter((b) => b === 1).length;
-    const zeros = lsbBits.length - ones;
-    const p1 = ones / lsbBits.length;
-    const p0 = zeros / lsbBits.length;
-    const entropy =
-      p1 > 0 && p0 > 0 ? -(p1 * Math.log2(p1) + p0 * Math.log2(p0)) : 0;
-
     document.getElementById("lsb-chi").textContent = result.chiSquare;
-    document.getElementById("lsb-entropy").textContent = entropy.toFixed(3);
+    document.getElementById("lsb-entropy").textContent = result.entropy;
 
     const verdictBox = document.getElementById("lsb-verdict-box");
     const verdictEl = document.getElementById("lsb-verdict");
@@ -780,13 +783,11 @@ export const ImageToolsMixin = {
     } else if (result.verdict === "Suspicious") {
       verdictBox.style.background = "rgba(234, 179, 8, 0.15)";
       verdictBox.style.border = "1px solid rgba(234, 179, 8, 0.3)";
-      verdictDesc.textContent =
-        "Some statistical anomalies detected. May contain hidden data.";
+      verdictDesc.textContent = `${result.suspicionLevel} indicator(s) detected. Image may contain hidden data.`;
     } else {
       verdictBox.style.background = "rgba(239, 68, 68, 0.15)";
       verdictBox.style.border = "1px solid rgba(239, 68, 68, 0.3)";
-      verdictDesc.textContent =
-        "Strong indicators of steganographic manipulation detected!";
+      verdictDesc.textContent = `${result.suspicionLevel} indicators detected! Strong evidence of steganographic manipulation.`;
     }
 
     const lsbCanvas = document.getElementById("lsb-canvas");
@@ -905,13 +906,27 @@ export const ImageToolsMixin = {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
+
+      let clientX, clientY;
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
       return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY,
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY,
       };
     };
 
-    canvas.onmousedown = (e) => {
+    const handleStart = (e) => {
+      e.preventDefault();
       this.isDragging = true;
       const pos = getPos(e);
       this.startX = pos.x;
@@ -921,8 +936,9 @@ export const ImageToolsMixin = {
         .getImageData(0, 0, canvas.width, canvas.height);
     };
 
-    canvas.onmousemove = (e) => {
+    const handleMove = (e) => {
       if (!this.isDragging) return;
+      e.preventDefault();
       const pos = getPos(e);
       const ctx = canvas.getContext("2d");
 
@@ -940,7 +956,7 @@ export const ImageToolsMixin = {
       ctx.strokeRect(this.startX - 1, this.startY - 1, w + 2, h + 2);
     };
 
-    canvas.onmouseup = (e) => {
+    const handleEnd = (e) => {
       if (!this.isDragging) return;
       this.isDragging = false;
       const pos = getPos(e);
@@ -955,13 +971,25 @@ export const ImageToolsMixin = {
       }
     };
 
-    canvas.onmouseout = () => {
+    const handleCancel = () => {
       if (this.isDragging) {
         this.isDragging = false;
         const ctx = canvas.getContext("2d");
         ctx.putImageData(this.tempSnapshot, 0, 0);
       }
     };
+
+    // Mouse events
+    canvas.onmousedown = handleStart;
+    canvas.onmousemove = handleMove;
+    canvas.onmouseup = handleEnd;
+    canvas.onmouseout = handleCancel;
+
+    // Touch events for mobile
+    canvas.ontouchstart = handleStart;
+    canvas.ontouchmove = handleMove;
+    canvas.ontouchend = handleEnd;
+    canvas.ontouchcancel = handleCancel;
   },
 
   applyRedact(x, y, w, h) {

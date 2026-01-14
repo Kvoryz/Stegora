@@ -34,25 +34,28 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 
 ### 📁 File Tools
 
-| Feature              | Description                                                  |
-| -------------------- | ------------------------------------------------------------ |
-| **File Vault**       | Encrypt/Decrypt any file type using AES-GCM 256-bit          |
-| **Base64 Converter** | Convert files to Base64 (and back). Supports Direct Paste!   |
-| **File Splitter**    | Split large files into smaller chunks & merge them back      |
-| **Magic Bytes**      | Detect actual file type by inspecting file signature headers |
+| Feature              | Description                                                   |
+| -------------------- | ------------------------------------------------------------- |
+| **File Vault**       | Encrypt/Decrypt any file type using AES-GCM 256-bit           |
+| **Base64 Converter** | Convert files to Base64 (and back). Supports Direct Paste!    |
+| **File Splitter**    | Split large files into smaller chunks & merge them back       |
+| **Magic Bytes**      | Detect actual file type by inspecting file signature headers  |
+| **Deep Scan**        | Find hidden files buried inside other files (e.g. RAR in JPG) |
+| **Hex Editor**       | View and edit raw file bytes in a hexadecimal viewer          |
 
 ### 🔑 Crypto Tools
 
-| Feature                | Description                                              |
-| ---------------------- | -------------------------------------------------------- |
-| **Morse Code**         | Encode/decode text to Morse code with audio playback     |
-| **Text Cipher**        | Caesar, ROT13, Atbash, and Vigenère cipher encryption    |
-| **Number Converter**   | Convert between Binary, Octal, Decimal, and Hexadecimal  |
-| **Roman Numerals**     | Convert between Arabic numbers and Roman numerals        |
-| **Secret Link**        | Create encrypted self-destructing secret links           |
-| **Hash Generator**     | Generate MD5, SHA-1, SHA-256, SHA-512 hashes             |
-| **Text Repeater**      | Repeat text N times with custom separator                |
-| **Password Generator** | Generate secure random passwords with strength indicator |
+| Feature                | Description                                                 |
+| ---------------------- | ----------------------------------------------------------- |
+| **Morse Code**         | Encode/decode text to Morse code with audio playback        |
+| **Text Cipher**        | Caesar, ROT13, Atbash, and Vigenère cipher encryption       |
+| **Number Converter**   | Convert between Binary, Octal, Decimal, and Hexadecimal     |
+| **Roman Numerals**     | Convert between Arabic numbers and Roman numerals           |
+| **Invisible Ink**      | Hide secret messages inside invisible zero-width characters |
+| **Secret Link**        | Create encrypted self-destructing secret links              |
+| **Hash Generator**     | Generate MD5, SHA-1, SHA-256, SHA-512 hashes                |
+| **Text Repeater**      | Repeat text N times with custom separator                   |
+| **Password Generator** | Generate secure random passwords with strength indicator    |
 
 ### 🔐 Security Features
 
