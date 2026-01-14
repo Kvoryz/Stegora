@@ -16,6 +16,7 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 | **Scramble**           | Visually encrypt images with password-protected pixel scrambling |
 | **Redact (Obfuscate)** | Pixelate or blur sensitive areas in images                       |
 | **Metadata Sanitize**  | Strip all EXIF, GPS, and camera info from images                 |
+| **Color Picker**       | Extract dominant colors palette from any image                   |
 
 ### 🔊 Audio Tools
 
@@ -47,6 +48,7 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 | **Morse Code**         | Encode/decode text to Morse code with audio playback     |
 | **Text Cipher**        | Caesar, ROT13, Atbash, and Vigenère cipher encryption    |
 | **Number Converter**   | Convert between Binary, Octal, Decimal, and Hexadecimal  |
+| **Roman Numerals**     | Convert between Arabic numbers and Roman numerals        |
 | **Secret Link**        | Create encrypted self-destructing secret links           |
 | **Hash Generator**     | Generate MD5, SHA-1, SHA-256, SHA-512 hashes             |
 | **Text Repeater**      | Repeat text N times with custom separator                |
@@ -59,7 +61,27 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 - **Password-Protected Scramble**: Images with embedded password verification
 - **Client-Side Only**: Zero server uploads, 100% browser-based
 
-## 🚀 How to Use
+## 🚀 Quick Start
+
+### Option 1: Use Vite (Development)
+
+```bash
+npm install
+npm run dev
+```
+
+### Option 2: Any HTTP Server
+
+```bash
+# Python
+python3 -m http.server 8000
+
+# Or use VS Code Live Server extension
+```
+
+> **Note**: ES modules require HTTP server. Direct `file://` won't work.
+
+## 📖 How to Use
 
 ### Steganography → Encode
 
@@ -121,11 +143,42 @@ Stegora is a modern, privacy-focused web application for **hiding secrets**, **a
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: HTML5, Vanilla CSS3, JavaScript ES6+
+- **Frontend**: HTML5, Vanilla CSS3, JavaScript ES6+ Modules
 - **Encryption**: Web Crypto API (AES-256, PBKDF2)
+- **Architecture**: Mixin-based modular design
 - **Fonts**: Plus Jakarta Sans (Google Fonts)
 - **Deployment**: Vercel-ready with PWA support
 - **Offline**: Service Worker for full offline capability
+
+## 📁 Project Structure
+
+```
+stegora/
+├── index.html              # Main HTML
+├── manifest.json           # PWA manifest
+├── sw.js                   # Service Worker
+├── assets/
+│   ├── css/style.css       # Styles
+│   ├── iconste.png         # App icon
+│   └── js/
+│       ├── main.js         # Entry point
+│       ├── app.js          # Main app (~280 lines)
+│       ├── core/           # Core utilities
+│       │   ├── crypto.js
+│       │   ├── steganography.js
+│       │   └── steganalysis.js
+│       ├── features/       # Feature modules
+│       │   ├── hash-generator.js
+│       │   ├── morse-code.js
+│       │   └── cipher.js
+│       └── ui/             # UI Panel Mixins
+│           ├── image-panel.js
+│           ├── audio-panel.js
+│           ├── image-tools.js
+│           ├── file-panel.js
+│           └── crypto-panel.js
+└── package.json            # Optional (for Vite)
+```
 
 ## 📱 Install as App (PWA)
 

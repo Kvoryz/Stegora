@@ -1,22 +1,42 @@
 {
-  "name": "Stegora - Secure Steganography",
+  "name": "Stegora - Secure Steganography & Privacy Tools",
   "short_name": "Stegora",
-  "description": "Hide secrets in images securely with AES-256 and LSB steganography.",
+  "description": "Hide secrets in images, encrypt files, and analyze metadata. 100% client-side privacy tools with AES-256 encryption.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
-  "orientation": "portrait-primary",
+  "background_color": "#0a0a0f",
+  "theme_color": "#8b5cf6",
+  "orientation": "any",
+  "categories": ["utilities", "security", "privacy"],
   "icons": [
     {
       "src": "assets/iconste.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/iconste.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Encode Image",
+      "short_name": "Encode",
+      "description": "Hide a secret message in an image",
+      "url": "/?tab=encode",
+      "icons": [{ "src": "assets/iconste.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Decode Image",
+      "short_name": "Decode",
+      "description": "Extract hidden message from an image",
+      "url": "/?tab=decode",
+      "icons": [{ "src": "assets/iconste.png", "sizes": "96x96" }]
     }
   ]
 }

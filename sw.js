@@ -1,11 +1,23 @@
-const CACHE_NAME = "stegora-v3.48";
+const CACHE_NAME = "stegora-v4.0";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
-  "/assets/css/style.css?v=3.46",
-  "/assets/js/app.js?v=3.46",
-  "/assets/iconste.png",
   "/manifest.json",
+  "/assets/css/style.css",
+  "/assets/iconste.png",
+  "/assets/js/main.js",
+  "/assets/js/app.js",
+  "/assets/js/core/crypto.js",
+  "/assets/js/core/steganography.js",
+  "/assets/js/core/steganalysis.js",
+  "/assets/js/features/hash-generator.js",
+  "/assets/js/features/morse-code.js",
+  "/assets/js/features/cipher.js",
+  "/assets/js/ui/image-panel.js",
+  "/assets/js/ui/audio-panel.js",
+  "/assets/js/ui/image-tools.js",
+  "/assets/js/ui/file-panel.js",
+  "/assets/js/ui/crypto-panel.js",
   "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap",
 ];
 
