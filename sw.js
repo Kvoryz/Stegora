@@ -1,4 +1,4 @@
-const CACHE_NAME = "stegora-v4.5";
+const CACHE_NAME = "stegora-v4.6";
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
@@ -35,7 +35,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log("[Service Worker] Caching all assets");
       return cache.addAll(ASSETS_TO_CACHE);
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -49,17 +49,27 @@ self.addEventListener("activate", (event) => {
             console.log("[Service Worker] Removing old cache", key);
             return caches.delete(key);
           }
-        })
+        }),
       );
-    })
+    }),
   );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => {});
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200 && response.type === "basic") {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      }),
   );
 });
