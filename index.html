@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -15,9 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/style.css?v=4.5" />
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#000000" />
+    <link rel="stylesheet" href="assets/css/style.css" />
   </head>
   <body>
     <canvas id="particle-canvas"></canvas>
@@ -5192,48 +5190,5 @@
     <canvas id="canvas" hidden></canvas>
 
     <script type="module" src="assets/js/main.js"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener("controllerchange", () => {
-            if (!refreshing) {
-              window.location.reload();
-              refreshing = true;
-            }
-          });
-
-          navigator.serviceWorker
-            .register("/sw.js?v=4.2")
-            .then((registration) => {
-              console.log("SW registered: ", registration);
-
-              setInterval(() => {
-                registration.update();
-              }, 60 * 60 * 1000);
-
-              if (registration.waiting) {
-                registration.waiting.postMessage({ type: "SKIP_WAITING" });
-              }
-
-              registration.onupdatefound = () => {
-                const newWorker = registration.installing;
-                newWorker.onstatechange = () => {
-                  if (newWorker.state === "installed") {
-                    if (navigator.serviceWorker.controller) {
-                      console.log("New content is available; please refresh.");
-                    } else {
-                      console.log("Content is cached for offline use.");
-                    }
-                  }
-                };
-              };
-            })
-            .catch((registrationError) => {
-              console.log("SW registration failed: ", registrationError);
-            });
-        });
-      }
-    </script>
   </body>
 </html>

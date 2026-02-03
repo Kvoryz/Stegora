@@ -150,16 +150,13 @@ python3 -m http.server 8000
 - **Encryption**: Web Crypto API (AES-256, PBKDF2)
 - **Architecture**: Mixin-based modular design
 - **Fonts**: Plus Jakarta Sans (Google Fonts)
-- **Deployment**: Vercel-ready with PWA support
-- **Offline**: Service Worker for full offline capability
+- **Deployment**: Vercel-ready
 
 ## 📁 Project Structure
 
 ```
 stegora/
 ├── index.html              # Main HTML
-├── manifest.json           # PWA manifest
-├── sw.js                   # Service Worker
 ├── assets/
 │   ├── css/style.css       # Styles
 │   ├── iconste.png         # App icon
@@ -182,11 +179,6 @@ stegora/
 │           └── crypto-panel.js
 └── package.json            # Optional (for Vite)
 ```
-
-## 📱 Install as App (PWA)
-
-- **Mobile**: Tap Share → Add to Home Screen
-- **Desktop**: Click install icon in URL bar
 
 ## 🔒 Privacy Promise
 
