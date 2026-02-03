@@ -1,10 +1,10 @@
-# Stegora - Secure Steganography & Privacy Tools
+# Shadix - Secure Steganography & Privacy Tools
 
 <p align="center">
-  <img src="assets/iconste.png" alt="Stegora Icon" width="150">
+  <img src="assets/iconste.png" alt="Shadix Icon" width="150">
 </p>
 
-Stegora is a modern, privacy-focused web application for **hiding secrets**, **analyzing images**, and **protecting your privacy**. Everything runs 100% client-side—no data leaves your device.
+Shadix is a modern, privacy-focused web application for **hiding secrets**, **analyzing images**, and **protecting your privacy**. Everything runs 100% client-side—no data leaves your device.
 
 ## ✨ Features
 
@@ -155,7 +155,7 @@ python3 -m http.server 8000
 ## 📁 Project Structure
 
 ```
-stegora/
+shadix/
 ├── index.html              # Main HTML
 ├── assets/
 │   ├── css/style.css       # Styles
@@ -186,4 +186,4 @@ All processing happens **in your browser**. No images, audio, passwords, or mess
 
 ---
 
-<p align="center"><em>Hide secrets in plain sight.</em></p>
+<p align="center"><em>Hide secrets in shadows.</em></p>

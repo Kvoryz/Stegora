@@ -53,15 +53,20 @@ class StegoraApp {
   }
 
   initTabs() {
-    const categoryTabs = document.querySelectorAll(".category-tab");
+    const landingView = document.getElementById("landing-view");
+    const workspaceView = document.getElementById("workspace-view");
+    const landingCards = document.querySelectorAll(".landing-card");
+    const backBtn = document.getElementById("back-to-landing");
     const subTabGroups = document.querySelectorAll(".sub-tabs");
 
-    categoryTabs.forEach((catTab) => {
-      catTab.addEventListener("click", () => {
-        categoryTabs.forEach((t) => t.classList.remove("active"));
-        catTab.classList.add("active");
+    // Landing card click -> enter workspace
+    landingCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        const category = card.dataset.category;
+        landingView.hidden = true;
+        workspaceView.hidden = false;
 
-        const category = catTab.dataset.category;
+        // Show correct sub-tabs and hide others
         subTabGroups.forEach((group) => {
           if (group.id === `sub-tabs-${category}`) {
             group.hidden = false;
@@ -74,6 +79,12 @@ class StegoraApp {
           }
         });
       });
+    });
+
+    // Back button -> return to landing
+    backBtn.addEventListener("click", () => {
+      workspaceView.hidden = true;
+      landingView.hidden = false;
     });
 
     const allSubTabs = document.querySelectorAll(".sub-tab");
